@@ -5,7 +5,6 @@ import 'package:keyboard_media_picker/Pickers/picker.dart';
 import 'package:keyboard_media_picker/delegates/album_picker_delegate.dart';
 import 'package:keyboard_media_picker/delegates/image_picker_delegate.dart';
 import 'package:keyboard_media_picker/util/keep_alive.dart';
-import 'package:keyboard_media_picker/util/pollar_icons.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -17,6 +16,7 @@ class ImagePicker extends StatefulWidget {
   final TextStyle menuStyle;
   final TextStyle albumNameStyle;
   final Color backgroundColor;
+  final Icon menuIcon;
 
   const ImagePicker({ 
     required Key key,
@@ -25,7 +25,8 @@ class ImagePicker extends StatefulWidget {
     this.expandedExtent = 1.0,
     this.menuStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
     this.albumNameStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-    this.backgroundColor = Colors.white
+    this.backgroundColor = Colors.white,
+    this.menuIcon = const Icon(Icons.download)
   }) : super(key: key);
 
   @override
@@ -232,7 +233,7 @@ class _ImagePickerState extends State<ImagePicker> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(pageCubit.state ? 'All Photos' : path, style: widget.menuStyle),
-            Icon(PollarIcons.small_down_arrow, size: 24)
+            widget.menuIcon
           ],
         ),
         onTap: () {

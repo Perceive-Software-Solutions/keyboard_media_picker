@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:keyboard_media_picker/keyboard_media_picker.dart';
-import 'package:keyboard_media_picker/util/pollar_icons.dart';
 
 
 void main() {
@@ -152,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: FittedBox(
                         fit: BoxFit.contain,
                         child: Icon(
-                          PollarIcons.add,
+                          Icons.add,
                           color: Colors.grey,
                           size: 34,
                         ),
@@ -173,7 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: FittedBox(
                         fit: BoxFit.contain,
                         child: Icon(
-                          PollarIcons.add,
+                          Icons.add,
                           color: Colors.grey,
                           size: 34,
                         ),

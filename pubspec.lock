@@ -158,11 +158,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_web_plugins:
-    dependency: transitive
-    description: flutter
-    source: sdk
-    version: "0.0.0"
   giphy_get:
     dependency: "direct main"
     description:
@@ -191,13 +186,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.0.0"
-  js:
-    dependency: transitive
-    description:
-      name: js
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.6.3"
   matcher:
     dependency: transitive
     description:
@@ -276,14 +264,12 @@ packages:
     source: hosted
     version: "1.11.1"
   photo_manager:
-    dependency: transitive
+    dependency: "direct main"
     description:
-      path: "."
-      ref: master
-      resolved-ref: "1ccf4fe043036e426fd185ca3f40c9ae02953296"
-      url: "git://github.com/Perceive-Software-Solutions/flutter_photo_manager.git"
-    source: git
-    version: "1.3.2"
+      name: photo_manager
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.3.9+1"
   platform:
     dependency: transitive
     description:
@@ -415,36 +401,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.0"
-  video_player:
-    dependency: transitive
-    description:
-      name: video_player
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.2.3"
-  video_player_platform_interface:
-    dependency: transitive
-    description:
-      name: video_player_platform_interface
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "4.2.0"
-  video_player_web:
-    dependency: transitive
-    description:
-      name: video_player_web
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.2"
-  wechat_assets_picker:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: master
-      resolved-ref: a71755cf8c752cfab8914e6678360a5dd34a2786
-      url: "git://github.com/Perceive-Software-Solutions/flutter_wechat_assets_picker"
-    source: git
-    version: "6.1.2"
   win32:
     dependency: transitive
     description:

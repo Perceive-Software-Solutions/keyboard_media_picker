@@ -4,10 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:keyboard_media_picker/Pickers/picker.dart';
 import 'package:keyboard_media_picker/delegates/album_picker_delegate.dart';
 import 'package:keyboard_media_picker/delegates/image_picker_delegate.dart';
+import 'package:keyboard_media_picker/provider/asset_picker_provider.dart';
 import 'package:keyboard_media_picker/util/keep_alive.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:provider/provider.dart';
-import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class ImagePicker extends StatefulWidget {
   final ImagePickerController? controller;

@@ -1,10 +1,12 @@
-## 0.0.1
+## 0.0.9
 
-* Created image picker delagate which references wechat_assets_picker
+* Reformatted dependencies
+* Removed WeChat plugin
 
-## 0.0.3
+## 0.0.8
 
-* Created an album picker delagate which references wechat_assets_picker
+* Removed Useless providers
+* Configured API Key
 
 ## 0.0.5
 
@@ -12,7 +14,10 @@
 * Created Giphy Picker Delagate
 * Attacked Both Giphy Picker and Image Picker to an overall wrapping widget Picker
 
-## 0.0.8
+## 0.0.3
 
-* Removed Useless providers
-* Configured API Key
+* Created an album picker delagate which references wechat_assets_picker
+
+## 0.0.1
+
+* Created image picker delagate which references wechat_assets_picker

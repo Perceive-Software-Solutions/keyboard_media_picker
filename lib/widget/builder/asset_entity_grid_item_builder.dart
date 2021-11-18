@@ -4,9 +4,7 @@
 ///
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
-
 import '../../provider/asset_entity_image_provider.dart';
-import '../../widget/scale_text.dart';
 
 class AssetEntityGridItemBuilder extends StatefulWidget {
   const AssetEntityGridItemBuilder({

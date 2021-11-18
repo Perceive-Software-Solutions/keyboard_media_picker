@@ -27,7 +27,6 @@
 .flutter-plugins
 .packages
 .flutter-plugins-dependencies
-pubspec.lock
 .pub-cache/
 .pub/
 /build/

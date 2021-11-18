@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:keyboard_media_picker/keyboard_media_picker.dart';
+import 'package:piky/piky.dart';
 
 
 void main() {
@@ -121,14 +121,14 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Picker(
-      apiKey: 'OI5ZOVhKTzf16it9QmrOZGSGdRudnk4H',
+      apiKey: 'Example',
       controller: pickerController,
       backgroundColor: Colors.white,
       initialExtent: 0.55,
       expandedExtent: 1.0,
       child: Scaffold(
           resizeToAvoidBottomInset: false,
-          backgroundColor: Colors.blue,
+          backgroundColor: Colors.white,
           body: Column(
             children: [
               Spacer(),

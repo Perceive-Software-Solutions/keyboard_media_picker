@@ -1,4 +1,4 @@
-# keyboard_media_picker
+# piky
 
 A new Flutter package project.
 

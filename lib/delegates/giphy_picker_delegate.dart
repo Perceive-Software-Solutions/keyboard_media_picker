@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:keyboard_media_picker/Pickers/giphy_picker.dart';
-import 'package:keyboard_media_picker/Pickers/imager_picker.dart';
-import 'package:keyboard_media_picker/provider/giphy_picker_provider.dart';
+import 'package:piky/Pickers/giphy_picker.dart';
+import 'package:piky/Pickers/imager_picker.dart';
+import 'package:piky/provider/giphy_picker_provider.dart';
 import 'package:provider/provider.dart';
 
 class GiphyPickerPickerBuilderDelegate {

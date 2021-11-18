@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:keyboard_media_picker/Pickers/imager_picker.dart';
-import 'package:keyboard_media_picker/provider/asset_entity_image_provider.dart';
-import 'package:keyboard_media_picker/provider/asset_picker_provider.dart';
-import 'package:keyboard_media_picker/widget/builder/asset_entity_grid_item_builder.dart';
+import 'package:piky/Pickers/imager_picker.dart';
+import 'package:piky/provider/asset_entity_image_provider.dart';
+import 'package:piky/provider/asset_picker_provider.dart';
+import 'package:piky/widget/builder/asset_entity_grid_item_builder.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';

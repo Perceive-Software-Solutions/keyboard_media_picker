@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:keyboard_media_picker/Pickers/giphy_picker.dart';
+import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import 'imager_picker.dart';

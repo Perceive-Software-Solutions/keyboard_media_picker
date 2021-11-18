@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:keyboard_media_picker/Pickers/picker.dart';
-import 'package:keyboard_media_picker/delegates/giphy_picker_delegate.dart';
-import 'package:keyboard_media_picker/provider/giphy_picker_provider.dart';
+import 'package:piky/Pickers/picker.dart';
+import 'package:piky/delegates/giphy_picker_delegate.dart';
+import 'package:piky/provider/giphy_picker_provider.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 
 import 'imager_picker.dart';

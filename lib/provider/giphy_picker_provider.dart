@@ -25,9 +25,6 @@ class GiphyPickerProvider extends ChangeNotifier {
   /// User `null` to display all assets into a single grid
   final int pageSize;
 
-  /// Connect your Giphy API Key to the client
-  final String apiKey = '';
-
   /// Stores a reference to giphy API
   late GiphyClient client;
 
@@ -83,7 +80,7 @@ class GiphyPickerProvider extends ChangeNotifier {
   }
 
   void initializeGiphyClient(String apiKey){
-    client = GiphyClient(apiKey: apiKey, randomId: '');
+    client = GiphyClient(apiKey: apiKey, randomId: '154');
   }
 
   /// Clears the [_displayAssets] and the [_totalAssetsCount]
@@ -110,7 +107,7 @@ class GiphyPickerProvider extends ChangeNotifier {
 
   /// Load more assets from trending state
   Future<void> loadMoreAssetsFromTrending(int offset) async {
-    GiphyCollection collection = await client.trending(offset: offset, limit: pageSize, rating: GiphyRating.r);
+    GiphyCollection collection = await client.trending(offset: offset, limit: pageSize);
     List<GiphyGif>? _list = collection.data;
     if(offset == 0){
       reset();

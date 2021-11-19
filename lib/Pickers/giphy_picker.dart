@@ -145,8 +145,9 @@ class _GiphyPickerState extends State<GiphyPicker> {
       if(scrollController.offset <= -80 && !snapping){
         if(sheetController.state!.extent == 1.0){
           snapping = true;
-          Future.delayed(Duration(milliseconds: 100), () {
+          Future.delayed(Duration(milliseconds: 150), () {
             sheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
+            focusNode.unfocus();
             sheetCubit.emit(false);
             Future.delayed(Duration(milliseconds: 300)).then((value) => {
               snapping = false
@@ -272,7 +273,7 @@ class _GiphyPickerState extends State<GiphyPicker> {
                     },
                     onTap: (){
                       setState(() {
-                        sheetController.expand();
+                        sheetController.snapToExtent(widget.expandedExtent, duration: Duration(milliseconds: 300));
                       });
                     },
                     onEditingComplete: (){

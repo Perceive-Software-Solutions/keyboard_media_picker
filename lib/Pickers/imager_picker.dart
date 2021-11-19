@@ -222,9 +222,11 @@ static const double HEADER_HEIGHT = 47.0;
                   snappings: [0.0, widget.initialExtent, widget.expandedExtent],
                   onSnap: (state, _){
                     if(state.isCollapsed){
+                      widget.pickerController.closeImagePicker();
+                    }
+                    if(state.extent == 0.55){
                       if(sheetCubit.state) sheetCubit.emit(false);
                       if(pageCubit.state) pageCubit.emit(false);
-                      widget.pickerController.closeImagePicker();
                     }
                     else if(state.isExpanded && !pageCubit.state){
                       if(!sheetCubit.state) sheetCubit.emit(true);

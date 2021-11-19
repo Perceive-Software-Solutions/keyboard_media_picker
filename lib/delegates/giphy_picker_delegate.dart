@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 class GiphyPickerPickerBuilderDelegate {
   GiphyPickerPickerBuilderDelegate(
     this.provider,
+    this.gridScrollController,
     this.giphyPickerController,
     this.sheetCubit,
     this.valueCubit, {
@@ -26,6 +27,9 @@ class GiphyPickerPickerBuilderDelegate {
   /// [ChangeNotifier] for giphy picker
   final GiphyPickerProvider provider;
 
+  /// The [ScrollController] for the preview grid.
+  final ScrollController gridScrollController;
+
   /// Controls the changes in state relative to the [SlidingSheet]
   /// 
   /// If the state is changed the imagePicker can change certain
@@ -39,9 +43,6 @@ class GiphyPickerPickerBuilderDelegate {
   final ConcreteCubit<String> valueCubit;
 
   final double initialExtent;
-
-  /// Primary [ScrollController] for the grid view
-  ScrollController gridController = ScrollController();
 
   /// Primary [TextEditingController] to get the current value of the [TextField]
   TextEditingController searchFieldController = TextEditingController();
@@ -95,17 +96,6 @@ class GiphyPickerPickerBuilderDelegate {
 
   //Build all containers that hold the gifs
   Widget assetItemBuilder(String url, String value, Map<String, double> currentAssets, int index){
-
-    // length of the currently loaded assets
-    int _length = currentAssets.length;
-
-     // load more assets when a offset of 6 is reached and has more to load
-    if (index == _length - 6) {
-      if(value == '')
-        provider.loadMoreAssetsFromTrending(currentAssets.length + 1);
-      else 
-        provider.loadMoreAssetsFromSearching(currentAssets.length + 1, value);
-    }
 
     // Render individual asset
     Widget _displayImage(){
@@ -183,8 +173,9 @@ class GiphyPickerPickerBuilderDelegate {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Container(
-                      height: !sheetCubitState ? height*0.4 - 60 : height,
+                      height: !sheetCubitState ? height*0.4 - 60 : height - 65 - MediaQuery.of(context).padding.top,
                       child: StaggeredGridView.countBuilder(
+                        controller: gridScrollController,
                         shrinkWrap: true,
                         mainAxisSpacing: 5,
                         crossAxisSpacing: 5,
@@ -210,13 +201,6 @@ class GiphyPickerPickerBuilderDelegate {
 
   /// Yes, the build method
   Widget build(BuildContext context) {
-
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-
-    //height of the screen
-    var height = MediaQuery.of(context).size.height;
-
     return ChangeNotifierProvider.value(
       value: provider,
       builder: (BuildContext context, _) {
@@ -226,15 +210,7 @@ class GiphyPickerPickerBuilderDelegate {
             return BlocBuilder<ConcreteCubit<bool>, bool>(
               bloc: sheetCubit,
               builder: (BuildContext context, bool sheetCubitState) {
-                return SingleChildScrollView(
-                  controller: gridController,
-                  child: Container(
-                    height: height,
-                    width: width,
-                    color: backgroundColor,
-                    child: hasAssetsToDisplay ? assetsGridBuilder(context, sheetCubitState) : loadingIndicator(context)
-                  ),
-                );
+                return hasAssetsToDisplay ? assetsGridBuilder(context, sheetCubitState) : loadingIndicator(context);
               }
             );
           }

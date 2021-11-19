@@ -194,9 +194,21 @@ class _PickerState extends State<Picker> {
               );
             },
             child: type == PickerType.ImagePicker ? 
-            ImagePicker(key: Key('ImagePicker'), controller: imagePickerController, pickerController: widget.controller, initialExtent: widget.initialExtent, expandedExtent: widget.expandedExtent) :
-            type == PickerType.GiphyPickerView ? 
-            GiphyPicker(key: Key('GiphyPicker'), apiKey: widget.apiKey, controller: giphyPickerController, initialExtent: widget.initialExtent, expandedExtent: widget.expandedExtent) :
+            ImagePicker(
+              key: Key('ImagePicker'), 
+              controller: imagePickerController, 
+              pickerController: widget.controller, 
+              initialExtent: widget.initialExtent, 
+              expandedExtent: widget.expandedExtent
+            ) : type == PickerType.GiphyPickerView ? 
+            GiphyPicker(
+              key: Key('GiphyPicker'), 
+              apiKey: widget.apiKey, 
+              controller: giphyPickerController, 
+              pickerController: widget.controller, 
+              initialExtent: widget.initialExtent, 
+              expandedExtent: widget.expandedExtent
+            ) :
             Container(),
           )
         ],

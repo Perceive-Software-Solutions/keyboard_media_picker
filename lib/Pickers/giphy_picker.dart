@@ -10,32 +10,47 @@ import 'imager_picker.dart';
 
 class GiphyPicker extends StatefulWidget {
 
+  /// Giphy Client API Key
   final String apiKey;
 
+  /// GiphyPicker State
   final GiphyPickerController? controller;
 
+  /// Picker State
+  final PickerController pickerController;
+
+  /// Initial extent of the [SlidingSheet]
   final double initialExtent;
 
+  /// Expanded extent of the [SlidingSheet]
   final double expandedExtent;
 
+  /// Background color when images are not loaded in
   final Color backgroundColor;
 
+  /// Search bar color
   final Color searchColor;
 
+  /// Cancel button
   final TextStyle cancelButtonStyle;
 
+  /// Search field hint text style
   final TextStyle hiddentTextStyle;
 
+  /// Search field hint icon style
   final TextStyle iconStyle;
 
+  /// Search field hint icon
   final Icon icon;
 
   GiphyPicker({
     required Key key,
+    required this.pickerController,
     required this.apiKey, 
     required this.controller, 
     required this.initialExtent, 
     required this.expandedExtent,
+
     this.cancelButtonStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
     this.hiddentTextStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
     this.icon = const Icon(Icons.search, size: 24, color: Colors.grey),
@@ -48,6 +63,30 @@ class GiphyPicker extends StatefulWidget {
 }
 
 class _GiphyPickerState extends State<GiphyPicker> {
+
+/*
+ 
+      ____                _   
+     / ___|___  _ __  ___| |_ 
+    | |   / _ \| '_ \/ __| __|
+    | |__| (_) | | | \__ \ |_ 
+     \____\___/|_| |_|___/\__|
+                              
+ 
+*/
+
+  static const double HEADER_HEIGHT = 50.0;
+
+/*
+ 
+     ____  _        _       
+    / ___|| |_ __ _| |_ ___ 
+    \___ \| __/ _` | __/ _ \
+     ___) | || (_| | ||  __/
+    |____/ \__\__,_|\__\___|
+                            
+ 
+*/
 
   /// Primary delegate for displaying assets
   late GiphyPickerPickerBuilderDelegate delegate;
@@ -77,17 +116,45 @@ class _GiphyPickerState extends State<GiphyPicker> {
   /// Primary [Cubit] to track the textfields current value
   ConcreteCubit<String> valueCubit = ConcreteCubit<String>('');
 
+  /// The [ScrollController] for the giphy preview grid
+  ScrollController giphyScrollController = ScrollController();
+
+  /// If the sliding sheet is currently snapping
+  bool snapping = false;
+
   //Adds a listener to the scroll position of the staggered grid view
   @override
   void initState() {
     super.initState();
-    provider = GiphyPickerProvider(pageSize: 40, apiKey: widget.apiKey);
+    provider = GiphyPickerProvider(pageSize: 43, apiKey: widget.apiKey);
     delegate = GiphyPickerPickerBuilderDelegate(
-      provider, 
+      provider,
+      giphyScrollController, 
       widget.controller,
       sheetCubit,
       valueCubit
     );
+
+    // Initiate Listeners
+    initiateListener(giphyScrollController);
+  }
+
+  /// Matches the sheetController state to the scroll offset of the feed
+  void initiateListener(ScrollController scrollController){
+    scrollController.addListener(() {
+      if(scrollController.offset <= -80 && !snapping){
+        if(sheetController.state!.extent == 1.0){
+          snapping = true;
+          Future.delayed(Duration(milliseconds: 100), () {
+            sheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
+            sheetCubit.emit(false);
+            Future.delayed(Duration(milliseconds: 300)).then((value) => {
+              snapping = false
+            });
+          });
+        }
+      }
+    });
   }
 
   @override
@@ -108,21 +175,26 @@ class _GiphyPickerState extends State<GiphyPicker> {
   Widget build(BuildContext context) {
 
     return SafeArea(
+      top: true,
       child: BlocProvider(
         create: (context) => valueCubit,
         child: BlocProvider(
           create: (context) => sheetCubit,
           child: SlidingSheet(
               controller: sheetController,
-              backdropColor: widget.backgroundColor,
+              backdropColor: Colors.transparent,
               closeOnBackdropTap: true,
               isBackdropInteractable: true,
+              duration: Duration(milliseconds: 300),
               snapSpec: SnapSpec(
                 initialSnap: widget.initialExtent,
-                snappings: [widget.initialExtent, widget.expandedExtent],
+                snappings: [0.0, widget.initialExtent, widget.expandedExtent],
                 onSnap: (state, _){
                   if(state.isCollapsed){
-                    sheetCubit.emit(false);
+                    widget.pickerController.closeGiphyPicker();
+                  }
+                  if(state.extent == 0.55){
+                    if(sheetCubit.state) sheetCubit.emit(false);
                   }
                   else if(state.isExpanded){
                     sheetCubit.emit(true);
@@ -130,21 +202,22 @@ class _GiphyPickerState extends State<GiphyPicker> {
                 },
               ),
               headerBuilder: (context, _){
-                return BlocBuilder<ConcreteCubit<bool>, bool>(
-                  bloc: sheetCubit,
-                  builder: (context, sheetCubitState) {
-                    return Container(
-                      color: widget.backgroundColor,
-                      child: _buildHeader(context, sheetCubitState),
-                    );
-                  }
+                return Container(
+                  color: widget.backgroundColor,
+                  child: _buildHeader(context),
                 );
               },
-              builder: (context, _){
+              customBuilder: (context, controller, sheetState){
                 if(delegate == null){
                   return Container();
                 }
-                return delegate.build(context);
+                return SingleChildScrollView(
+                  controller: controller,
+                  child: Container(
+                    height: MediaQuery.of(context).size.height - HEADER_HEIGHT - MediaQuery.of(context).padding.top,
+                    child: delegate.build(context)
+                  )
+                );
               },
             )
         ),
@@ -152,15 +225,13 @@ class _GiphyPickerState extends State<GiphyPicker> {
     );
   }
 
-  Widget _buildHeader(
-    BuildContext context,
-    bool sheetCubitState){
+  Widget _buildHeader(BuildContext context){
 
     //Width of the screen
     var width = MediaQuery.of(context).size.width;
 
     return Container(
-      height: 50,
+      height: HEADER_HEIGHT,
       child: Center(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 10),
@@ -196,10 +267,8 @@ class _GiphyPickerState extends State<GiphyPicker> {
                       ),
                     ),
                     onChanged: (value){
-                      setState(() {
-                        provider.loadMoreAssetsFromSearching(0, value);
-                        valueCubit.emit(value);
-                      });
+                      provider.loadMoreAssetsFromSearching(0, value);
+                      valueCubit.emit(value);
                     },
                     onTap: (){
                       setState(() {
@@ -220,10 +289,8 @@ class _GiphyPickerState extends State<GiphyPicker> {
                   child: Text('Cancel', style: widget.cancelButtonStyle),
                 ),
                 onTap: (){
-                  setState(() {
-                    focusNode.unfocus();
-                    valueCubit.emit('');
-                  });
+                  focusNode.unfocus();
+                  valueCubit.emit('');
                 },
               ) : Container()
             ],

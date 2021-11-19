@@ -59,12 +59,14 @@ class _ImagePickerState extends State<ImagePicker> {
   /// The primary [Cubit] for the page transition between [AssetPathEntity] and [AssetEntity]
   ConcreteCubit<bool> pageCubit = ConcreteCubit<bool>(false);
 
-  /// Filter option
-  FilterOptionGroup filer = FilterOptionGroup();
-
   @override
   void initState() {
     super.initState();
+
+    OrderOption order = OrderOption(asc: false, type: OrderOptionType.createDate);
+
+    /// Filter option
+    FilterOptionGroup filer = FilterOptionGroup(orders: [order]);
 
     provider = DefaultAssetPickerProvider(
       maxAssets: widget.controller!.imageCount, 

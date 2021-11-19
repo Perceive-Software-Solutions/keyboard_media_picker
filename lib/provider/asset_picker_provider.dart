@@ -284,7 +284,6 @@ class DefaultAssetPickerProvider
         needTitle: true,
         sizeConstraint: SizeConstraint(ignoreSize: true),
       ),
-      containsPathModified: true,
     );
 
     // Merge user's filter option into base options if it's not null.
@@ -292,10 +291,24 @@ class DefaultAssetPickerProvider
       options.merge(filterOptions!);
     }
 
-    final List<AssetPathEntity> _list = await PhotoManager.getAssetPathList(
+    // Get All Photos
+    final List<AssetPathEntity> _other = await PhotoManager.getAssetPathList(
+      onlyAll: true,
       type: requestType,
       filterOption: options,
     );
+
+    // Get all albums
+    final List<AssetPathEntity> _list = await PhotoManager.getAssetPathList(
+      type: requestType,
+      filterOption: options
+    );
+
+    // Remove recents from the list of albums
+    _list.removeWhere((element) => element.name == _other.first.name);
+
+    // Add recents into the first index
+    _list.insert(0, _other.first);
 
     for (final AssetPathEntity pathEntity in _list) {
       // Use sync method to avoid unnecessary wait.

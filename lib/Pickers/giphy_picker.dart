@@ -142,13 +142,14 @@ class _GiphyPickerState extends State<GiphyPicker> {
   /// Matches the sheetController state to the scroll offset of the feed
   void initiateListener(ScrollController scrollController){
     scrollController.addListener(() {
-      if(scrollController.offset <= -80 && !snapping){
+      if(scrollController.offset <= -20 && !snapping){
         if(sheetController.state!.extent == 1.0){
           snapping = true;
-          Future.delayed(Duration(milliseconds: 150), () {
+          Future.delayed(Duration(milliseconds: 0), () {
             sheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
             focusNode.unfocus();
             sheetCubit.emit(false);
+            scrollController.jumpTo(0.0);
             Future.delayed(Duration(milliseconds: 300)).then((value) => {
               snapping = false
             });
@@ -209,11 +210,18 @@ class _GiphyPickerState extends State<GiphyPicker> {
                 );
               },
               customBuilder: (context, controller, sheetState){
+                controller.addListener(() {
+                  if(controller.offset > 0 && !sheetCubit.state){
+                    sheetCubit.emit(true);
+                    sheetController.snapToExtent(widget.expandedExtent);
+                  }
+                });
                 if(delegate == null){
                   return Container();
                 }
                 return SingleChildScrollView(
                   controller: controller,
+                  physics: AlwaysScrollableScrollPhysics(),
                   child: Container(
                     height: MediaQuery.of(context).size.height - HEADER_HEIGHT - MediaQuery.of(context).padding.top,
                     child: delegate.build(context)

@@ -40,15 +40,11 @@ class ImagePickerBuilderDelegate {
   /// The [ScrollController] for the preview grid.
   final ScrollController gridScrollController = ScrollController();
 
-  /// The [ScrollController] for the [SingleChildScrollView]
-  final ScrollController mainScrollController = ScrollController();
-
   /// Keep a dispose method to sync with [State].
   ///
   /// Be aware that the method will do nothing when [keepScrollOffset] is true.
   void dispose() {
     gridScrollController.dispose();
-    mainScrollController.dispose();
   }
 
   //Takes an input [Key], and returns the index of the child element with that associated key, or null if not found.
@@ -331,28 +327,13 @@ class ImagePickerBuilderDelegate {
   
   /// Yes, the build method
   Widget build(BuildContext context){
-
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-
-    //height of the screen
-    var height = MediaQuery.of(context).size.height;
-    
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _){
         return Selector<DefaultAssetPickerProvider, bool>(
         selector: (_, DefaultAssetPickerProvider provider) => provider.hasAssetsToDisplay,
         builder: (_, bool hasAssetsToDisplay, __) {
-          return SingleChildScrollView(
-            controller: mainScrollController,
-            child: Container(
-              color: backgroundColor,
-              height: height,
-              width: width,
-              child: hasAssetsToDisplay ? assetsGridBuilder(context) : loadingIndicator(context),
-              ),
-            );
+          return hasAssetsToDisplay ? assetsGridBuilder(context) : loadingIndicator(context);
           }
         );
       }, 

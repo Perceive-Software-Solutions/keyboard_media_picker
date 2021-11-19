@@ -35,6 +35,30 @@ class ImagePicker extends StatefulWidget {
 
 class _ImagePickerState extends State<ImagePicker> {
 
+/*
+ 
+      ____                _   
+     / ___|___  _ __  ___| |_ 
+    | |   / _ \| '_ \/ __| __|
+    | |__| (_) | | | \__ \ |_ 
+     \____\___/|_| |_|___/\__|
+                              
+ 
+*/
+
+static const double HEADER_HEIGHT = 47.0;
+
+/*
+ 
+     ____  _        _       
+    / ___|| |_ __ _| |_ ___ 
+    \___ \| __/ _` | __/ _ \
+     ___) | || (_| | ||  __/
+    |____/ \__\__,_|\__\___|
+                            
+ 
+*/
+
   /// Primary provider for loading assets
   late DefaultAssetPickerProvider provider;
 
@@ -83,7 +107,8 @@ class _ImagePickerState extends State<ImagePicker> {
     imageDelegate = ImagePickerBuilderDelegate(
       provider,
       widget.controller,
-      gridCount: 4
+      gridCount: 4,
+      
     );
 
     albumDelegate = AlbumPickerBuilderDelegate(
@@ -129,7 +154,8 @@ class _ImagePickerState extends State<ImagePicker> {
 
     return KeepAliveWidget(
       key: Key('ImagePicker'),
-      child: SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
         child: BlocProvider(
           create: (context) => pageCubit,
           child: BlocProvider(
@@ -158,7 +184,7 @@ class _ImagePickerState extends State<ImagePicker> {
                     buildWhen: (o, n) => o != n,
                     builder: (context, sheetCubitState) {
                       return Container(
-                        height: 47,
+                        height: HEADER_HEIGHT,
                         color: Colors.white,
                         child: ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
                           value: provider,
@@ -197,14 +223,24 @@ class _ImagePickerState extends State<ImagePicker> {
                     }
                   );
                 },
-                builder: (context, _){
+                customBuilder: (context, controller, sheetState){
+                  double SAFE_AREA_PADDING = sheetState.isExpanded ? MediaQuery.of(context).padding.top : 0.0;
                   return BlocBuilder<ConcreteCubit<bool>, bool>(
                     bloc: pageCubit,
                     buildWhen: (o, n) => o != n,
                     builder: (context, state) {
-                      return !state ? 
-                      Container(key: Key("1"), child: imageDelegate.build(context)) : 
-                      Container(key: Key("2"), child: albumDelegate.build(context));
+                      return !state ? SingleChildScrollView(
+                        controller: controller,
+                        child: Container(
+                          key: Key("1"), 
+                          height: MediaQuery.of(context).size.height*sheetState.extent-HEADER_HEIGHT-SAFE_AREA_PADDING,
+                          child: imageDelegate.build(context)
+                        )
+                      ) : 
+                      Container(
+                        key: Key("2"), 
+                        child: albumDelegate.build(context)
+                      );
                     }
                   );
                 },
@@ -227,7 +263,7 @@ class _ImagePickerState extends State<ImagePicker> {
       //Max Extent
       return Container(
         key: Key("Picker-Max-View"),
-        height: 47,
+        height: HEADER_HEIGHT,
         color: widget.backgroundColor,
         child: GestureDetector(
           child: Row(
@@ -247,7 +283,7 @@ class _ImagePickerState extends State<ImagePicker> {
     else{
       //Min Extent
       return Container(
-        height: 47,
+        height: HEADER_HEIGHT,
         width: width,
         color: widget.backgroundColor,
         child: Padding(

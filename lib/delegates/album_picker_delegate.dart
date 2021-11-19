@@ -242,14 +242,9 @@ class AlbumPickerBuilderDelegate {
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _) {
-        return Container(
-          color: backgroundColor,
-          height: height,
-          width: width,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 16, right: 16, top: 5),
-            child: assetsGridBuilder(context),
-          ),
+        return Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 5),
+          child: assetsGridBuilder(context),
         );
       }, 
     );

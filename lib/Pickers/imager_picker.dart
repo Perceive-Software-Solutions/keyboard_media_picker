@@ -229,17 +229,17 @@ static const double HEADER_HEIGHT = 47.0;
                     bloc: pageCubit,
                     buildWhen: (o, n) => o != n,
                     builder: (context, state) {
-                      return !state ? SingleChildScrollView(
+                      return SingleChildScrollView(
                         controller: controller,
-                        child: Container(
+                        child: !state ? Container(
                           key: Key("1"), 
                           height: MediaQuery.of(context).size.height*sheetState.extent-HEADER_HEIGHT-SAFE_AREA_PADDING,
                           child: imageDelegate.build(context)
-                        )
-                      ) : 
-                      Container(
-                        key: Key("2"), 
-                        child: albumDelegate.build(context)
+                        ) : Container(
+                          key: Key("2"), 
+                          height: MediaQuery.of(context).size.height-HEADER_HEIGHT-SAFE_AREA_PADDING,
+                          child: albumDelegate.build(context)
+                        ),
                       );
                     }
                   );

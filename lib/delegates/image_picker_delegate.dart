@@ -9,24 +9,31 @@ import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:sliding_sheet/sliding_sheet.dart';
 
 
 
 class ImagePickerBuilderDelegate {
   ImagePickerBuilderDelegate(
     this.provider,
+    this.gridScrollController,
     this.imagePickerController, {
       this.gridCount = 4,
       this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-      this.backgroundColor = Colors.white
+      this.backgroundColor = Colors.white,
   });
 
+  /// Selected overlay style
   final TextStyle overlayStyle;
 
+  /// Background color behind the loaded images
   final Color backgroundColor;
 
   /// [ChangeNotifier] for asset picker
   final DefaultAssetPickerProvider provider;
+
+  /// The [ScrollController] for the preview grid.
+  final ScrollController gridScrollController;
 
   /// The column count inside of the [_sliverGrid]
   final int gridCount;
@@ -36,9 +43,6 @@ class ImagePickerBuilderDelegate {
   /// If the state is changed the imagePicker can change certain
   /// params inside of the [ImagePickerBuilderDelegate] accordingly
   final ImagePickerController? imagePickerController;
-
-  /// The [ScrollController] for the preview grid.
-  final ScrollController gridScrollController = ScrollController();
 
   /// Keep a dispose method to sync with [State].
   ///

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:sliding_sheet/sliding_sheet.dart';
 
 
 
@@ -17,21 +18,25 @@ class AlbumPickerBuilderDelegate {
   AlbumPickerBuilderDelegate(
     this.provider,
     this.pageCubit,
+    this.gridScrollController,
     this.imagePickerController, {
       this.gridCount = 3,
-      this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
       this.albumNameStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
       this.albumCountStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
       this.backgroundColor = Colors.white
   });
 
+  /// Text Style of displaying the album count
   final TextStyle albumCountStyle;
 
+  /// Text Style of displaying the album name
   final TextStyle albumNameStyle;
 
-  final TextStyle overlayStyle;
-
+  /// Background colour behind the loaded albums
   final Color backgroundColor;
+
+  /// The [ScrollController] for the preview grid.
+  final ScrollController gridScrollController;
 
   /// [ChangeNotifier] for asset picker
   final DefaultAssetPickerProvider provider;
@@ -48,18 +53,11 @@ class AlbumPickerBuilderDelegate {
   /// params inside of the [ImagePickerBuilderDelegate] accordingly
   final ImagePickerController? imagePickerController;
 
-  /// The [ScrollController] for the preview grid.
-  final ScrollController gridScrollController = ScrollController();
-
-  /// The [ScrollController] for the [SingleChildScrollView]
-  final ScrollController mainScrollController = ScrollController();
-
   /// Keep a dispose method to sync with [State].
   ///
   /// Be aware that the method will do nothing when [keepScrollOffset] is true.
   void dispose() {
     gridScrollController.dispose();
-    mainScrollController.dispose();
   }
 
   /// Whether the current platform is Apple OS.
@@ -91,40 +89,6 @@ class AlbumPickerBuilderDelegate {
     return Center(
       child: Container()
     );
-  }
-
-  /// Overlays [imageItemBuilder] amd [videoItemBuilder] to display the slected state
-  List<Widget> selectedOverlay(BuildContext context, AssetEntity asset){
-
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-    
-    return [
-      Positioned.fill(
-        child: Opacity(
-          opacity: 0.4,
-          child: Container(
-            height: width / 3,
-            width: width / 3,
-            color: Colors.black,
-          ),
-        ),
-      ),
-      Align(
-        alignment: Alignment.center,
-        child: Container(
-          height: 30,
-          width: 30,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius:BorderRadius.circular(30)),
-          child: Center(
-            child: Text(
-              (provider.selectedAssets.indexOf(asset) + 1).toString(),
-              style: overlayStyle,
-        )),
-      ))
-    ];
   }
 
   Widget thumbnailItemBuilder(
@@ -211,6 +175,7 @@ class AlbumPickerBuilderDelegate {
             crossAxisSpacing: 14,
             mainAxisSpacing: 16,
             maxCrossAxisExtent: width / 3,
+            controller: gridScrollController,
             children: [
               for(int i = 0; i < pathEntityList.length + placeholderCount + gridCount; i++)
                 if(i >= pathEntityList.length)
@@ -232,13 +197,6 @@ class AlbumPickerBuilderDelegate {
   
   /// Yes, the build method
   Widget build(BuildContext context){
-
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-
-    //height of the screen
-    var height = MediaQuery.of(context).size.height;
-    
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _) {

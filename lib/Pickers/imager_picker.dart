@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 class ImagePicker extends StatefulWidget {
   final ImagePickerController? controller;
+  final PickerController pickerController;
   final double initialExtent;
   final double expandedExtent;
   final TextStyle menuStyle;
@@ -21,6 +22,7 @@ class ImagePicker extends StatefulWidget {
   const ImagePicker({ 
     required Key key,
     required this.controller,
+    required this.pickerController,
     this.initialExtent = 0.4,
     this.expandedExtent = 1.0,
     this.menuStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
@@ -75,7 +77,7 @@ static const double HEADER_HEIGHT = 47.0;
   List<AssetEntity> selectedAssets = <AssetEntity>[];
 
   /// The primary controller for the [SlidingSheet]
-  final SheetController sheetController = SheetController();
+  SheetController sheetController = SheetController();
 
   /// The primary [Cubit] for the headerBuilder inside [SlidingSheet]
   ConcreteCubit<bool> sheetCubit = ConcreteCubit<bool>(false);
@@ -83,15 +85,26 @@ static const double HEADER_HEIGHT = 47.0;
   /// The primary [Cubit] for the page transition between [AssetPathEntity] and [AssetEntity]
   ConcreteCubit<bool> pageCubit = ConcreteCubit<bool>(false);
 
+  /// The [ScrollController] for the image preview grid
+  ScrollController imageGridScrollController = ScrollController();
+
+  /// The [ScrollController] for the album preview grid.
+  ScrollController albumGridScrollController = ScrollController();
+
+  /// If the sliding sheet is currently snapping
+  bool snapping = false;
+
   @override
   void initState() {
     super.initState();
 
+    /// Order images inside albums
     OrderOption order = OrderOption(asc: false, type: OrderOptionType.createDate);
 
     /// Filter option
     FilterOptionGroup filer = FilterOptionGroup(orders: [order]);
 
+    //Initiate provider
     provider = DefaultAssetPickerProvider(
       maxAssets: widget.controller!.imageCount, 
       pageSize: 120,
@@ -103,24 +116,32 @@ static const double HEADER_HEIGHT = 47.0;
       filterOptions: filer
     );
 
-    //Build delegate
+    //Build image delegate
     imageDelegate = ImagePickerBuilderDelegate(
       provider,
+      imageGridScrollController,
       widget.controller,
       gridCount: 4,
-      
     );
 
+    //Build album delegate
     albumDelegate = AlbumPickerBuilderDelegate(
       provider,
       pageCubit,
+      albumGridScrollController,
       widget.controller,
       gridCount: 2
     );
 
+    // Add already selected images
     initialSelect(widget.controller!.selectedAssets);
-
+    
+    // Constantly edit the state with selected assets
     addSelectedAssetstoState();
+
+    // Initiate listeners on scroll controllers
+    initiateListener(imageGridScrollController);
+    initiateListener(albumGridScrollController);
   }
 
 
@@ -131,6 +152,36 @@ static const double HEADER_HEIGHT = 47.0;
       //Binds the controller to this state
       widget.controller!._bind(this);
     }
+  }
+
+  void initiateListener(ScrollController scrollController){
+    scrollController.addListener(() {
+      if(scrollController.offset <= -80 && !snapping){
+        if(sheetController.state!.extent == 1.0){
+          snapping = true;
+          Future.delayed(Duration.zero, () {
+            sheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
+            sheetCubit.emit(false);
+            if(pageCubit.state){
+              pageCubit.emit(!pageCubit.state);
+            }
+            Future.delayed(Duration(milliseconds: 300)).then((value) => {
+              snapping = false
+            });
+          });
+        }
+        else if(sheetController.state!.extent == 0.55){
+          snapping = true;
+          Future.delayed(Duration.zero, () {
+            sheetController.snapToExtent(0.0, duration: Duration(milliseconds: 300));
+            widget.pickerController.closeImagePicker();
+          });
+          Future.delayed(Duration(milliseconds: 300)).then((value) => {
+            snapping = false
+          });
+        }
+      }
+    });
   }
 
   /// Adds the current selected assets to [ImagePicker] dynamically
@@ -162,16 +213,18 @@ static const double HEADER_HEIGHT = 47.0;
             create: (context) => sheetCubit,
             child: SlidingSheet(
                 controller: sheetController,
-                backdropColor: Colors.white,
+                backdropColor: Colors.transparent,
                 closeOnBackdropTap: true,
                 isBackdropInteractable: true,
+                duration: Duration(milliseconds: 300),
                 snapSpec: SnapSpec(
                   initialSnap: widget.initialExtent,
-                  snappings: [widget.initialExtent, widget.expandedExtent],
+                  snappings: [0.0, widget.initialExtent, widget.expandedExtent],
                   onSnap: (state, _){
                     if(state.isCollapsed){
                       if(sheetCubit.state) sheetCubit.emit(false);
                       if(pageCubit.state) pageCubit.emit(false);
+                      widget.pickerController.closeImagePicker();
                     }
                     else if(state.isExpanded && !pageCubit.state){
                       if(!sheetCubit.state) sheetCubit.emit(true);
@@ -225,6 +278,7 @@ static const double HEADER_HEIGHT = 47.0;
                 },
                 customBuilder: (context, controller, sheetState){
                   double SAFE_AREA_PADDING = sheetState.isExpanded ? MediaQuery.of(context).padding.top : 0.0;
+                  double height = sheetState.extent < widget.initialExtent ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*sheetState.extent;
                   return BlocBuilder<ConcreteCubit<bool>, bool>(
                     bloc: pageCubit,
                     buildWhen: (o, n) => o != n,
@@ -233,7 +287,7 @@ static const double HEADER_HEIGHT = 47.0;
                         controller: controller,
                         child: !state ? Container(
                           key: Key("1"), 
-                          height: MediaQuery.of(context).size.height*sheetState.extent-HEADER_HEIGHT-SAFE_AREA_PADDING,
+                          height: height-HEADER_HEIGHT-SAFE_AREA_PADDING,
                           child: imageDelegate.build(context)
                         ) : Container(
                           key: Key("2"), 

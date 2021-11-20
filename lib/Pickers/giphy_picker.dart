@@ -50,7 +50,6 @@ class GiphyPicker extends StatefulWidget {
     required this.controller, 
     required this.initialExtent, 
     required this.expandedExtent,
-
     this.cancelButtonStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
     this.hiddentTextStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
     this.icon = const Icon(Icons.search, size: 24, color: Colors.grey),
@@ -184,8 +183,6 @@ class _GiphyPickerState extends State<GiphyPicker> {
           create: (context) => sheetCubit,
           child: SlidingSheet(
               controller: sheetController,
-              backdropColor: Colors.transparent,
-              closeOnBackdropTap: true,
               isBackdropInteractable: true,
               duration: Duration(milliseconds: 300),
               snapSpec: SnapSpec(

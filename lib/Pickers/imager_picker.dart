@@ -213,8 +213,6 @@ static const double HEADER_HEIGHT = 47.0;
             create: (context) => sheetCubit,
             child: SlidingSheet(
                 controller: sheetController,
-                backdropColor: Colors.transparent,
-                closeOnBackdropTap: true,
                 isBackdropInteractable: true,
                 duration: Duration(milliseconds: 300),
                 snapSpec: SnapSpec(

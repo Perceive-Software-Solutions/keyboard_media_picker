@@ -211,31 +211,31 @@ static const double HEADER_HEIGHT = 47.0;
           create: (context) => pageCubit,
           child: BlocProvider(
             create: (context) => sheetCubit,
-            child: SlidingSheet(
-                controller: sheetController,
-                isBackdropInteractable: true,
-                duration: Duration(milliseconds: 300),
-                snapSpec: SnapSpec(
-                  initialSnap: widget.initialExtent,
-                  snappings: [0.0, widget.initialExtent, widget.expandedExtent],
-                  onSnap: (state, _){
-                    if(state.isCollapsed){
-                      widget.pickerController.closeImagePicker();
-                    }
-                    if(state.extent == 0.55){
-                      if(sheetCubit.state) sheetCubit.emit(false);
-                      if(pageCubit.state) pageCubit.emit(false);
-                    }
-                    else if(state.isExpanded && !pageCubit.state){
-                      if(!sheetCubit.state) sheetCubit.emit(true);
-                    }
-                  },
-                ),
-                headerBuilder: (context, _){
-                  return BlocBuilder<ConcreteCubit<bool>, bool>(
-                    bloc: sheetCubit,
-                    buildWhen: (o, n) => o != n,
-                    builder: (context, sheetCubitState) {
+            child: BlocBuilder<ConcreteCubit<bool>, bool>(
+              bloc: sheetCubit,
+              buildWhen: (o, n) => o != n,
+              builder: (context, sheetCubitState) {
+                return SlidingSheet(
+                    controller: sheetController,
+                    isBackdropInteractable: true,
+                    duration: Duration(milliseconds: 300),
+                    snapSpec: SnapSpec(
+                      initialSnap: widget.initialExtent,
+                      snappings: [0.0, widget.initialExtent, widget.expandedExtent],
+                      onSnap: (state, _){
+                        if(state.isCollapsed){
+                          widget.pickerController.closeImagePicker();
+                        }
+                        if(state.extent == 0.55){
+                          if(sheetCubit.state) sheetCubit.emit(false);
+                          if(pageCubit.state) pageCubit.emit(false);
+                        }
+                        else if(state.isExpanded && !pageCubit.state){
+                          if(!sheetCubit.state) sheetCubit.emit(true);
+                        }
+                      },
+                    ),
+                    headerBuilder: (context, _){
                       return Container(
                         height: HEADER_HEIGHT,
                         color: Colors.white,
@@ -273,32 +273,32 @@ static const double HEADER_HEIGHT = 47.0;
                           }
                         )
                       );
-                    }
-                  );
-                },
-                customBuilder: (context, controller, sheetState){
-                  double SAFE_AREA_PADDING = sheetState.isExpanded ? MediaQuery.of(context).padding.top : 0.0;
-                  double height = sheetState.extent < widget.initialExtent ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*sheetState.extent;
-                  return BlocBuilder<ConcreteCubit<bool>, bool>(
-                    bloc: pageCubit,
-                    buildWhen: (o, n) => o != n,
-                    builder: (context, state) {
-                      return SingleChildScrollView(
-                        controller: controller,
-                        child: !state ? Container(
-                          key: Key("1"), 
-                          height: height-HEADER_HEIGHT-SAFE_AREA_PADDING,
-                          child: imageDelegate.build(context)
-                        ) : Container(
-                          key: Key("2"), 
-                          height: MediaQuery.of(context).size.height-HEADER_HEIGHT-SAFE_AREA_PADDING,
-                          child: albumDelegate.build(context)
-                        ),
+                    },
+                    customBuilder: (context, controller, sheetState){
+                      double SAFE_AREA_PADDING = sheetCubitState ? MediaQuery.of(context).padding.top : 0.0;
+                      double height = sheetCubitState ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*0.55;
+                      return BlocBuilder<ConcreteCubit<bool>, bool>(
+                        bloc: pageCubit,
+                        buildWhen: (o, n) => o != n,
+                        builder: (context, state) {
+                          return SingleChildScrollView(
+                            controller: controller,
+                            child: !state ? Container(
+                              key: Key("1"), 
+                              height: height-HEADER_HEIGHT-SAFE_AREA_PADDING,
+                              child: imageDelegate.build(context)
+                            ) : Container(
+                              key: Key("2"), 
+                              height: MediaQuery.of(context).size.height-HEADER_HEIGHT-SAFE_AREA_PADDING,
+                              child: albumDelegate.build(context)
+                            ),
+                          );
+                        }
                       );
-                    }
+                    },
                   );
-                },
-              ),
+              }
+            ),
           ),
         ),
       ),

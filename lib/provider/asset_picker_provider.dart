@@ -291,6 +291,8 @@ class DefaultAssetPickerProvider
       options.merge(filterOptions!);
     }
 
+    PhotoManager.requestPermissionExtend(requestOption: PermisstionRequestOption());
+
     // Get All Photos
     final List<AssetPathEntity> _other = await PhotoManager.getAssetPathList(
       onlyAll: true,
@@ -301,7 +303,7 @@ class DefaultAssetPickerProvider
     // Get all albums
     final List<AssetPathEntity> _list = await PhotoManager.getAssetPathList(
       type: requestType,
-      filterOption: options
+      filterOption: options,
     );
 
     // Remove recents from the list of albums

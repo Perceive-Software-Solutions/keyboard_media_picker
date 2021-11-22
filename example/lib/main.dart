@@ -121,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Picker(
-      apiKey: 'OI5ZOVhKTzf16it9QmrOZGSGdRudnk4H',
+      apiKey: 'Example',
       controller: pickerController,
       backgroundColor: Colors.white,
       initialExtent: 0.55,

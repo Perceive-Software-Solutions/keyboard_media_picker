@@ -331,6 +331,7 @@ static const double HEADER_HEIGHT = 47.0;
         onTap: () {
           provider.getAssetPathList();
           pageCubit.emit(!pageCubit.state);
+          sheetCubit.emit(true);
         }),
       );
     }
@@ -352,6 +353,7 @@ static const double HEADER_HEIGHT = 47.0;
                 child: Text('All Photos', style: widget.menuStyle),
                 onTap: () {
                   pageCubit.emit(!pageCubit.state);
+                  sheetCubit.emit(true);
                   sheetController.expand();
                 },
               )

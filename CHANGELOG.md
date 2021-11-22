@@ -1,3 +1,11 @@
+## [0.1.0] v0.1.0
+
+* Updated scrolling on Giphy Picker
+* Updated Scrolling on Image Picker
+* Fixed Ordering of Images
+* Fixed grabbing the recents album (IOS)
+* Adder interactable background
+
 ## [0.0.11] v0.0.11
 
 * Renamed flutter repository

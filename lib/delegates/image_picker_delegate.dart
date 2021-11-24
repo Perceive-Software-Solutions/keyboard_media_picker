@@ -235,11 +235,6 @@ class ImagePickerBuilderDelegate {
           child: GestureDetector(
             child: child,
             onTap:(){
-              if(provider.selectedAssets.isNotEmpty){
-                if(provider.selectedAssets[0].videoDuration.inMilliseconds > 0){
-                  provider.unSelectAsset(provider.selectedAssets[0]);
-                }
-              }
               if(provider.selectedAssets.contains(currentAssets[index]))
                 provider.unSelectAsset(currentAssets[index]);
               else if(currentAssets[index].videoDuration.inMilliseconds > 0){
@@ -247,6 +242,12 @@ class ImagePickerBuilderDelegate {
                 provider.selectAsset(currentAssets[index]);
               }
               else provider.selectAsset(currentAssets[index]);
+
+              if(provider.selectedAssets.isNotEmpty){
+                if(provider.selectedAssets[0].videoDuration.inMilliseconds > 0 && provider.selectedAssets[0] != currentAssets[index]){
+                  provider.unSelectAsset(provider.selectedAssets[0]);
+                }
+              }
 
               imagePickerController!.update();
             }

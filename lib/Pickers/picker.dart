@@ -48,6 +48,10 @@ class Picker extends StatefulWidget {
   ///If not used [CircularProgressIndicator] will be its placeholder
   final Widget? imageLoadingIndicator;
 
+  ///Initiate Backdrop Colors
+  final Color minBackdropColor;
+  final Color maxBackdropColor;
+
   Picker({
     required this.apiKey,
     required this.child, 
@@ -59,7 +63,9 @@ class Picker extends StatefulWidget {
     this.minExtent = 0.0,
     this.mediumExtent = 0.55,
     this.expandedExtent= 1.0,
-    this.headerHeight = 50
+    this.headerHeight = 50,
+    this.minBackdropColor = Colors.transparent,
+    this.maxBackdropColor = Colors.black
   });
 
   @override
@@ -226,6 +232,8 @@ class _PickerState extends State<Picker> {
               headerBuilder: widget.imageHeaderBuilder,
               headerHeight: widget.headerHeight,
               loadingIndicator: widget.imageLoadingIndicator,
+              minBackdropColor: widget.minBackdropColor,
+              maxBackdropColor: widget.maxBackdropColor,
             ) : type == PickerType.GiphyPickerView ? 
             GiphyPicker(
               key: Key('GiphyPicker'), 

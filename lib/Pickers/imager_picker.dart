@@ -33,6 +33,10 @@ class ImagePicker extends StatefulWidget {
   /// If not used will have the base [CircularProgressIndicator] as placeholder
   final Widget? loadingIndicator;
 
+  /// Backdrop Colors
+  final Color minBackdropColor;
+  final Color maxBackdropColor;
+
   const ImagePicker({ 
     required Key key,
     required this.controller,
@@ -44,13 +48,15 @@ class ImagePicker extends StatefulWidget {
     this.mediumExtent = 0.4,
     this.expandedExtent = 1.0,
     this.headerHeight = 50,
+    this.minBackdropColor = Colors.transparent,
+    this.maxBackdropColor = Colors.black
   }) : super(key: key);
 
   @override
   _ImagePickerState createState() => _ImagePickerState();
 }
 
-class _ImagePickerState extends State<ImagePicker> {
+class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStateMixin {
 
 /*
  
@@ -71,6 +77,12 @@ class _ImagePickerState extends State<ImagePicker> {
 
   /// Primary delegate for displaying thumbnails
   late AlbumPickerBuilderDelegate albumDelegate;
+
+  /// Controls the animation of the backdrop color reletive the the [SlidingSheet]
+  late AnimationController animationController;
+
+  /// Animates the color from min extent to medium extent
+  late Animation<Color?> colorTween;
 
   /// The state of the [ImagePicker]
   Option type = Option.Open;
@@ -95,8 +107,6 @@ class _ImagePickerState extends State<ImagePicker> {
 
   /// If the sliding sheet is currently snapping
   bool snapping = false;
-
-
 
   @override
   void initState() {
@@ -137,6 +147,14 @@ class _ImagePickerState extends State<ImagePicker> {
       widget.controller,
       gridCount: 2
     );
+
+    //Initiate animation
+    animationController = AnimationController(
+      vsync: this,
+      value: widget.initialExtent/widget.mediumExtent,
+      duration: Duration(milliseconds: 0)
+    );
+    colorTween = ColorTween(begin: widget.minBackdropColor, end: widget.maxBackdropColor).animate(animationController);
 
     // Add already selected images
     initialSelect(widget.controller!.selectedAssets);
@@ -205,6 +223,12 @@ class _ImagePickerState extends State<ImagePicker> {
     }
   }
 
+  void sheetListener(SheetState state){
+    if(state.extent<= widget.mediumExtent && (state.extent - widget.minExtent) >= 0){
+      animationController.animateTo((state.extent - widget.minExtent) / widget.mediumExtent);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -233,91 +257,97 @@ class _ImagePickerState extends State<ImagePicker> {
             builder: (context, sheetCubitState) {
               return ColorfulSafeArea(
                 top: sheetCubitState,
-                color: Colors.black.withOpacity(0.5),
-                child: SlidingSheet(
-                    controller: sheetController,
-                    isBackdropInteractable: true,
-                    duration: Duration(milliseconds: 300),
-                    cornerRadius: 32,
-                    cornerRadiusOnFullscreen: 0,
-                    backdropColor:  Colors.black.withOpacity(0.5),
-                    snapSpec: SnapSpec(
-                      initialSnap: widget.initialExtent,
-                      snappings: [widget.minExtent, widget.mediumExtent, widget.expandedExtent],
-                      onSnap: (state, _){
-                        if(state.isCollapsed){
-                          widget.pickerController!.closeImagePicker();
-                        }
-                        if(state.extent == widget.mediumExtent){
-                          if(sheetCubit.state) sheetCubit.emit(false);
-                          if(pageCubit.state) pageCubit.emit(false);
-                        }
-                        else if(state.isExpanded && !pageCubit.state){
-                          if(!sheetCubit.state) sheetCubit.emit(true);
-                        }
-                      },
-                    ),
-                    headerBuilder: (context, state){
-                      return Container(
-                        height: widget.headerHeight,
-                        color: Colors.white,
-                        child: ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
-                          value: provider,
-                          builder: (context, snapshot) {
-                            return Selector<DefaultAssetPickerProvider, AssetPathEntity?>(
-                              selector: (_, DefaultAssetPickerProvider p) => p.currentPathEntity,
-                              builder: (BuildContext context, AssetPathEntity? _path, Widget? child) {
-                                return AnimatedSwitcher(
-                                  duration: Duration(milliseconds: 400),
-                                  transitionBuilder: (child, animation){
-                                    return FadeTransition(
-                                      opacity: CurvedAnimation(
-                                        parent: animation,
-                                        curve: Curves.easeOut,
-                                      ),
-                                      child: SlideTransition(
-                                        position: Tween<Offset>(
-                                          begin: const Offset(0, -1.5),
-                                          end: Offset.zero,
-                                        ).animate(CurvedAnimation(
-                                          parent: animation,
-                                          curve: Curves.easeInOutQuart,
-                                        )),
-                                        child: child
-                                      ),
+                color: widget.maxBackdropColor,
+                child: AnimatedBuilder(
+                  animation: colorTween,
+                  builder: (context, child) {
+                    return SlidingSheet(
+                        controller: sheetController,
+                        isBackdropInteractable: true,
+                        duration: Duration(milliseconds: 300),
+                        cornerRadius: 32,
+                        cornerRadiusOnFullscreen: 0,
+                        backdropColor: colorTween.value,
+                        listener: sheetListener,
+                        snapSpec: SnapSpec(
+                          initialSnap: widget.initialExtent,
+                          snappings: [widget.minExtent, widget.mediumExtent, widget.expandedExtent],
+                          onSnap: (state, _){
+                            if(state.isCollapsed){
+                              widget.pickerController!.closeImagePicker();
+                            }
+                            if(state.extent == widget.mediumExtent){
+                              if(sheetCubit.state) sheetCubit.emit(false);
+                              if(pageCubit.state) pageCubit.emit(false);
+                            }
+                            else if(state.isExpanded && !pageCubit.state){
+                              if(!sheetCubit.state) sheetCubit.emit(true);
+                            }
+                          },
+                        ),
+                        headerBuilder: (context, state){
+                          return Container(
+                            height: widget.headerHeight,
+                            color: Colors.white,
+                            child: ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
+                              value: provider,
+                              builder: (context, snapshot) {
+                                return Selector<DefaultAssetPickerProvider, AssetPathEntity?>(
+                                  selector: (_, DefaultAssetPickerProvider p) => p.currentPathEntity,
+                                  builder: (BuildContext context, AssetPathEntity? _path, Widget? child) {
+                                    return AnimatedSwitcher(
+                                      duration: Duration(milliseconds: 400),
+                                      transitionBuilder: (child, animation){
+                                        return FadeTransition(
+                                          opacity: CurvedAnimation(
+                                            parent: animation,
+                                            curve: Curves.easeOut,
+                                          ),
+                                          child: SlideTransition(
+                                            position: Tween<Offset>(
+                                              begin: const Offset(0, -1.5),
+                                              end: Offset.zero,
+                                            ).animate(CurvedAnimation(
+                                              parent: animation,
+                                              curve: Curves.easeInOutQuart,
+                                            )),
+                                            child: child
+                                          ),
+                                        );
+                                      },
+                                      child: _buildHeader(context, sheetCubitState, _path?.name ?? "Recents")
                                     );
-                                  },
-                                  child: _buildHeader(context, sheetCubitState, _path?.name ?? "Recents")
+                                  }
                                 );
                               }
-                            );
-                          }
-                        )
-                      );
-                    },
-                    customBuilder: (context, controller, sheetState){
-                      double SAFE_AREA_PADDING = sheetCubitState ? MediaQuery.of(context).padding.top : 0.0;
-                      double height = sheetCubitState ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*widget.mediumExtent;
-                      return BlocBuilder<ConcreteCubit<bool>, bool>(
-                        bloc: pageCubit,
-                        buildWhen: (o, n) => o != n,
-                        builder: (context, state) {
-                          return SingleChildScrollView(
-                            controller: controller,
-                            child: !state ? Container(
-                              key: Key("1"), 
-                              height: height-widget.headerHeight-SAFE_AREA_PADDING,
-                              child: imageDelegate.build(context)
-                            ) : Container(
-                              key: Key("2"), 
-                              height: MediaQuery.of(context).size.height-widget.headerHeight-SAFE_AREA_PADDING,
-                              child: albumDelegate.build(context)
-                            ),
+                            )
                           );
-                        }
+                        },
+                        customBuilder: (context, controller, sheetState){
+                          double SAFE_AREA_PADDING = sheetCubitState ? MediaQuery.of(context).padding.top : 0.0;
+                          double height = sheetCubitState ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*widget.mediumExtent;
+                          return BlocBuilder<ConcreteCubit<bool>, bool>(
+                            bloc: pageCubit,
+                            buildWhen: (o, n) => o != n,
+                            builder: (context, state) {
+                              return SingleChildScrollView(
+                                controller: controller,
+                                child: !state ? Container(
+                                  key: Key("1"), 
+                                  height: height-widget.headerHeight-SAFE_AREA_PADDING,
+                                  child: imageDelegate.build(context)
+                                ) : Container(
+                                  key: Key("2"), 
+                                  height: MediaQuery.of(context).size.height-widget.headerHeight-SAFE_AREA_PADDING,
+                                  child: albumDelegate.build(context)
+                                ),
+                              );
+                            }
+                          );
+                        },
                       );
-                    },
-                  ),
+                  }
+                ),
               );
             }
           ),

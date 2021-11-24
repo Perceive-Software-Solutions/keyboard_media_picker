@@ -193,6 +193,8 @@ class _MyHomePageState extends State<MyHomePage> {
       minExtent: 0.0,
       mediumExtent: 0.55,
       expandedExtent: 1.0,
+      minBackdropColor: Colors.transparent,
+      maxBackdropColor: Colors.black.withOpacity(0.4),
       imageLoadingIndicator: imageLoadingIndicator(),
       imageHeaderBuilder: (String path, bool state){
         return imageHeaderBuilder(path, state);

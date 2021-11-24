@@ -273,6 +273,10 @@ class DefaultAssetPickerProvider
 
   @override
   Future<void> getAssetPathList() async {
+
+    // Clear old list
+    _pathEntityList.clear();
+
     // Initial base options.
     // Enable need title for audios and image to get proper display.
     final FilterOptionGroup options = FilterOptionGroup(
@@ -343,6 +347,7 @@ class DefaultAssetPickerProvider
 
   @override
   Future<void> getAssetsFromEntity(int page, AssetPathEntity pathEntity) async {
+    _currentAssets.clear();
     _currentAssets = (await pathEntity.getAssetListPaged(
       page,
       pageSize,

@@ -18,10 +18,14 @@ class ImagePickerBuilderDelegate {
     this.provider,
     this.gridScrollController,
     this.imagePickerController, {
+      this.loadingIndicator,
       this.gridCount = 4,
       this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
       this.backgroundColor = Colors.white,
   });
+
+  /// When fetching the images this loading indicator will be used
+  final Widget? loadingIndicator;
 
   /// Selected overlay style
   final TextStyle overlayStyle;
@@ -58,7 +62,7 @@ class ImagePickerBuilderDelegate {
   }
 
   /// Loading indicator
-  Widget loadingIndicator(BuildContext context){
+  Widget exampleLoadingIndicator(BuildContext context){
     return Center(
       child: SizedBox.fromSize(
         size: Size.square(48.0),
@@ -337,7 +341,7 @@ class ImagePickerBuilderDelegate {
         return Selector<DefaultAssetPickerProvider, bool>(
         selector: (_, DefaultAssetPickerProvider provider) => provider.hasAssetsToDisplay,
         builder: (_, bool hasAssetsToDisplay, __) {
-          return hasAssetsToDisplay ? assetsGridBuilder(context) : loadingIndicator(context);
+          return hasAssetsToDisplay ? assetsGridBuilder(context) : loadingIndicator ?? exampleLoadingIndicator(context);
           }
         );
       }, 

@@ -1,3 +1,4 @@
+import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:piky/Pickers/picker.dart';
@@ -10,25 +11,39 @@ import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:provider/provider.dart';
 
 class ImagePicker extends StatefulWidget {
+  /// Controllers
   final ImagePickerController? controller;
-  final PickerController pickerController;
+  final PickerController? pickerController;
+
+  /// Sheet sizing extents
   final double initialExtent;
   final double expandedExtent;
-  final TextStyle menuStyle;
-  final TextStyle albumNameStyle;
-  final Color backgroundColor;
-  final Icon menuIcon;
+  final double mediumExtent;
+  final double minExtent;
+
+  /// Header Height
+  /// Must pass the height of the header widget to avoid overflow
+  final double headerHeight;
+
+  /// Header of the Media Picker at min Extent
+  /// Contains a String defining the most recent or current album name
+  final Widget Function(String, bool) headerBuilder;
+
+  /// Loading indicator when ImagePickerProvidor is still fetching the images
+  /// If not used will have the base [CircularProgressIndicator] as placeholder
+  final Widget? loadingIndicator;
 
   const ImagePicker({ 
     required Key key,
     required this.controller,
-    required this.pickerController,
+    required this.headerBuilder,
+    this.pickerController,
+    this.loadingIndicator,
+    this.minExtent = 0.0,
     this.initialExtent = 0.4,
+    this.mediumExtent = 0.4,
     this.expandedExtent = 1.0,
-    this.menuStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-    this.albumNameStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-    this.backgroundColor = Colors.white,
-    this.menuIcon = const Icon(Icons.download)
+    this.headerHeight = 50,
   }) : super(key: key);
 
   @override
@@ -36,19 +51,6 @@ class ImagePicker extends StatefulWidget {
 }
 
 class _ImagePickerState extends State<ImagePicker> {
-
-/*
- 
-      ____                _   
-     / ___|___  _ __  ___| |_ 
-    | |   / _ \| '_ \/ __| __|
-    | |__| (_) | | | \__ \ |_ 
-     \____\___/|_| |_|___/\__|
-                              
- 
-*/
-
-static const double HEADER_HEIGHT = 47.0;
 
 /*
  
@@ -94,6 +96,8 @@ static const double HEADER_HEIGHT = 47.0;
   /// If the sliding sheet is currently snapping
   bool snapping = false;
 
+
+
   @override
   void initState() {
     super.initState();
@@ -122,6 +126,7 @@ static const double HEADER_HEIGHT = 47.0;
       imageGridScrollController,
       widget.controller,
       gridCount: 4,
+      loadingIndicator: widget.loadingIndicator
     );
 
     //Build album delegate
@@ -170,11 +175,11 @@ static const double HEADER_HEIGHT = 47.0;
             });
           });
         }
-        else if(sheetController.state!.extent == 0.55){
+        else if(sheetController.state!.extent == widget.mediumExtent){
           snapping = true;
           Future.delayed(Duration.zero, () {
-            sheetController.snapToExtent(0.0, duration: Duration(milliseconds: 300));
-            widget.pickerController.closeImagePicker();
+            sheetController.snapToExtent(widget.minExtent, duration: Duration(milliseconds: 300));
+            widget.pickerController!.closeImagePicker();
           });
           Future.delayed(Duration(milliseconds: 300)).then((value) => {
             snapping = false
@@ -203,30 +208,47 @@ static const double HEADER_HEIGHT = 47.0;
   @override
   Widget build(BuildContext context) {
 
+    Widget _buildHeader(BuildContext context, bool sheetCubitState, String path){
+      //Max Extent
+      return GestureDetector(
+        onTap: () {
+          provider.getAssetPathList();
+          pageCubit.emit(!pageCubit.state);
+          sheetCubit.emit(true);
+          sheetController.expand();
+        },
+        child: widget.headerBuilder(path, sheetCubitState) 
+      );
+    }
+
     return KeepAliveWidget(
       key: Key('ImagePicker'),
-      child: Padding(
-        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      child: BlocProvider(
+        create: (context) => pageCubit,
         child: BlocProvider(
-          create: (context) => pageCubit,
-          child: BlocProvider(
-            create: (context) => sheetCubit,
-            child: BlocBuilder<ConcreteCubit<bool>, bool>(
-              bloc: sheetCubit,
-              buildWhen: (o, n) => o != n,
-              builder: (context, sheetCubitState) {
-                return SlidingSheet(
+          create: (context) => sheetCubit,
+          child: BlocBuilder<ConcreteCubit<bool>, bool>(
+            bloc: sheetCubit,
+            buildWhen: (o, n) => o != n,
+            builder: (context, sheetCubitState) {
+              return ColorfulSafeArea(
+                top: sheetCubitState,
+                color: Colors.black.withOpacity(0.5),
+                child: SlidingSheet(
                     controller: sheetController,
                     isBackdropInteractable: true,
                     duration: Duration(milliseconds: 300),
+                    cornerRadius: 32,
+                    cornerRadiusOnFullscreen: 0,
+                    backdropColor:  Colors.black.withOpacity(0.5),
                     snapSpec: SnapSpec(
                       initialSnap: widget.initialExtent,
-                      snappings: [0.0, widget.initialExtent, widget.expandedExtent],
+                      snappings: [widget.minExtent, widget.mediumExtent, widget.expandedExtent],
                       onSnap: (state, _){
                         if(state.isCollapsed){
-                          widget.pickerController.closeImagePicker();
+                          widget.pickerController!.closeImagePicker();
                         }
-                        if(state.extent == 0.55){
+                        if(state.extent == widget.mediumExtent){
                           if(sheetCubit.state) sheetCubit.emit(false);
                           if(pageCubit.state) pageCubit.emit(false);
                         }
@@ -235,9 +257,9 @@ static const double HEADER_HEIGHT = 47.0;
                         }
                       },
                     ),
-                    headerBuilder: (context, _){
+                    headerBuilder: (context, state){
                       return Container(
-                        height: HEADER_HEIGHT,
+                        height: widget.headerHeight,
                         color: Colors.white,
                         child: ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
                           value: provider,
@@ -248,7 +270,6 @@ static const double HEADER_HEIGHT = 47.0;
                                 return AnimatedSwitcher(
                                   duration: Duration(milliseconds: 400),
                                   transitionBuilder: (child, animation){
-                                    // return FadeTransition(opacity: animation, child: child,);
                                     return FadeTransition(
                                       opacity: CurvedAnimation(
                                         parent: animation,
@@ -276,7 +297,7 @@ static const double HEADER_HEIGHT = 47.0;
                     },
                     customBuilder: (context, controller, sheetState){
                       double SAFE_AREA_PADDING = sheetCubitState ? MediaQuery.of(context).padding.top : 0.0;
-                      double height = sheetCubitState ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*0.55;
+                      double height = sheetCubitState ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*widget.mediumExtent;
                       return BlocBuilder<ConcreteCubit<bool>, bool>(
                         bloc: pageCubit,
                         buildWhen: (o, n) => o != n,
@@ -285,83 +306,24 @@ static const double HEADER_HEIGHT = 47.0;
                             controller: controller,
                             child: !state ? Container(
                               key: Key("1"), 
-                              height: height-HEADER_HEIGHT-SAFE_AREA_PADDING,
+                              height: height-widget.headerHeight-SAFE_AREA_PADDING,
                               child: imageDelegate.build(context)
                             ) : Container(
                               key: Key("2"), 
-                              height: MediaQuery.of(context).size.height-HEADER_HEIGHT-SAFE_AREA_PADDING,
+                              height: MediaQuery.of(context).size.height-widget.headerHeight-SAFE_AREA_PADDING,
                               child: albumDelegate.build(context)
                             ),
                           );
                         }
                       );
                     },
-                  );
-              }
-            ),
+                  ),
+              );
+            }
           ),
         ),
       ),
     );
-  }
-
-  Widget _buildHeader(
-    BuildContext context, 
-    bool sheetCubitState, 
-    String path){
-    
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-
-    if(sheetCubitState){
-      //Max Extent
-      return Container(
-        key: Key("Picker-Max-View"),
-        height: HEADER_HEIGHT,
-        color: widget.backgroundColor,
-        child: GestureDetector(
-          child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(pageCubit.state ? 'All Photos' : path, style: widget.menuStyle),
-            widget.menuIcon
-          ],
-        ),
-        onTap: () {
-          provider.getAssetPathList();
-          pageCubit.emit(!pageCubit.state);
-          sheetCubit.emit(true);
-        }),
-      );
-    }
-    else{
-      //Min Extent
-      return Container(
-        height: HEADER_HEIGHT,
-        width: width,
-        color: widget.backgroundColor,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(path, style: widget.albumNameStyle),
-              Spacer(),
-              GestureDetector(
-                child: Text('All Photos', style: widget.menuStyle),
-                onTap: () {
-                  pageCubit.emit(!pageCubit.state);
-                  sheetCubit.emit(true);
-                  sheetController.expand();
-                },
-              )
-            ],
-          ),
-        ),
-      );
-    }
   }
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:piky/piky.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 
 void main() {
@@ -37,9 +38,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String? gifAsset;
 
+  late ScrollController scrollController;
+
   @override
   void initState() {
     super.initState();
+
+    scrollController = ScrollController();
     pickerController = PickerController(
       onGiphyReceived: (value){
         setState(() {
@@ -118,14 +123,80 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Widget imageHeaderBuilder(String path, bool state){
+    return Container(
+      key: Key("Picker-Max-View"),
+      height: 59.75,
+      color: Colors.grey,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 2.0),
+            child: Text(path, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          ),
+          Icon(!state ? Icons.arrow_downward : Icons.arrow_upward, size: 16)
+        ],
+      ),
+    );
+  }
+
+  Widget itemBuilder(int index){
+    return AnimationConfiguration.staggeredGrid(
+      columnCount: 4,
+      position: index,
+      duration: const Duration(milliseconds: 375),
+      child: ScaleAnimation(
+        child: FadeInAnimation(
+          child: Container(
+            height: 200,
+            width: 200,
+            color: Colors.grey.withOpacity(0.4),
+          ),
+        )
+      )
+    );
+  }
+
+  Widget imageLoadingIndicator(){
+    return CustomScrollView(
+      scrollDirection: Axis.vertical,
+      physics: NeverScrollableScrollPhysics(),
+      controller: scrollController,
+      slivers: [
+        SliverGrid(
+          delegate: SliverChildBuilderDelegate((_, int index) => Builder(
+            builder: (BuildContext c){
+              return itemBuilder(index);
+              },
+            ),
+            childCount: 100,
+          ), 
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisSpacing: 1,
+            crossAxisSpacing: 1
+          )
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Picker(
-      apiKey: 'Example',
+      apiKey: 'OI5ZOVhKTzf16it9QmrOZGSGdRudnk4H',
       controller: pickerController,
       backgroundColor: Colors.white,
       initialExtent: 0.55,
+      minExtent: 0.0,
+      mediumExtent: 0.55,
       expandedExtent: 1.0,
+      imageLoadingIndicator: imageLoadingIndicator(),
+      imageHeaderBuilder: (String path, bool state){
+        return imageHeaderBuilder(path, state);
+      },
       child: Scaffold(
           resizeToAvoidBottomInset: false,
           backgroundColor: Colors.white,

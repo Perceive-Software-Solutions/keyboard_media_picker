@@ -1,3 +1,7 @@
+## [0.1.1] v0.1.1
+
+* Fixed Expanded media
+
 ## [0.1.0] v0.1.0
 
 * Updated scrolling on Giphy Picker

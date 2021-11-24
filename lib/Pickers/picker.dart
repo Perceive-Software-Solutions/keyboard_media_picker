@@ -16,29 +16,50 @@ enum Option {
 
 class Picker extends StatefulWidget {
 
+  ///Giphy API Key
   final String apiKey;
 
   ///Child be padded when image or giphy picker is shown
   final Widget child;
 
-  ///Background color of picker
+  ///Background color behind the image picker
+  ///Is seen when neither the Image picker or the Giphy picker is loaded
   final Color backgroundColor;
 
   ///Picker of controller
   final PickerController controller;
-  ///Initial extent of the sheet
-  final double initialExtent;
 
-  ///Expanded extent of the sheet
+  ///Sliding Sheet Extents
+  final double initialExtent;
+  final double minExtent;
+  final double mediumExtent;
   final double expandedExtent;
+
+  ///MaxExtentHeaderBuilder For the ImagePicker
+  ///Displayed when the sliding sheet current extent reaches expanded extent
+  final Widget Function(String, bool) imageHeaderBuilder;
+
+  ///The height of either the minExtentHeaderBuilder or the height of the maxExtentHeaderBuilder
+  ///Header height should always be passed in specifying the height of maxExtentImageHeaderBuilder
+  ///or minExtentImageHeaderBuilder so the offset of the sliding sheet can be set accordingly
+  final double headerHeight;
+
+  ///Loading Indicator for the Media Viewer
+  ///If not used [CircularProgressIndicator] will be its placeholder
+  final Widget? imageLoadingIndicator;
 
   Picker({
     required this.apiKey,
     required this.child, 
     required this.backgroundColor, 
     required this.controller,  
-    this.initialExtent = 0.4, 
-    this.expandedExtent= 1.0
+    required this.imageHeaderBuilder,
+    this.imageLoadingIndicator,
+    this.initialExtent = 0.55, 
+    this.minExtent = 0.0,
+    this.mediumExtent = 0.55,
+    this.expandedExtent= 1.0,
+    this.headerHeight = 50
   });
 
   @override
@@ -199,7 +220,12 @@ class _PickerState extends State<Picker> {
               controller: imagePickerController, 
               pickerController: widget.controller, 
               initialExtent: widget.initialExtent, 
-              expandedExtent: widget.expandedExtent
+              minExtent: widget.minExtent,
+              mediumExtent: widget.mediumExtent,
+              expandedExtent: widget.expandedExtent,
+              headerBuilder: widget.imageHeaderBuilder,
+              headerHeight: widget.headerHeight,
+              loadingIndicator: widget.imageLoadingIndicator,
             ) : type == PickerType.GiphyPickerView ? 
             GiphyPicker(
               key: Key('GiphyPicker'), 
@@ -221,7 +247,9 @@ class PickerController extends ChangeNotifier{
 
   _PickerState? _state;
 
+  ///If a image is selected inside of the ImagePicker
   Function(List<AssetEntity>? images) onImageReceived;
+  ///If a Giphy is selected inside of the GiphyPicker
   Function(String? gif) onGiphyReceived;
 
   PickerController({required this.onGiphyReceived, required this.onImageReceived});

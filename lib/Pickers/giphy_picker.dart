@@ -17,7 +17,7 @@ class GiphyPicker extends StatefulWidget {
   final GiphyPickerController? controller;
 
   /// Picker State
-  final PickerController pickerController;
+  final PickerController? pickerController;
 
   /// Initial extent of the [SlidingSheet]
   final double initialExtent;
@@ -45,11 +45,11 @@ class GiphyPicker extends StatefulWidget {
 
   GiphyPicker({
     required Key key,
-    required this.pickerController,
     required this.apiKey, 
     required this.controller, 
     required this.initialExtent, 
     required this.expandedExtent,
+    this.pickerController,
     this.cancelButtonStyle = const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black),
     this.hiddentTextStyle = const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black),
     this.icon = const Icon(Icons.search, size: 24, color: Colors.grey),
@@ -190,7 +190,7 @@ class _GiphyPickerState extends State<GiphyPicker> {
                 snappings: [0.0, widget.initialExtent, widget.expandedExtent],
                 onSnap: (state, _){
                   if(state.isCollapsed){
-                    widget.pickerController.closeGiphyPicker();
+                    widget.pickerController!.closeGiphyPicker();
                   }
                   if(state.extent == 0.55){
                     if(sheetCubit.state) sheetCubit.emit(false);

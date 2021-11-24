@@ -291,8 +291,6 @@ class DefaultAssetPickerProvider
       options.merge(filterOptions!);
     }
 
-    PhotoManager.requestPermissionExtend(requestOption: PermisstionRequestOption());
-
     // Get All Photos
     final List<AssetPathEntity> _other = await PhotoManager.getAssetPathList(
       onlyAll: true,
@@ -305,6 +303,7 @@ class DefaultAssetPickerProvider
       type: requestType,
       filterOption: options,
     );
+
 
     // Remove recents from the list of albums
     _list.removeWhere((element) => element.name == _other.first.name);

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -39,6 +41,10 @@ class Picker extends StatefulWidget {
   ///Displayed when the sliding sheet current extent reaches expanded extent
   final Widget Function(String, bool) imageHeaderBuilder;
 
+  /// Builds the album menu of the image picker
+  /// Contains a list of [AssetEntity] mapped to [Uint8List]'s for thumbnails and information
+  final Widget Function(Map<AssetPathEntity, Uint8List?>, ScrollController, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+
   ///The height of either the minExtentHeaderBuilder or the height of the maxExtentHeaderBuilder
   ///Header height should always be passed in specifying the height of maxExtentImageHeaderBuilder
   ///or minExtentImageHeaderBuilder so the offset of the sliding sheet can be set accordingly
@@ -58,6 +64,7 @@ class Picker extends StatefulWidget {
     required this.backgroundColor, 
     required this.controller,  
     required this.imageHeaderBuilder,
+    required this.albumMenuBuilder,
     this.imageLoadingIndicator,
     this.initialExtent = 0.55, 
     this.minExtent = 0.0,
@@ -230,6 +237,7 @@ class _PickerState extends State<Picker> {
               mediumExtent: widget.mediumExtent,
               expandedExtent: widget.expandedExtent,
               headerBuilder: widget.imageHeaderBuilder,
+              albumMenuBuilder: widget.albumMenuBuilder,
               headerHeight: widget.headerHeight,
               loadingIndicator: widget.imageLoadingIndicator,
               minBackdropColor: widget.minBackdropColor,

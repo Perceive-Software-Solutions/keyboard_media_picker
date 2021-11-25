@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,6 +31,10 @@ class ImagePicker extends StatefulWidget {
   /// Contains a String defining the most recent or current album name
   final Widget Function(String, bool) headerBuilder;
 
+  /// Builds the album menu of the image picker
+  /// Contains a list of [AssetEntity] mapped to [Uint8List]'s for thumbnails and information
+  final Widget Function(Map<AssetPathEntity, Uint8List?>, ScrollController, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+
   /// Loading indicator when ImagePickerProvidor is still fetching the images
   /// If not used will have the base [CircularProgressIndicator] as placeholder
   final Widget? loadingIndicator;
@@ -41,6 +47,7 @@ class ImagePicker extends StatefulWidget {
     required Key key,
     required this.controller,
     required this.headerBuilder,
+    required this.albumMenuBuilder,
     this.pickerController,
     this.loadingIndicator,
     this.minExtent = 0.0,
@@ -144,6 +151,8 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       provider,
       pageCubit,
       albumGridScrollController,
+
+      widget.albumMenuBuilder,
       widget.controller,
       gridCount: 2
     );
@@ -209,11 +218,13 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
 
   /// Adds the current selected assets to [ImagePicker] dynamically
   void addSelectedAssetstoState(){
-    provider.addListener(() { 
-      setState(() {
-        selectedAssets = provider.selectedAssets;
+    if(mounted){
+      provider.addListener(() { 
+        setState(() {
+          selectedAssets = provider.selectedAssets;
+        });
       });
-    });
+    }
   }
 
   /// Initially selects assets if they have been previously selected

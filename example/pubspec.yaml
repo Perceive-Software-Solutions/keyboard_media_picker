@@ -37,6 +37,7 @@ dependency_overrides:
 
 dev_dependencies:
   flutter_staggered_animations: ^1.0.0
+  flutter_bloc: ^7.2.0
   flutter_test:
     sdk: flutter
 

@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:piky/piky.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 
 void main() {
@@ -183,6 +186,147 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  /// Builds the overlapping thumbnail
+  Widget thumbnailItemBuilder(
+    BuildContext context, Uint8List? thumbNail){
+      Widget assetItemBuilder(){
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            height: 36,
+            width: 36,
+            child: thumbNail != null ? Image.memory(
+              thumbNail,
+              filterQuality: FilterQuality.high,
+              fit: BoxFit.fitWidth,
+            ) : Container()
+          ),
+        );
+      }
+
+    if(thumbNail != null)
+      return assetItemBuilder();
+    else
+      return SizedBox.shrink();
+    
+  }
+
+  Widget tileItemBuilder(BuildContext context, AssetPathEntity? assetPathEntity, Uint8List? thumbNail, dynamic Function(AssetPathEntity) onTap){
+    return GestureDetector(
+      child: Container(
+        color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: thumbnailItemBuilder(context, thumbNail),
+              ),
+              Container(
+                height: 36,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2.5, bottom: 2.5),
+                  child: assetPathEntity != null ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(assetPathEntity.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      Text(assetPathEntity.assetCount.toString(), style: TextStyle(fontSize: 12, color: Colors.grey.withOpacity(0.4)))
+                    ],
+                  ) : SizedBox.shrink(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      onTap: assetPathEntity != null ? (){
+        onTap(assetPathEntity);
+      } : (){},
+    );
+  }
+
+  Widget albumMenuBuilder(Map<AssetPathEntity, Uint8List?> pathEntityList, ScrollController controller, dynamic Function(AssetPathEntity) onTap){
+    AssetPathEntity? recents; 
+    AssetPathEntity? favorites;
+    if(pathEntityList.isNotEmpty){
+      recents = pathEntityList.keys.firstWhere((element) => element.name == "Recents");
+      favorites = pathEntityList.keys.firstWhere((element) => element.name == "Favorites");
+    }
+    List<Widget> children = [];
+    pathEntityList.forEach((key, value) { 
+      if(key.name != "Recents" && key.name != "Favorites")
+        children.add(tileItemBuilder(context, key, value, onTap));
+    });
+    Widget _cupertinoList(Map<AssetPathEntity, Uint8List?> assets){
+      return ListView(
+        padding: const EdgeInsets.only(top: 16, bottom: 16, left: 8, right: 8),
+        physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        controller: controller,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text('Pick an album', style: TextStyle(fontSize: 12, color: Colors.grey.withOpacity(0.4))),
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: Container(
+              color: Colors.white,
+              height: 124,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  tileItemBuilder(context, recents, pathEntityList[recents], onTap),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 62, top: 10, bottom: 10),
+                    child: Container(
+                      height: 1,
+                      color: Colors.grey.withOpacity(0.4),
+                    ),
+                  ),
+                  tileItemBuilder(context, favorites, pathEntityList[favorites], onTap)
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 20, bottom: 10, left: 8),
+            child: Text('My Albums', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),),
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: Container(
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 16, bottom: 16),
+                child: Column(
+                  children: [
+                    for(int i = 0; i < children.length; i++)
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          children[i],
+                          i != children.length - 1 ? Padding(
+                            padding: const EdgeInsets.only(left: 62, top: 10, bottom: 10),
+                            child: Container(
+                              height: 1,
+                              color: Colors.grey.withOpacity(0.4),
+                            ),
+                          ) : SizedBox.shrink()
+                        ],
+                      )
+                  ]
+                ),
+              ),
+            ),
+          )
+        ],
+      );
+    }
+
+    return _cupertinoList(pathEntityList);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Picker(
@@ -196,9 +340,9 @@ class _MyHomePageState extends State<MyHomePage> {
       minBackdropColor: Colors.transparent,
       maxBackdropColor: Colors.black.withOpacity(0.4),
       imageLoadingIndicator: imageLoadingIndicator(),
-      imageHeaderBuilder: (String path, bool state){
-        return imageHeaderBuilder(path, state);
-      },
+      imageHeaderBuilder: imageHeaderBuilder,
+      albumMenuBuilder: albumMenuBuilder,
+      
       child: Scaffold(
           resizeToAvoidBottomInset: false,
           backgroundColor: Colors.white,
@@ -271,4 +415,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
   }
+}
+
+class ConcreteCubit<T> extends Cubit<T> {
+  ConcreteCubit(T initialState) : super(initialState);
 }

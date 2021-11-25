@@ -274,11 +274,12 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                   builder: (context, child) {
                     return SlidingSheet(
                         controller: sheetController,
-                        isBackdropInteractable: true,
+                        isBackdropInteractable: false,
                         duration: Duration(milliseconds: 300),
                         cornerRadius: 32,
                         cornerRadiusOnFullscreen: 0,
                         backdropColor: colorTween.value,
+                        
                         listener: sheetListener,
                         snapSpec: SnapSpec(
                           initialSnap: widget.initialExtent,

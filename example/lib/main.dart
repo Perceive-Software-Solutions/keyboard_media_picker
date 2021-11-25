@@ -342,7 +342,6 @@ class _MyHomePageState extends State<MyHomePage> {
       imageLoadingIndicator: imageLoadingIndicator(),
       imageHeaderBuilder: imageHeaderBuilder,
       albumMenuBuilder: albumMenuBuilder,
-      
       child: Scaffold(
           resizeToAvoidBottomInset: false,
           backgroundColor: Colors.white,

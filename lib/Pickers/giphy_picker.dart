@@ -19,11 +19,14 @@ class GiphyPicker extends StatefulWidget {
   /// Picker State
   final PickerController? pickerController;
 
-  /// Initial extent of the [SlidingSheet]
+  /// [SlidingSheet] extents
   final double initialExtent;
-
-  /// Expanded extent of the [SlidingSheet]
+  final double minExtent;
+  final double mediumExtent;
   final double expandedExtent;
+
+  /// Height of the header widget
+  final double headerHeight;
 
   /// Background color when images are not loaded in
   final Color backgroundColor;
@@ -47,12 +50,15 @@ class GiphyPicker extends StatefulWidget {
     required Key key,
     required this.apiKey, 
     required this.controller, 
-    required this.initialExtent, 
-    required this.expandedExtent,
+    this.minExtent = 0.0,
+    this.initialExtent = 0.4,
+    this.mediumExtent = 0.4,
+    this.expandedExtent = 1.0,
+    this.headerHeight = 50,
     this.pickerController,
     this.cancelButtonStyle = const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black),
-    this.hiddentTextStyle = const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black),
-    this.icon = const Icon(Icons.search, size: 24, color: Colors.grey),
+    this.hiddentTextStyle = const TextStyle(fontSize: 14, color: Colors.black),
+    this.icon = const Icon(Icons.search, size: 24, color: Colors.black),
     this.iconStyle = const TextStyle(color: Colors.grey),
     this.backgroundColor = Colors.white,
     this.searchColor = Colors.grey
@@ -113,7 +119,7 @@ class _GiphyPickerState extends State<GiphyPicker> {
   ConcreteCubit<bool> sheetCubit = ConcreteCubit<bool>(false);
 
   /// Primary [Cubit] to track the textfields current value
-  ConcreteCubit<String> valueCubit = ConcreteCubit<String>('');
+  String searchValue = '';
 
   /// The [ScrollController] for the giphy preview grid
   ScrollController giphyScrollController = ScrollController();
@@ -121,25 +127,56 @@ class _GiphyPickerState extends State<GiphyPicker> {
   /// If the sliding sheet is currently snapping
   bool snapping = false;
 
+  /// If assets are finished loading
+  bool assetsLoadingComplete = false;
+
+  /// If the search is currently queued up
+  bool queued = true;
+
   //Adds a listener to the scroll position of the staggered grid view
   @override
   void initState() {
     super.initState();
-    provider = GiphyPickerProvider(pageSize: 43, apiKey: widget.apiKey);
+    provider = GiphyPickerProvider(pageSize: 20, apiKey: widget.apiKey);
     delegate = GiphyPickerPickerBuilderDelegate(
       provider,
       giphyScrollController, 
       widget.controller,
       sheetCubit,
-      valueCubit
+      initialExtent: widget.initialExtent
     );
 
     // Initiate Listeners
-    initiateListener(giphyScrollController);
+    initiateScrollListener(giphyScrollController);
+    initiateSearchListener();
+
+  }
+
+
+
+  void searchGiphy(String value){
+    searchValue = value;
+    if(assetsLoadingComplete == false){
+      queued = true;
+    }
+    else if(assetsLoadingComplete){
+      provider.loadMoreAssetsFromSearching(0, searchValue);
+      queued = false;
+    }
+  }
+
+  void initiateSearchListener(){
+    provider.addListener(() { 
+      print(provider.assetsLoadingComplete);
+      assetsLoadingComplete = provider.assetsLoadingComplete;
+    });
+    if(queued){
+      searchGiphy(searchValue);
+    }
   }
 
   /// Matches the sheetController state to the scroll offset of the feed
-  void initiateListener(ScrollController scrollController){
+  void initiateScrollListener(ScrollController scrollController){
     scrollController.addListener(() {
       if(scrollController.offset <= -20 && !snapping){
         if(sheetController.state!.extent == 1.0){
@@ -178,55 +215,52 @@ class _GiphyPickerState extends State<GiphyPicker> {
     return SafeArea(
       top: true,
       child: BlocProvider(
-        create: (context) => valueCubit,
-        child: BlocProvider(
-          create: (context) => sheetCubit,
-          child: SlidingSheet(
-              controller: sheetController,
-              isBackdropInteractable: true,
-              duration: Duration(milliseconds: 300),
-              snapSpec: SnapSpec(
-                initialSnap: widget.initialExtent,
-                snappings: [0.0, widget.initialExtent, widget.expandedExtent],
-                onSnap: (state, _){
-                  if(state.isCollapsed){
-                    widget.pickerController!.closeGiphyPicker();
-                  }
-                  if(state.extent == 0.55){
-                    if(sheetCubit.state) sheetCubit.emit(false);
-                  }
-                  else if(state.isExpanded){
-                    sheetCubit.emit(true);
-                  }
-                },
-              ),
-              headerBuilder: (context, _){
-                return Container(
-                  color: widget.backgroundColor,
-                  child: _buildHeader(context),
-                );
-              },
-              customBuilder: (context, controller, sheetState){
-                controller.addListener(() {
-                  if(controller.offset > 0 && !sheetCubit.state){
-                    sheetCubit.emit(true);
-                    sheetController.snapToExtent(widget.expandedExtent);
-                  }
-                });
-                if(delegate == null){
-                  return Container();
+        create: (context) => sheetCubit,
+        child: SlidingSheet(
+            controller: sheetController,
+            isBackdropInteractable: true,
+            duration: Duration(milliseconds: 300),
+            snapSpec: SnapSpec(
+              initialSnap: widget.initialExtent,
+              snappings: [widget.minExtent, widget.mediumExtent, widget.expandedExtent],
+              onSnap: (state, _){
+                if(state.isCollapsed){
+                  widget.pickerController!.closeGiphyPicker();
                 }
-                return SingleChildScrollView(
-                  controller: controller,
-                  physics: AlwaysScrollableScrollPhysics(),
-                  child: Container(
-                    height: MediaQuery.of(context).size.height - HEADER_HEIGHT - MediaQuery.of(context).padding.top,
-                    child: delegate.build(context)
-                  )
-                );
+                if(state.extent == widget.mediumExtent){
+                  if(sheetCubit.state) sheetCubit.emit(false);
+                }
+                else if(state.isExpanded){
+                  sheetCubit.emit(true);
+                }
               },
-            )
-        ),
+            ),
+            headerBuilder: (context, _){
+              return Container(
+                color: widget.backgroundColor,
+                child: _buildHeader(context),
+              );
+            },
+            customBuilder: (context, controller, sheetState){
+              controller.addListener(() {
+                if(controller.offset > 0 && !sheetCubit.state){
+                  sheetCubit.emit(true);
+                  sheetController.snapToExtent(widget.expandedExtent);
+                }
+              });
+              if(delegate == null){
+                return Container();
+              }
+              return SingleChildScrollView(
+                controller: controller,
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Container(
+                  height: MediaQuery.of(context).size.height - HEADER_HEIGHT - MediaQuery.of(context).padding.top,
+                  child: delegate.build(context)
+                )
+              );
+            },
+          )
       )
     );
   }
@@ -248,7 +282,7 @@ class _GiphyPickerState extends State<GiphyPicker> {
               Padding(
                 padding: EdgeInsets.only(top: 10, left: 16, right: !focusNode.hasFocus ? 16 : 0),
                 child: Container(
-                  width: focusNode.hasFocus ? width*0.84 - 26 : width - 32,
+                  width: focusNode.hasFocus ? width*0.876 - 26 : width - 32,
                   height: 36,
                   child: TextFormField(
                     controller: searchFieldController,
@@ -256,25 +290,18 @@ class _GiphyPickerState extends State<GiphyPicker> {
                     decoration: InputDecoration(
                       prefixStyle: widget.iconStyle,
                       prefixIcon: widget.icon,
-                      prefixIconConstraints: BoxConstraints(
-                        maxHeight: 36,
-                        minHeight: 36,
-                        maxWidth: 30,
-                        minWidth: 30
-                      ),
                       contentPadding: EdgeInsets.zero,
                       filled: true,
                       fillColor: widget.searchColor,
                       hintText: 'Search GIPHY',
                       hintStyle: widget.hiddentTextStyle,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(18),
                         borderSide: BorderSide.none
                       ),
                     ),
                     onChanged: (value){
-                      provider.loadMoreAssetsFromSearching(0, value);
-                      valueCubit.emit(value);
+                      searchGiphy(value);
                     },
                     onTap: (){
                       setState(() {
@@ -296,7 +323,7 @@ class _GiphyPickerState extends State<GiphyPicker> {
                 ),
                 onTap: (){
                   focusNode.unfocus();
-                  valueCubit.emit('');
+                  searchValue = '';
                 },
               ) : Container()
             ],

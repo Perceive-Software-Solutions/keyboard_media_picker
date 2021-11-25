@@ -6,14 +6,14 @@ import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/provider/giphy_picker_provider.dart';
 import 'package:provider/provider.dart';
+import 'dart:math';
 
 class GiphyPickerPickerBuilderDelegate {
   GiphyPickerPickerBuilderDelegate(
     this.provider,
     this.gridScrollController,
     this.giphyPickerController,
-    this.sheetCubit,
-    this.valueCubit, {
+    this.sheetCubit, {
       this.initialExtent = 0.4,
       this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
       this.backgroundColor = Colors.white
@@ -39,25 +39,61 @@ class GiphyPickerPickerBuilderDelegate {
   /// The primary [Cubit] for the headerBuilder inside [SlidingSheet]
   final ConcreteCubit<bool> sheetCubit;
 
-  /// The primary [Cubit] to listen to the value of the [TextField]
-  final ConcreteCubit<String> valueCubit;
-
   final double initialExtent;
 
   /// Primary [TextEditingController] to get the current value of the [TextField]
   TextEditingController searchFieldController = TextEditingController();
 
+  ScrollController loading = ScrollController();
+
   /// Loading indicator
-  Widget loadingIndicator(BuildContext context){
-    return Center(
-      child: SizedBox.fromSize(
-        size: Size.square(48.0),
-        child: CircularProgressIndicator(
-            strokeWidth: 4.0,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-            value: 1.0,
+  // Widget loadingIndicator(BuildContext context){
+  //   return Center(
+  //     child: SizedBox.fromSize(
+  //       size: Size.square(48.0),
+  //       child: CircularProgressIndicator(
+  //           strokeWidth: 4.0,
+  //           valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+  //           value: 1.0,
+  //         ),
+  //     ),
+  //   );
+  // }
+
+  Widget loadingIndicator(BuildContext context, bool sheetCubitState){
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
+    List<double> ratios = [];
+    for(int i = 0; i < 20; i++){
+      ratios.add(Random().nextDouble() + 0.5);
+    }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Container(
+          height: !sheetCubitState ? height*initialExtent - 60 : height - 65 - MediaQuery.of(context).padding.top,
+          child: StaggeredGridView.countBuilder(
+            controller: loading,
+            physics: NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            mainAxisSpacing: 5,
+            crossAxisSpacing: 5,
+            padding: EdgeInsets.only(left: 5, right: 5, bottom: 5),
+            itemCount: 20,
+            scrollDirection: !sheetCubitState ? Axis.horizontal : Axis.vertical,
+            crossAxisCount: 2,
+            itemBuilder: (context, i){
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(12)
+                ),
+              );
+            },
+            staggeredTileBuilder: (int index) => StaggeredTile.extent(1, !sheetCubitState ? (height*0.165)*ratios[index] - 15 : (width*0.5)/ratios[index] - 15),
           ),
-      ),
+        ),
+      ],
     );
   }
 
@@ -95,7 +131,7 @@ class GiphyPickerPickerBuilderDelegate {
   }
 
   //Build all containers that hold the gifs
-  Widget assetItemBuilder(String url, String value, Map<String, double> currentAssets, int index){
+  Widget assetItemBuilder(String url, Map<String, double> currentAssets, int index){
 
     // Render individual asset
     Widget _displayImage(){
@@ -105,15 +141,20 @@ class GiphyPickerPickerBuilderDelegate {
           return Stack(
             children: [
               Positioned.fill(
-                child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: NetworkImage(url),
-                      fit: BoxFit.cover
+                child: Image.network(url,
+                fit: BoxFit.cover,
+                loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress){
+                  if(loadingProgress == null) return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: child
+                  );
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(12)
                     ),
-                  ),
-                ),
+                  );
+                }),
               ),
               if (selectedAsset == currentAssets.keys.elementAt(index)) ...selectedOverlay(context)
             ],
@@ -159,44 +200,40 @@ class GiphyPickerPickerBuilderDelegate {
     //Width of the screen
     var width = MediaQuery.of(context).size.width;
 
-    return BlocBuilder<ConcreteCubit<String>, String>(
-      bloc: valueCubit,
-      builder: (BuildContext context, String value) {
-        return Selector<GiphyPickerProvider, int>(
-            selector: (_, GiphyPickerProvider provider) => provider.displayAssets.length,
-            builder: (_, int length, __) {
-            return Selector<GiphyPickerProvider, Map<String, double>>(
-              selector: (_, GiphyPickerProvider provider) => provider.displayAssets,
-              builder: (_, Map<String, double> assets, __) {
-                List<double> urlRatio = assets.values.toList();
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: !sheetCubitState ? height*0.4 - 60 : height - 65 - MediaQuery.of(context).padding.top,
-                      child: StaggeredGridView.countBuilder(
-                        controller: gridScrollController,
-                        shrinkWrap: true,
-                        mainAxisSpacing: 5,
-                        crossAxisSpacing: 5,
-                        padding: EdgeInsets.only(left: 5, right: 5, bottom: 5),
-                        itemCount: provider.totalAssetsCount,
-                        scrollDirection: !sheetCubitState ? Axis.horizontal : Axis.vertical,
-                        crossAxisCount: 2,
-                        itemBuilder: (context, i){
-                          return assetItemBuilder(assets.keys.elementAt(i), value, assets, i);
-                        },
-                        staggeredTileBuilder: (int index) => StaggeredTile.extent(1, !sheetCubitState ? (height*0.165)*urlRatio[index] - 15 : (width*0.5)/urlRatio[index] - 15),
-                      ),
-                    ),
-                  ],
-                );
-              }
-            );
-          }
-        );
-      }
-    );
+    return Selector<GiphyPickerProvider, int>(
+      selector: (_, GiphyPickerProvider provider) => provider.displayAssets.length,
+      builder: (_, int length, __) {
+      return Selector<GiphyPickerProvider, Map<String, double>>(
+        selector: (_, GiphyPickerProvider provider) => provider.displayAssets,
+        builder: (_, Map<String, double> assets, __) {
+          List<double> urlRatio = assets.values.toList();
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Container(
+                height: !sheetCubitState ? height*initialExtent - 60 : height - 65 - MediaQuery.of(context).padding.top,
+                child: StaggeredGridView.countBuilder(
+                  controller: gridScrollController,
+                  shrinkWrap: true,
+                  mainAxisSpacing: 5,
+                  crossAxisSpacing: 5,
+                  padding: EdgeInsets.only(left: 5, right: 5, bottom: 5),
+                  itemCount: provider.totalAssetsCount,
+                  scrollDirection: !sheetCubitState ? Axis.horizontal : Axis.vertical,
+                  crossAxisCount: 2,
+                  itemBuilder: (context, i){
+                    return assetItemBuilder(assets.keys.elementAt(i), assets, i);
+                  },
+                  staggeredTileBuilder: (int index) => StaggeredTile.extent(1, !sheetCubitState ? 
+                  (height*0.165)*urlRatio[index] - 15 : (width*0.5)/urlRatio[index] - 15),
+                ),
+              ),
+            ],
+          );
+        }
+      );
+    }
+  );
   }
 
   /// Yes, the build method
@@ -210,7 +247,7 @@ class GiphyPickerPickerBuilderDelegate {
             return BlocBuilder<ConcreteCubit<bool>, bool>(
               bloc: sheetCubit,
               builder: (BuildContext context, bool sheetCubitState) {
-                return hasAssetsToDisplay ? assetsGridBuilder(context, sheetCubitState) : loadingIndicator(context);
+                return hasAssetsToDisplay ? assetsGridBuilder(context, sheetCubitState) : loadingIndicator(context, sheetCubitState);
               }
             );
           }

@@ -54,9 +54,24 @@ class Picker extends StatefulWidget {
   ///If not used [CircularProgressIndicator] will be its placeholder
   final Widget? imageLoadingIndicator;
 
+  ///Loading Indicator for the Gif viewer when no Gifs are loaded
+  final Widget? Function(BuildContext, bool)? gifLoadingIndicator;
+
+  ///Loading Indicator for the Gif viewer when Gifs are currently beiing rendered
+  final Widget? gifLoadingTileIndicator;
+
   ///Initiate Backdrop Colors
   final Color minBackdropColor;
   final Color maxBackdropColor;
+
+  /// GiphyPicker
+  Widget? notch;
+  TextStyle cancelButtonStyle;
+  TextStyle hiddenTextStyle;
+  TextStyle style;
+  Icon icon;
+  TextStyle iconStyle;
+  Color searchColor;
 
   Picker({
     required this.apiKey,
@@ -72,7 +87,17 @@ class Picker extends StatefulWidget {
     this.expandedExtent= 1.0,
     this.headerHeight = 50,
     this.minBackdropColor = Colors.transparent,
-    this.maxBackdropColor = Colors.black
+    this.maxBackdropColor = Colors.black,
+    // Giphy Picker
+    this.notch,
+    this.cancelButtonStyle = const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black),
+    this.hiddenTextStyle = const TextStyle(fontSize: 14, color: Colors.black),
+    this.style = const TextStyle(fontSize: 14),
+    this.icon = const Icon(Icons.search, size: 24, color: Colors.black),
+    this.iconStyle = const TextStyle(color: Colors.grey),
+    this.searchColor = Colors.grey,
+    this.gifLoadingIndicator,
+    this.gifLoadingTileIndicator
   });
 
   @override
@@ -247,9 +272,23 @@ class _PickerState extends State<Picker> {
               key: Key('GiphyPicker'), 
               apiKey: widget.apiKey, 
               controller: giphyPickerController, 
-              pickerController: widget.controller, 
+              pickerController: widget.controller,
               initialExtent: widget.initialExtent, 
-              expandedExtent: widget.expandedExtent
+              minExtent: widget.minExtent,
+              mediumExtent: widget.mediumExtent,
+              expandedExtent: widget.expandedExtent,
+              notch: widget.notch,
+              cancelButtonStyle: widget.cancelButtonStyle,
+              hiddentTextStyle: widget.hiddenTextStyle,
+              style: widget.style,
+              icon: widget.icon,
+              iconStyle: widget.iconStyle,
+              backgroundColor: widget.backgroundColor,
+              searchColor: widget.searchColor,
+              minBackdropColor: widget.minBackdropColor,
+              maxBackdropColor: widget.maxBackdropColor,
+              loadingIndicator: widget.gifLoadingIndicator,
+              loadingTileIndicator: widget.gifLoadingTileIndicator,
             ) :
             Container(),
           )

@@ -6,23 +6,28 @@ import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/provider/giphy_picker_provider.dart';
 import 'package:provider/provider.dart';
-import 'dart:math';
 
 class GiphyPickerPickerBuilderDelegate {
   GiphyPickerPickerBuilderDelegate(
     this.provider,
     this.gridScrollController,
     this.giphyPickerController,
-    this.sheetCubit, {
+    this.sheetCubit,
+    this.loadingIndicator,
+    this.loadingTileIndicator, {
       this.initialExtent = 0.4,
       this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-      this.backgroundColor = Colors.white
     }
   );
 
+  /// Overlay TextStyle
   final TextStyle overlayStyle;
 
-  final Color backgroundColor;
+  /// Loading Indicator before any Gifs are loaded
+  final Widget? Function(BuildContext, bool)? loadingIndicator;
+
+  /// Individual Gif loading indicator
+  final Widget? loadingTileIndicator;
 
   /// [ChangeNotifier] for giphy picker
   final GiphyPickerProvider provider;
@@ -39,6 +44,7 @@ class GiphyPickerPickerBuilderDelegate {
   /// The primary [Cubit] for the headerBuilder inside [SlidingSheet]
   final ConcreteCubit<bool> sheetCubit;
 
+  /// Intial Extent
   final double initialExtent;
 
   /// Primary [TextEditingController] to get the current value of the [TextField]
@@ -47,53 +53,16 @@ class GiphyPickerPickerBuilderDelegate {
   ScrollController loading = ScrollController();
 
   /// Loading indicator
-  // Widget loadingIndicator(BuildContext context){
-  //   return Center(
-  //     child: SizedBox.fromSize(
-  //       size: Size.square(48.0),
-  //       child: CircularProgressIndicator(
-  //           strokeWidth: 4.0,
-  //           valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-  //           value: 1.0,
-  //         ),
-  //     ),
-  //   );
-  // }
-
-  Widget loadingIndicator(BuildContext context, bool sheetCubitState){
-    var height = MediaQuery.of(context).size.height;
-    var width = MediaQuery.of(context).size.width;
-    List<double> ratios = [];
-    for(int i = 0; i < 20; i++){
-      ratios.add(Random().nextDouble() + 0.5);
-    }
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Container(
-          height: !sheetCubitState ? height*initialExtent - 60 : height - 65 - MediaQuery.of(context).padding.top,
-          child: StaggeredGridView.countBuilder(
-            controller: loading,
-            physics: NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            mainAxisSpacing: 5,
-            crossAxisSpacing: 5,
-            padding: EdgeInsets.only(left: 5, right: 5, bottom: 5),
-            itemCount: 20,
-            scrollDirection: !sheetCubitState ? Axis.horizontal : Axis.vertical,
-            crossAxisCount: 2,
-            itemBuilder: (context, i){
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(12)
-                ),
-              );
-            },
-            staggeredTileBuilder: (int index) => StaggeredTile.extent(1, !sheetCubitState ? (height*0.165)*ratios[index] - 15 : (width*0.5)/ratios[index] - 15),
+  Widget loadingIndicatorExample(BuildContext context){
+    return Center(
+      child: SizedBox.fromSize(
+        size: Size.square(48.0),
+        child: CircularProgressIndicator(
+            strokeWidth: 4.0,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+            value: 1.0,
           ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -130,6 +99,15 @@ class GiphyPickerPickerBuilderDelegate {
     ];
   }
 
+  Widget loadingTileIndicatorExample(){
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey,
+        borderRadius: BorderRadius.circular(12)
+      ),
+    );
+  }
+
   //Build all containers that hold the gifs
   Widget assetItemBuilder(String url, Map<String, double> currentAssets, int index){
 
@@ -148,12 +126,7 @@ class GiphyPickerPickerBuilderDelegate {
                     borderRadius: BorderRadius.circular(12),
                     child: child
                   );
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
-                      borderRadius: BorderRadius.circular(12)
-                    ),
-                  );
+                  return loadingTileIndicator ?? loadingTileIndicatorExample();
                 }),
               ),
               if (selectedAsset == currentAssets.keys.elementAt(index)) ...selectedOverlay(context)
@@ -247,7 +220,7 @@ class GiphyPickerPickerBuilderDelegate {
             return BlocBuilder<ConcreteCubit<bool>, bool>(
               bloc: sheetCubit,
               builder: (BuildContext context, bool sheetCubitState) {
-                return hasAssetsToDisplay ? assetsGridBuilder(context, sheetCubitState) : loadingIndicator(context, sheetCubitState);
+                return hasAssetsToDisplay ? assetsGridBuilder(context, sheetCubitState) : loadingIndicator!(context, sheetCubitState) ?? loadingIndicatorExample(context);
               }
             );
           }

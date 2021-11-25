@@ -1,8 +1,10 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:piky/piky.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 
@@ -159,6 +161,52 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         )
       )
+    );
+  }
+
+  Widget? gifTileLoadingIndicator(){
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey,
+        borderRadius: BorderRadius.circular(12)
+      ),
+    );
+  }
+
+  Widget gifLoadingIndicator(BuildContext context, bool sheetCubitState){
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
+    List<double> ratios = [];
+    for(int i = 0; i < 20; i++){
+      ratios.add(Random().nextDouble() + 0.5);
+    }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Container(
+          height: !sheetCubitState ? height*0.55 - 60 : height - 65 - MediaQuery.of(context).padding.top,
+          child: StaggeredGridView.countBuilder(
+            controller: ScrollController(),
+            physics: NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            mainAxisSpacing: 5,
+            crossAxisSpacing: 5,
+            padding: EdgeInsets.only(left: 5, right: 5, bottom: 5),
+            itemCount: 20,
+            scrollDirection: !sheetCubitState ? Axis.horizontal : Axis.vertical,
+            crossAxisCount: 2,
+            itemBuilder: (context, i){
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(12)
+                ),
+              );
+            },
+            staggeredTileBuilder: (int index) => StaggeredTile.extent(1, !sheetCubitState ? (height*0.165)*ratios[index] - 15 : (width*0.5)/ratios[index] - 15),
+          ),
+        ),
+      ],
     );
   }
 
@@ -340,8 +388,10 @@ class _MyHomePageState extends State<MyHomePage> {
       minBackdropColor: Colors.transparent,
       maxBackdropColor: Colors.black.withOpacity(0.4),
       imageLoadingIndicator: imageLoadingIndicator(),
+      gifLoadingTileIndicator: gifTileLoadingIndicator(),
       imageHeaderBuilder: imageHeaderBuilder,
       albumMenuBuilder: albumMenuBuilder,
+      gifLoadingIndicator: gifLoadingIndicator,
       child: Scaffold(
           resizeToAvoidBottomInset: false,
           backgroundColor: Colors.white,

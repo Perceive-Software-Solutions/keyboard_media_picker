@@ -188,7 +188,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
 
   void initiateListener(ScrollController scrollController){
     scrollController.addListener(() {
-      if(scrollController.offset <= -80 && !snapping){
+      if(scrollController.offset <= -20 && !snapping){
         if(sheetController.state!.extent == 1.0){
           snapping = true;
           Future.delayed(Duration.zero, () {

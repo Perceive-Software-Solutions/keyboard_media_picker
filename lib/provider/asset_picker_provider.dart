@@ -351,8 +351,10 @@ class DefaultAssetPickerProvider
     _currentAssets = (await pathEntity.getAssetListPaged(
       page,
       pageSize,
-    ))
-        .toList();
+    )).toList();
+    // for(AssetEntity asset in _currentAssets){
+    //   print( await asset.file);
+    // }
     _hasAssetsToDisplay = currentAssets.isNotEmpty;
     notifyListeners();
   }

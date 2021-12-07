@@ -251,12 +251,12 @@ class _PickerState extends State<Picker> {
     bool onlyPhotos) async {
     
     /// Intialize the [ImagePickerController]
-    imagePickerController = ImagePickerController(
-      selectedAssets: selectedAssets, 
-      duration: duration, 
-      imageCount: imageCount, 
-      onlyPhotos: onlyPhotos
-    );
+    // imagePickerController = ImagePickerController(
+    //   selectedAssets: selectedAssets, 
+    //   duration: duration, 
+    //   imageCount: imageCount, 
+    //   onlyPhotos: onlyPhotos
+    // );
 
     if(currentlyOpen != null && type != PickerType.ImagePicker){
       await currentlyOpen!();

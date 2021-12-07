@@ -1,3 +1,9 @@
+## [0.2.0] v0.2.0
+
+* Sliding animations
+* Retaining state between all three pickers
+* Added adjustable safe areas
+
 ## [0.1.2] v0.1.1
 
 * Fixed Expanded media

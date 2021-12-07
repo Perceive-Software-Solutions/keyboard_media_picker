@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -273,16 +274,14 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Container(
                 height: 36,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 2.5, bottom: 2.5),
-                  child: assetPathEntity != null ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(assetPathEntity.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                      Text(assetPathEntity.assetCount.toString(), style: TextStyle(fontSize: 12, color: Colors.grey.withOpacity(0.4)))
-                    ],
-                  ) : SizedBox.shrink(),
-                ),
+                child: assetPathEntity != null ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(assetPathEntity.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                    Text(assetPathEntity.assetCount.toString(), style: TextStyle(fontSize: 12, color: Colors.grey.withOpacity(0.4)))
+                  ],
+                ) : SizedBox.shrink(),
               ),
             ],
           ),
@@ -295,15 +294,20 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget albumMenuBuilder(Map<AssetPathEntity, Uint8List?> pathEntityList, ScrollController controller, dynamic Function(AssetPathEntity) onTap){
+
+    pathEntityList.removeWhere((key, value) => value == null);
+
     AssetPathEntity? recents; 
     AssetPathEntity? favorites;
     if(pathEntityList.isNotEmpty){
-      recents = pathEntityList.keys.firstWhere((element) => element.name == "Recents");
-      favorites = pathEntityList.keys.firstWhere((element) => element.name == "Favorites");
+      try{
+        recents = pathEntityList.keys.firstWhere((element) => element.name == (Platform.isIOS ? "Recents" : "Recent"));
+        favorites = pathEntityList.keys.firstWhere((element) => element.name == (Platform.isIOS ? "Favorites" : "Camera"));
+      }catch(e){}
     }
     List<Widget> children = [];
     pathEntityList.forEach((key, value) { 
-      if(key.name != "Recents" && key.name != "Favorites")
+      if(key.name != (Platform.isIOS ? "Recents" : "Recent") && key.name != (Platform.isIOS ? "Favorites" : "Camera"))
         children.add(tileItemBuilder(context, key, value, onTap));
     });
     Widget _cupertinoList(Map<AssetPathEntity, Uint8List?> assets){

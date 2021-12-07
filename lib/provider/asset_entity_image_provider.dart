@@ -21,9 +21,9 @@ class AssetEntityImageProvider extends ImageProvider<AssetEntityImageProvider> {
     ],
     this.isOriginal = true,
   }) : assert(
-          isOriginal || thumbSize?.length == 2,
-          'thumbSize must contain and only contain two integers when it\'s not original',
-        );
+    isOriginal || thumbSize?.length == 2,
+    'thumbSize must contain and only contain two integers when it\'s not original',
+  );
 
   final AssetEntity entity;
 

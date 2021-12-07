@@ -9,24 +9,31 @@ import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:sliding_sheet/sliding_sheet.dart';
 
 
 
 class ImagePickerBuilderDelegate {
   ImagePickerBuilderDelegate(
     this.provider,
+    this.gridScrollController,
     this.imagePickerController, {
+      this.loadingIndicator,
+      this.overlayBuilder,
       this.gridCount = 4,
-      this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-      this.backgroundColor = Colors.white
   });
 
-  final TextStyle overlayStyle;
+  /// Overlay that displays if the image is selected
+  final Widget Function(BuildContext context, int index)? overlayBuilder;
 
-  final Color backgroundColor;
+  /// When fetching the images this loading indicator will be used
+  final Widget? loadingIndicator;
 
   /// [ChangeNotifier] for asset picker
   final DefaultAssetPickerProvider provider;
+
+  /// The [ScrollController] for the preview grid.
+  final ScrollController gridScrollController;
 
   /// The column count inside of the [_sliverGrid]
   final int gridCount;
@@ -37,18 +44,11 @@ class ImagePickerBuilderDelegate {
   /// params inside of the [ImagePickerBuilderDelegate] accordingly
   final ImagePickerController? imagePickerController;
 
-  /// The [ScrollController] for the preview grid.
-  final ScrollController gridScrollController = ScrollController();
-
-  /// The [ScrollController] for the [SingleChildScrollView]
-  final ScrollController mainScrollController = ScrollController();
-
   /// Keep a dispose method to sync with [State].
   ///
   /// Be aware that the method will do nothing when [keepScrollOffset] is true.
   void dispose() {
     gridScrollController.dispose();
-    mainScrollController.dispose();
   }
 
   //Takes an input [Key], and returns the index of the child element with that associated key, or null if not found.
@@ -58,7 +58,7 @@ class ImagePickerBuilderDelegate {
   }
 
   /// Loading indicator
-  Widget loadingIndicator(BuildContext context){
+  Widget exampleLoadingIndicator(BuildContext context){
     return Center(
       child: SizedBox.fromSize(
         size: Size.square(48.0),
@@ -79,37 +79,39 @@ class ImagePickerBuilderDelegate {
   }
 
   /// Overlays [imageItemBuilder] amd [videoItemBuilder] to display the slected state
-  List<Widget> selectedOverlay(BuildContext context, AssetEntity asset){
+  Widget selectedOverlay(BuildContext context, AssetEntity asset){
 
     //Width of the screen
     var width = MediaQuery.of(context).size.width;
     
-    return [
-      Positioned.fill(
-        child: Opacity(
-          opacity: 0.4,
-          child: Container(
-            height: width / 3,
-            width: width / 3,
-            color: Colors.black,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.4,
+            child: Container(
+              height: width / 3,
+              width: width / 3,
+              color: Colors.black,
+            ),
           ),
         ),
-      ),
-      Align(
-        alignment: Alignment.center,
-        child: Container(
-          height: 30,
-          width: 30,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius:BorderRadius.circular(30)),
-          child: Center(
-            child: Text(
-              (provider.selectedAssets.indexOf(asset) + 1).toString(),
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+        Align(
+          alignment: Alignment.center,
+          child: Container(
+            height: 30,
+            width: 30,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius:BorderRadius.circular(30)),
+            child: Center(
+              child: Text(
+                (provider.selectedAssets.indexOf(asset) + 1).toString(),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+          )),
         )),
-      ))
-    ];
+      ],
+    );
   }
 
   /// Items and placeholders current displayed in the grid
@@ -139,7 +141,9 @@ class ImagePickerBuilderDelegate {
                 failedItemBuilder: failedItemBuilder,
               ),
             ),
-          if (provider.selectedAssets.contains(asset)) ...selectedOverlay(context, asset)
+          if (provider.selectedAssets.contains(asset)) overlayBuilder != null ? 
+          Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : 
+          Positioned.fill(child: selectedOverlay(context, asset))
         ],
         );
       }
@@ -195,8 +199,10 @@ class ImagePickerBuilderDelegate {
                 ),
               ),
             ),
-          if (provider.selectedAssets.contains(asset)) ...selectedOverlay(context, asset)
-        ],
+            if (provider.selectedAssets.contains(asset)) overlayBuilder != null ? 
+              Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : 
+              Positioned.fill(child: selectedOverlay(context, asset))
+          ],
         );
       }
     );
@@ -231,11 +237,6 @@ class ImagePickerBuilderDelegate {
           child: GestureDetector(
             child: child,
             onTap:(){
-              if(provider.selectedAssets.isNotEmpty){
-                if(provider.selectedAssets[0].videoDuration.inMilliseconds > 0){
-                  provider.unSelectAsset(provider.selectedAssets[0]);
-                }
-              }
               if(provider.selectedAssets.contains(currentAssets[index]))
                 provider.unSelectAsset(currentAssets[index]);
               else if(currentAssets[index].videoDuration.inMilliseconds > 0){
@@ -243,6 +244,12 @@ class ImagePickerBuilderDelegate {
                 provider.selectAsset(currentAssets[index]);
               }
               else provider.selectAsset(currentAssets[index]);
+
+              if(provider.selectedAssets.isNotEmpty){
+                if(provider.selectedAssets[0].videoDuration.inMilliseconds > 0 && provider.selectedAssets[0] != currentAssets[index]){
+                  provider.unSelectAsset(provider.selectedAssets[0]);
+                }
+              }
 
               imagePickerController!.update();
             }
@@ -331,28 +338,13 @@ class ImagePickerBuilderDelegate {
   
   /// Yes, the build method
   Widget build(BuildContext context){
-
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-
-    //height of the screen
-    var height = MediaQuery.of(context).size.height;
-    
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _){
         return Selector<DefaultAssetPickerProvider, bool>(
         selector: (_, DefaultAssetPickerProvider provider) => provider.hasAssetsToDisplay,
         builder: (_, bool hasAssetsToDisplay, __) {
-          return SingleChildScrollView(
-            controller: mainScrollController,
-            child: Container(
-              color: backgroundColor,
-              height: height,
-              width: width,
-              child: hasAssetsToDisplay ? assetsGridBuilder(context) : loadingIndicator(context),
-              ),
-            );
+          return hasAssetsToDisplay ? assetsGridBuilder(context) : loadingIndicator ?? exampleLoadingIndicator(context);
           }
         );
       }, 

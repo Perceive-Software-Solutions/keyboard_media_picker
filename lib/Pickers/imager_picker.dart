@@ -1,39 +1,98 @@
+import 'dart:typed_data';
+import 'dart:ui';
+
+import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:piky/Pickers/picker.dart';
 import 'package:piky/delegates/album_picker_delegate.dart';
 import 'package:piky/delegates/image_picker_delegate.dart';
 import 'package:piky/provider/asset_picker_provider.dart';
+import 'package:piky/util/functions.dart';
 import 'package:piky/util/keep_alive.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:provider/provider.dart';
 
 class ImagePicker extends StatefulWidget {
+
+  /// Main sheet controller
+  final SheetController sheetController;
+
+  /// Controllers
   final ImagePickerController? controller;
+  final PickerController? pickerController;
+
+  /// Sheet sizing extents
   final double initialExtent;
   final double expandedExtent;
-  final TextStyle menuStyle;
-  final TextStyle albumNameStyle;
-  final Color backgroundColor;
-  final Icon menuIcon;
+  final double mediumExtent;
+  final double minExtent;
+
+  /// Header Height
+  /// Must pass the height of the header widget to avoid overflow
+  final double headerHeight;
+
+  /// Header of the Media Picker at min Extent
+  /// Contains a String defining the most recent or current album name
+  final Widget Function(String, bool) headerBuilder;
+
+  /// Builds the album menu of the image picker
+  /// Contains a list of [AssetEntity] mapped to [Uint8List]'s for thumbnails and information
+  final Widget Function(Map<AssetPathEntity, Uint8List?>, ScrollController, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+
+  /// Loading indicator when ImagePickerProvidor is still fetching the images
+  /// If not used will have the base [CircularProgressIndicator] as placeholder
+  final Widget? loadingIndicator;
+
+  /// Overlay of the selected Asset
+  final Widget Function(BuildContext context, int index)? overlayBuilder;
+
+  /// Backdrop Colors
+  final Color minBackdropColor;
+  final Color maxBackdropColor;
+
+  /// Color of the growable Header
+  final Color statusBarPaddingColor;
+
+  final bool isLocked;
 
   const ImagePicker({ 
     required Key key,
     required this.controller,
+    required this.headerBuilder,
+    required this.albumMenuBuilder,
+    required this.sheetController,
+    this.pickerController,
+    this.loadingIndicator,
+    this.overlayBuilder,
+    this.minExtent = 0.0,
     this.initialExtent = 0.4,
+    this.mediumExtent = 0.4,
     this.expandedExtent = 1.0,
-    this.menuStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-    this.albumNameStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-    this.backgroundColor = Colors.white,
-    this.menuIcon = const Icon(Icons.download)
+    this.headerHeight = 50,
+    this.statusBarPaddingColor = Colors.white,
+    this.minBackdropColor = Colors.transparent,
+    this.maxBackdropColor = Colors.black,
+    this.isLocked = false
   }) : super(key: key);
 
   @override
   _ImagePickerState createState() => _ImagePickerState();
 }
 
-class _ImagePickerState extends State<ImagePicker> {
+class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStateMixin {
+
+/*
+ 
+     ____  _        _       
+    / ___|| |_ __ _| |_ ___ 
+    \___ \| __/ _` | __/ _ \
+     ___) | || (_| | ||  __/
+    |____/ \__\__,_|\__\___|
+                            
+ 
+*/
 
   /// Primary provider for loading assets
   late DefaultAssetPickerProvider provider;
@@ -44,14 +103,23 @@ class _ImagePickerState extends State<ImagePicker> {
   /// Primary delegate for displaying thumbnails
   late AlbumPickerBuilderDelegate albumDelegate;
 
+  /// Controls the animation of the backdrop color reletive the the [SlidingSheet]
+  late AnimationController animationController;
+
+  /// Animates the color from min extent to medium extent
+  late Animation<Color?> colorTween;
+
+  /// Initial extent
+  late ConcreteCubit<double> sheetExtent = ConcreteCubit<double>(widget.initialExtent);
+
   /// The state of the [ImagePicker]
   Option type = Option.Open;
 
   /// The current selected assets
   List<AssetEntity> selectedAssets = <AssetEntity>[];
 
-  /// The primary controller for the [SlidingSheet]
-  final SheetController sheetController = SheetController();
+  // /// The primary controller for the [SlidingSheet]
+  // widget.sheetController widget.sheetController = widget.sheetController();
 
   /// The primary [Cubit] for the headerBuilder inside [SlidingSheet]
   ConcreteCubit<bool> sheetCubit = ConcreteCubit<bool>(false);
@@ -59,13 +127,26 @@ class _ImagePickerState extends State<ImagePicker> {
   /// The primary [Cubit] for the page transition between [AssetPathEntity] and [AssetEntity]
   ConcreteCubit<bool> pageCubit = ConcreteCubit<bool>(false);
 
-  /// Filter option
-  FilterOptionGroup filer = FilterOptionGroup();
+  /// The [ScrollController] for the image preview grid
+  ScrollController imageGridScrollController = ScrollController();
+
+  /// The [ScrollController] for the album preview grid.
+  ScrollController albumGridScrollController = ScrollController();
+
+  /// If the sliding sheet is currently snapping
+  bool snapping = false;
 
   @override
   void initState() {
     super.initState();
 
+    /// Order images inside albums
+    OrderOption order = OrderOption(asc: false, type: OrderOptionType.createDate);
+
+    /// Filter option
+    FilterOptionGroup filer = FilterOptionGroup(orders: [order]);
+
+    //Initiate provider
     provider = DefaultAssetPickerProvider(
       maxAssets: widget.controller!.imageCount, 
       pageSize: 120,
@@ -77,23 +158,44 @@ class _ImagePickerState extends State<ImagePicker> {
       filterOptions: filer
     );
 
-    //Build delegate
+    //Build image delegate
     imageDelegate = ImagePickerBuilderDelegate(
       provider,
+      imageGridScrollController,
       widget.controller,
-      gridCount: 4
+      gridCount: 4,
+      loadingIndicator: widget.loadingIndicator,
+      overlayBuilder: widget.overlayBuilder
     );
 
+    //Build album delegate
     albumDelegate = AlbumPickerBuilderDelegate(
       provider,
       pageCubit,
+      albumGridScrollController,
+
+      widget.albumMenuBuilder,
       widget.controller,
       gridCount: 2
     );
 
-    initialSelect(widget.controller!.selectedAssets);
+    //Initiate animation
+    animationController = AnimationController(
+      vsync: this,
+      value: widget.minExtent/widget.mediumExtent,
+      duration: Duration(milliseconds: 0)
+    );
+    colorTween = ColorTween(begin: widget.minBackdropColor, end: widget.maxBackdropColor).animate(animationController);
 
+    // Add already selected images
+    initialSelect(widget.controller!.selectedAssets);
+    
+    // Constantly edit the state with selected assets
     addSelectedAssetstoState();
+
+    // Initiate listeners on scroll controllers
+    initiateListener(imageGridScrollController);
+    initiateListener(albumGridScrollController);
   }
 
 
@@ -106,13 +208,52 @@ class _ImagePickerState extends State<ImagePicker> {
     }
   }
 
+  @override
+  void dispose(){
+    super.dispose();
+    provider.removeListener(() { });
+    provider.dispose();
+  }
+
+
+  void initiateListener(ScrollController scrollController){
+    scrollController.addListener(() {
+      if(scrollController.offset <= -50 && widget.sheetController.state!.extent != widget.minExtent && !snapping){
+        if(widget.sheetController.state!.extent == 1.0){
+          snapping = true;
+          Future.delayed(Duration.zero, () {
+            widget.sheetController.snapToExtent(widget.mediumExtent, duration: Duration(milliseconds: 300));
+            sheetCubit.emit(false);
+            if(pageCubit.state){
+              pageCubit.emit(!pageCubit.state);
+            }
+            Future.delayed(Duration(milliseconds: 300)).then((value) => {
+              snapping = false
+            });
+          });
+        }
+        else if(widget.sheetController.state!.extent == widget.mediumExtent){
+          snapping = true;
+          Future.delayed(Duration.zero, () {
+            widget.sheetController.snapToExtent(widget.minExtent, duration: Duration(milliseconds: 300));
+          });
+          Future.delayed(Duration(milliseconds: 300)).then((value) => {
+            snapping = false
+          });
+        }
+      }
+    });
+  }
+
   /// Adds the current selected assets to [ImagePicker] dynamically
   void addSelectedAssetstoState(){
-    provider.addListener(() { 
-      setState(() {
-        selectedAssets = provider.selectedAssets;
+    if(mounted){
+      provider.addListener(() { 
+        setState(() {
+          selectedAssets = provider.selectedAssets;
+        });
       });
-    });
+    }
   }
 
   /// Initially selects assets if they have been previously selected
@@ -122,152 +263,153 @@ class _ImagePickerState extends State<ImagePicker> {
     }
   }
 
+  void sheetListener(SheetState state){
+    if(state.extent <= widget.mediumExtent && (state.extent - widget.initialExtent) >= 0){
+      animationController.animateTo((state.extent - widget.initialExtent) / widget.mediumExtent);
+    }
+    sheetExtent.emit(state.extent);
+    if(state.extent <= widget.initialExtent/3 && widget.isLocked){
+      widget.sheetController.snapToExtent(widget.initialExtent);
+    }
+
+    // print(state.extent);
+  }
+
+  Widget _buildHeader(BuildContext context, bool sheetCubitState, String path){
+    //Max Extent
+    return GestureDetector(
+      onTap: () {
+        provider.getAssetPathList();
+        pageCubit.emit(!pageCubit.state);
+        sheetCubit.emit(true);
+        widget.sheetController.expand();
+      },
+      child: widget.headerBuilder(path, sheetCubitState) 
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
+    var statusBarHeight = MediaQueryData.fromWindow(window).padding.top;
+
     return KeepAliveWidget(
       key: Key('ImagePicker'),
-      child: SafeArea(
+      child: BlocProvider(
+        create: (context) => pageCubit,
         child: BlocProvider(
-          create: (context) => pageCubit,
-          child: BlocProvider(
-            create: (context) => sheetCubit,
-            child: SlidingSheet(
-                controller: sheetController,
-                backdropColor: Colors.white,
-                closeOnBackdropTap: true,
-                isBackdropInteractable: true,
-                snapSpec: SnapSpec(
-                  initialSnap: widget.initialExtent,
-                  snappings: [widget.initialExtent, widget.expandedExtent],
-                  onSnap: (state, _){
-                    if(state.isCollapsed){
-                      if(sheetCubit.state) sheetCubit.emit(false);
-                      if(pageCubit.state) pageCubit.emit(false);
-                    }
-                    else if(state.isExpanded && !pageCubit.state){
-                      if(!sheetCubit.state) sheetCubit.emit(true);
-                    }
-                  },
-                ),
-                headerBuilder: (context, _){
-                  return BlocBuilder<ConcreteCubit<bool>, bool>(
-                    bloc: sheetCubit,
-                    buildWhen: (o, n) => o != n,
-                    builder: (context, sheetCubitState) {
-                      return Container(
-                        height: 47,
-                        color: Colors.white,
-                        child: ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
-                          value: provider,
-                          builder: (context, snapshot) {
-                            return Selector<DefaultAssetPickerProvider, AssetPathEntity?>(
-                              selector: (_, DefaultAssetPickerProvider p) => p.currentPathEntity,
-                              builder: (BuildContext context, AssetPathEntity? _path, Widget? child) {
-                                return AnimatedSwitcher(
-                                  duration: Duration(milliseconds: 400),
-                                  transitionBuilder: (child, animation){
-                                    // return FadeTransition(opacity: animation, child: child,);
-                                    return FadeTransition(
-                                      opacity: CurvedAnimation(
-                                        parent: animation,
-                                        curve: Curves.easeOut,
-                                      ),
-                                      child: SlideTransition(
-                                        position: Tween<Offset>(
-                                          begin: const Offset(0, -1.5),
-                                          end: Offset.zero,
-                                        ).animate(CurvedAnimation(
-                                          parent: animation,
-                                          curve: Curves.easeInOutQuart,
-                                        )),
-                                        child: child
-                                      ),
-                                    );
-                                  },
-                                  child: _buildHeader(context, sheetCubitState, _path?.name ?? "Recents")
+          create: (context) => sheetCubit,
+          child: BlocBuilder<ConcreteCubit<bool>, bool>(
+            bloc: sheetCubit,
+            buildWhen: (o, n) => o != n,
+            builder: (context, sheetCubitState) {
+              return AnimatedBuilder(
+                animation: colorTween,
+                builder: (context, child) {
+                  return BlocBuilder<ConcreteCubit<double>, double>(
+                    bloc: sheetExtent,
+                    builder: (context, extent) {
+                      double topExtentValue = Functions.animateOver(extent, percent: 0.9);
+                      return SlidingSheet(
+                          controller: widget.sheetController,
+                          isBackdropInteractable: extent > widget.initialExtent ? false : true,
+                          duration: Duration(milliseconds: 300),
+                          cornerRadius: 32,
+                          cornerRadiusOnFullscreen: 0,
+                          backdropColor: extent > widget.initialExtent ? colorTween.value : null,
+                          listener: sheetListener,
+                          snapSpec: SnapSpec(
+                            initialSnap: widget.minExtent,
+                            snappings: [widget.minExtent, widget.initialExtent, widget.mediumExtent, widget.expandedExtent],
+                            onSnap: (state, _){
+                              // if(state.isCollapsed && widget.minExtent == 0){
+                              //   widget.pickerController!.closeImagePicker();
+                              // }
+                              if(state.extent == widget.mediumExtent){
+                                if(sheetCubit.state) sheetCubit.emit(false);
+                                if(pageCubit.state) pageCubit.emit(false);
+                              }
+                              else if(state.isExpanded && !pageCubit.state){
+                                if(!sheetCubit.state) sheetCubit.emit(true);
+                              }
+                            },
+                          ),
+                          headerBuilder: (context, state){
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(height: lerpDouble(0, statusBarHeight, topExtentValue)!, color: widget.statusBarPaddingColor,),
+                                Container(
+                                  height: widget.headerHeight,
+                                  color: Colors.white,
+                                  child: ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
+                                    value: provider,
+                                    builder: (context, snapshot) {
+                                      return Selector<DefaultAssetPickerProvider, AssetPathEntity?>(
+                                        selector: (_, DefaultAssetPickerProvider p) => p.currentPathEntity,
+                                        builder: (BuildContext context, AssetPathEntity? _path, Widget? child) {
+                                          return AnimatedSwitcher(
+                                            duration: Duration(milliseconds: 400),
+                                            transitionBuilder: (child, animation){
+                                              return FadeTransition(
+                                                opacity: CurvedAnimation(
+                                                  parent: animation,
+                                                  curve: Curves.easeOut,
+                                                ),
+                                                child: SlideTransition(
+                                                  position: Tween<Offset>(
+                                                    begin: const Offset(0, -1.5),
+                                                    end: Offset.zero,
+                                                  ).animate(CurvedAnimation(
+                                                    parent: animation,
+                                                    curve: Curves.easeInOutQuart,
+                                                  )),
+                                                  child: child
+                                                ),
+                                              );
+                                            },
+                                            child: _buildHeader(context, sheetCubitState, _path?.name ?? "Recents")
+                                          );
+                                        }
+                                      );
+                                    }
+                                  )
+                                ),
+                              ],
+                            );
+                          },
+                          customBuilder: (context, controller, sheetState){
+                            double SAFE_AREA_PADDING = sheetCubitState ? MediaQuery.of(context).padding.top : 0.0;
+                            double height = sheetCubitState ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*widget.mediumExtent;
+                            return BlocBuilder<ConcreteCubit<bool>, bool>(
+                              bloc: pageCubit,
+                              buildWhen: (o, n) => o != n,
+                              builder: (context, state) {
+                                return SingleChildScrollView(
+                                  controller: controller,
+                                  child: !state ? Container(
+                                    key: Key("1"), 
+                                    height: height-widget.headerHeight-SAFE_AREA_PADDING,
+                                    child: imageDelegate.build(context)
+                                  ) : Container(
+                                    key: Key("2"), 
+                                    height: MediaQuery.of(context).size.height-widget.headerHeight-SAFE_AREA_PADDING,
+                                    child: albumDelegate.build(context)
+                                  ),
                                 );
                               }
                             );
-                          }
-                        )
-                      );
+                          },
+                        );
                     }
                   );
-                },
-                builder: (context, _){
-                  return BlocBuilder<ConcreteCubit<bool>, bool>(
-                    bloc: pageCubit,
-                    buildWhen: (o, n) => o != n,
-                    builder: (context, state) {
-                      return !state ? 
-                      Container(key: Key("1"), child: imageDelegate.build(context)) : 
-                      Container(key: Key("2"), child: albumDelegate.build(context));
-                    }
-                  );
-                },
-              ),
+                }
+              );
+            }
           ),
         ),
       ),
     );
-  }
-
-  Widget _buildHeader(
-    BuildContext context, 
-    bool sheetCubitState, 
-    String path){
-    
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-
-    if(sheetCubitState){
-      //Max Extent
-      return Container(
-        key: Key("Picker-Max-View"),
-        height: 47,
-        color: widget.backgroundColor,
-        child: GestureDetector(
-          child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(pageCubit.state ? 'All Photos' : path, style: widget.menuStyle),
-            widget.menuIcon
-          ],
-        ),
-        onTap: () {
-          provider.getAssetPathList();
-          pageCubit.emit(!pageCubit.state);
-        }),
-      );
-    }
-    else{
-      //Min Extent
-      return Container(
-        height: 47,
-        width: width,
-        color: widget.backgroundColor,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(path, style: widget.albumNameStyle),
-              Spacer(),
-              GestureDetector(
-                child: Text('All Photos', style: widget.menuStyle),
-                onTap: () {
-                  pageCubit.emit(!pageCubit.state);
-                  sheetController.expand();
-                },
-              )
-            ],
-          ),
-        ),
-      );
-    }
   }
 }
 

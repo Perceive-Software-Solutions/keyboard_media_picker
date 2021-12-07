@@ -10,21 +10,34 @@ import 'package:provider/provider.dart';
 class GiphyPickerPickerBuilderDelegate {
   GiphyPickerPickerBuilderDelegate(
     this.provider,
+    this.gridScrollController,
     this.giphyPickerController,
     this.sheetCubit,
-    this.valueCubit, {
-      this.initialExtent = 0.4,
+    this.loadingIndicator,
+    this.loadingTileIndicator, {
+      this.overlayBuilder,
+      this.mediumExtent = 0.4,
       this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-      this.backgroundColor = Colors.white
     }
   );
 
+  /// Overlay Widget of the selected asset
+  final Widget Function(BuildContext context, int index)? overlayBuilder;
+
+  /// Overlay TextStyle
   final TextStyle overlayStyle;
 
-  final Color backgroundColor;
+  /// Loading Indicator before any Gifs are loaded
+  final Widget? Function(BuildContext, bool)? loadingIndicator;
+
+  /// Individual Gif loading indicator
+  final Widget? loadingTileIndicator;
 
   /// [ChangeNotifier] for giphy picker
   final GiphyPickerProvider provider;
+
+  /// The [ScrollController] for the preview grid.
+  final ScrollController gridScrollController;
 
   /// Controls the changes in state relative to the [SlidingSheet]
   /// 
@@ -35,19 +48,16 @@ class GiphyPickerPickerBuilderDelegate {
   /// The primary [Cubit] for the headerBuilder inside [SlidingSheet]
   final ConcreteCubit<bool> sheetCubit;
 
-  /// The primary [Cubit] to listen to the value of the [TextField]
-  final ConcreteCubit<String> valueCubit;
-
-  final double initialExtent;
-
-  /// Primary [ScrollController] for the grid view
-  ScrollController gridController = ScrollController();
+  /// Intial Extent
+  final double mediumExtent;
 
   /// Primary [TextEditingController] to get the current value of the [TextField]
   TextEditingController searchFieldController = TextEditingController();
 
+  ScrollController loading = ScrollController();
+
   /// Loading indicator
-  Widget loadingIndicator(BuildContext context){
+  Widget loadingIndicatorExample(BuildContext context){
     return Center(
       child: SizedBox.fromSize(
         size: Size.square(48.0),
@@ -61,51 +71,51 @@ class GiphyPickerPickerBuilderDelegate {
   }
 
   /// Overlays [imageItemBuilder] amd [videoItemBuilder] to display the slected state
-  List<Widget> selectedOverlay(BuildContext context){
+  Widget selectedOverlay(BuildContext context){
 
     //Width of the screen
     var width = MediaQuery.of(context).size.width;
     
-    return [
-      Positioned.fill(
-        child: Opacity(
-          opacity: 0.4,
-          child: Container(
-            height: width / 3,
-            width: width / 3,
-            color: Colors.black,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.4,
+            child: Container(
+              height: width / 3,
+              width: width / 3,
+              color: Colors.black,
+            ),
           ),
         ),
-      ),
-      Align(
-        alignment: Alignment.center,
-        child: Container(
-          height: 30,
-          width: 30,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius:BorderRadius.circular(30)),
-          child: Center(
-            child: Text('1', style: overlayStyle)
-          ),
+        Align(
+          alignment: Alignment.center,
+          child: Container(
+            height: 30,
+            width: 30,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius:BorderRadius.circular(30)),
+            child: Center(
+              child: Text('1', style: overlayStyle)
+            )
+          )
         )
-      )
-    ];
+      ],
+    );
+  }
+
+  Widget loadingTileIndicatorExample(){
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey,
+        borderRadius: BorderRadius.circular(12)
+      ),
+    );
   }
 
   //Build all containers that hold the gifs
-  Widget assetItemBuilder(String url, String value, Map<String, double> currentAssets, int index){
-
-    // length of the currently loaded assets
-    int _length = currentAssets.length;
-
-     // load more assets when a offset of 6 is reached and has more to load
-    if (index == _length - 6) {
-      if(value == '')
-        provider.loadMoreAssetsFromTrending(currentAssets.length + 1);
-      else 
-        provider.loadMoreAssetsFromSearching(currentAssets.length + 1, value);
-    }
+  Widget assetItemBuilder(String url, Map<String, double> currentAssets, int index){
 
     // Render individual asset
     Widget _displayImage(){
@@ -115,17 +125,17 @@ class GiphyPickerPickerBuilderDelegate {
           return Stack(
             children: [
               Positioned.fill(
-                child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: NetworkImage(url),
-                      fit: BoxFit.cover
-                    ),
-                  ),
-                ),
+                child: Image.network(url,
+                fit: BoxFit.cover,
+                loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress){
+                  if(loadingProgress == null) return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: child
+                  );
+                  return loadingTileIndicator ?? loadingTileIndicatorExample();
+                }),
               ),
-              if (selectedAsset == currentAssets.keys.elementAt(index)) ...selectedOverlay(context)
+              if (selectedAsset == currentAssets.keys.elementAt(index)) overlayBuilder != null ? overlayBuilder!(context, 1) : selectedOverlay(context)
             ],
           );
         }
@@ -169,54 +179,44 @@ class GiphyPickerPickerBuilderDelegate {
     //Width of the screen
     var width = MediaQuery.of(context).size.width;
 
-    return BlocBuilder<ConcreteCubit<String>, String>(
-      bloc: valueCubit,
-      builder: (BuildContext context, String value) {
-        return Selector<GiphyPickerProvider, int>(
-            selector: (_, GiphyPickerProvider provider) => provider.displayAssets.length,
-            builder: (_, int length, __) {
-            return Selector<GiphyPickerProvider, Map<String, double>>(
-              selector: (_, GiphyPickerProvider provider) => provider.displayAssets,
-              builder: (_, Map<String, double> assets, __) {
-                List<double> urlRatio = assets.values.toList();
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: !sheetCubitState ? height*0.4 - 60 : height,
-                      child: StaggeredGridView.countBuilder(
-                        shrinkWrap: true,
-                        mainAxisSpacing: 5,
-                        crossAxisSpacing: 5,
-                        padding: EdgeInsets.only(left: 5, right: 5, bottom: 5),
-                        itemCount: provider.totalAssetsCount,
-                        scrollDirection: !sheetCubitState ? Axis.horizontal : Axis.vertical,
-                        crossAxisCount: 2,
-                        itemBuilder: (context, i){
-                          return assetItemBuilder(assets.keys.elementAt(i), value, assets, i);
-                        },
-                        staggeredTileBuilder: (int index) => StaggeredTile.extent(1, !sheetCubitState ? (height*0.165)*urlRatio[index] - 15 : (width*0.5)/urlRatio[index] - 15),
-                      ),
-                    ),
-                  ],
-                );
-              }
-            );
-          }
-        );
-      }
-    );
+    return Selector<GiphyPickerProvider, int>(
+      selector: (_, GiphyPickerProvider provider) => provider.displayAssets.length,
+      builder: (_, int length, __) {
+      return Selector<GiphyPickerProvider, Map<String, double>>(
+        selector: (_, GiphyPickerProvider provider) => provider.displayAssets,
+        builder: (_, Map<String, double> assets, __) {
+          List<double> urlRatio = assets.values.toList();
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Container(
+                height: !sheetCubitState ? height*mediumExtent - 60 : height - 65 - MediaQuery.of(context).padding.top,
+                child: StaggeredGridView.countBuilder(
+                  controller: gridScrollController,
+                  shrinkWrap: true,
+                  mainAxisSpacing: 5,
+                  crossAxisSpacing: 5,
+                  padding: EdgeInsets.only(left: 5, right: 5, bottom: 5),
+                  itemCount: provider.totalAssetsCount,
+                  scrollDirection: !sheetCubitState ? Axis.horizontal : Axis.vertical,
+                  crossAxisCount: 2,
+                  itemBuilder: (context, i){
+                    return assetItemBuilder(assets.keys.elementAt(i), assets, i);
+                  },
+                  staggeredTileBuilder: (int index) => StaggeredTile.extent(1, !sheetCubitState ? 
+                  (height*0.165)*urlRatio[index] - 15 : (width*0.5)/urlRatio[index] - 15),
+                ),
+              ),
+            ],
+          );
+        }
+      );
+    }
+  );
   }
 
   /// Yes, the build method
   Widget build(BuildContext context) {
-
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-
-    //height of the screen
-    var height = MediaQuery.of(context).size.height;
-
     return ChangeNotifierProvider.value(
       value: provider,
       builder: (BuildContext context, _) {
@@ -226,15 +226,7 @@ class GiphyPickerPickerBuilderDelegate {
             return BlocBuilder<ConcreteCubit<bool>, bool>(
               bloc: sheetCubit,
               builder: (BuildContext context, bool sheetCubitState) {
-                return SingleChildScrollView(
-                  controller: gridController,
-                  child: Container(
-                    height: height,
-                    width: width,
-                    color: backgroundColor,
-                    child: hasAssetsToDisplay ? assetsGridBuilder(context, sheetCubitState) : loadingIndicator(context)
-                  ),
-                );
+                return hasAssetsToDisplay ? assetsGridBuilder(context, sheetCubitState) : loadingIndicator!(context, sheetCubitState) ?? loadingIndicatorExample(context);
               }
             );
           }

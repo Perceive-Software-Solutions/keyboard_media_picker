@@ -31,6 +31,9 @@ class GiphyPickerProvider extends ChangeNotifier {
   /// Stores the current selected Asset
   String? _selectedAsset;
 
+  /// 
+  bool assetsLoadingComplete = true;
+
   /// Get [_selectedAsset]
   String? get selectedAsset => _selectedAsset;
 
@@ -107,7 +110,11 @@ class GiphyPickerProvider extends ChangeNotifier {
 
   /// Load more assets from trending state
   Future<void> loadMoreAssetsFromTrending(int offset) async {
-    GiphyCollection collection = await client.trending(offset: offset, limit: pageSize);
+    assetsLoadingComplete = false;
+    notifyListeners();
+    GiphyCollection collection = await client.trending(offset: offset, limit: pageSize).then((value) {
+      return value;
+    });
     List<GiphyGif>? _list = collection.data;
     if(offset == 0){
       reset();
@@ -115,9 +122,10 @@ class GiphyPickerProvider extends ChangeNotifier {
     totalAssetsCount += _list!.length;
     for(GiphyGif _gif in _list){
       String _url = _gif.images!.fixedWidth.url;
-      double _displaySize = double.parse(_gif.images!.fixedWidth.width)/double.parse(_gif.images!.fixedWidth.height);
+      double _displaySize = double.parse(_gif.images!.fixedWidthDownsampled!.width)/double.parse(_gif.images!.fixedWidthDownsampled!.height);
       _displayAssets[_url] = _displaySize;
     }
+    assetsLoadingComplete = true;
     notifyListeners();
   }
   
@@ -127,7 +135,11 @@ class GiphyPickerProvider extends ChangeNotifier {
       loadMoreAssetsFromTrending(offset);
     }
     else{
-      GiphyCollection collection = await client.search(value, offset: offset, limit: pageSize, rating: GiphyRating.r);
+      assetsLoadingComplete = false;
+      GiphyCollection collection = await client.search(value, offset: offset, limit: pageSize, rating: GiphyRating.r).then((value) {
+        assetsLoadingComplete = true;
+        return value;
+      });
       List<GiphyGif>? _list = collection.data;
       if(offset == 0){
         reset();
@@ -135,9 +147,10 @@ class GiphyPickerProvider extends ChangeNotifier {
       totalAssetsCount += _list!.length;
       for(GiphyGif _gif in _list){
         String _url = _gif.images!.fixedWidth.url;
-        double _displaySize = double.parse(_gif.images!.fixedWidth.width)/double.parse(_gif.images!.fixedWidth.height);
+        double _displaySize = double.parse(_gif.images!.fixedWidthDownsampled!.width)/double.parse(_gif.images!.fixedWidthDownsampled!.height);
         _displayAssets[_url] = _displaySize;
       }
+      assetsLoadingComplete = true;
       notifyListeners();
     }
   }

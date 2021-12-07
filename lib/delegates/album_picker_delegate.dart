@@ -2,14 +2,13 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/provider/asset_picker_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:sliding_sheet/sliding_sheet.dart';
 
 
 
@@ -17,21 +16,17 @@ class AlbumPickerBuilderDelegate {
   AlbumPickerBuilderDelegate(
     this.provider,
     this.pageCubit,
+    this.gridScrollController,
+    this.albumMenuBuilder,
     this.imagePickerController, {
       this.gridCount = 3,
-      this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-      this.albumNameStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-      this.albumCountStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-      this.backgroundColor = Colors.white
+
   });
 
-  final TextStyle albumCountStyle;
+  final Widget Function(Map<AssetPathEntity, Uint8List?>, ScrollController controller, dynamic Function(AssetPathEntity)) albumMenuBuilder;
 
-  final TextStyle albumNameStyle;
-
-  final TextStyle overlayStyle;
-
-  final Color backgroundColor;
+  /// The [ScrollController] for the preview grid.
+  final ScrollController gridScrollController;
 
   /// [ChangeNotifier] for asset picker
   final DefaultAssetPickerProvider provider;
@@ -48,18 +43,11 @@ class AlbumPickerBuilderDelegate {
   /// params inside of the [ImagePickerBuilderDelegate] accordingly
   final ImagePickerController? imagePickerController;
 
-  /// The [ScrollController] for the preview grid.
-  final ScrollController gridScrollController = ScrollController();
-
-  /// The [ScrollController] for the [SingleChildScrollView]
-  final ScrollController mainScrollController = ScrollController();
-
   /// Keep a dispose method to sync with [State].
   ///
   /// Be aware that the method will do nothing when [keepScrollOffset] is true.
   void dispose() {
     gridScrollController.dispose();
-    mainScrollController.dispose();
   }
 
   /// Whether the current platform is Apple OS.
@@ -93,162 +81,54 @@ class AlbumPickerBuilderDelegate {
     );
   }
 
-  /// Overlays [imageItemBuilder] amd [videoItemBuilder] to display the slected state
-  List<Widget> selectedOverlay(BuildContext context, AssetEntity asset){
-
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-    
-    return [
-      Positioned.fill(
-        child: Opacity(
-          opacity: 0.4,
-          child: Container(
-            height: width / 3,
-            width: width / 3,
-            color: Colors.black,
-          ),
-        ),
-      ),
-      Align(
-        alignment: Alignment.center,
-        child: Container(
-          height: 30,
-          width: 30,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius:BorderRadius.circular(30)),
-          child: Center(
-            child: Text(
-              (provider.selectedAssets.indexOf(asset) + 1).toString(),
-              style: overlayStyle,
-        )),
-      ))
-    ];
-  }
-
+  /// Builds the overlapping thumbnail
   Widget thumbnailItemBuilder(
-    BuildContext context, int index, Map<AssetPathEntity, Uint8List?> pathEntityList, int length, int placeHolder){
-
-    Widget assetItemBuilder(){
-
-      Uint8List? _thumbnail = pathEntityList[pathEntityList.keys.elementAt(index)];
-
-      return AnimationConfiguration.staggeredGrid(
-        columnCount: 2,
-        position: index,
-        child: ScaleAnimation(
-          child: FadeInAnimation(
-            child: GestureDetector(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(17),
-                    child: Container(
-                      width: 105,
-                      height: 139,
-                      child: _thumbnail != null ? Image.memory(
-                        _thumbnail,
-                        filterQuality: FilterQuality.high,
-                        fit: BoxFit.fitWidth,
-                      ) : Container()
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 5),
-                    child: Text(pathEntityList.keys.elementAt(index).name, style: albumNameStyle),
-                  ),
-                  Text(pathEntityList.keys.elementAt(index).assetCount.toString(), style: albumCountStyle)
-                ],
-              ),
-              onTap: () {
-                provider.currentPathEntity = pathEntityList.keys.elementAt(index);
-                provider.getAssetsFromEntity(0, pathEntityList.keys.elementAt(index));
-                if(pageCubit.state) pageCubit.emit(false);
-              },
-            ),
+    BuildContext context, Uint8List? thumbNail){
+      Widget assetItemBuilder(){
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            height: 36,
+            width: 36,
+            child: thumbNail != null ? Image.memory(
+              thumbNail,
+              filterQuality: FilterQuality.high,
+              fit: BoxFit.fitWidth,
+            ) : Container()
           ),
-        ),
-      );
-    }
+        );
+      }
 
-    if(pathEntityList[index]?.isNotEmpty ?? true)
+    if(thumbNail != null)
       return assetItemBuilder();
     else
       return SizedBox.shrink();
     
   }
 
-  /// The main grid view builder for assets
-  Widget assetsGridBuilder(BuildContext context){
-
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-
+  Widget assetListBuilder(BuildContext context){
     return Selector<DefaultAssetPickerProvider, Map<AssetPathEntity, Uint8List?>>(
       selector: (_, DefaultAssetPickerProvider p) => p.pathEntityList,
       builder: (_, Map<AssetPathEntity, Uint8List?> pathEntityList, __) {
-
-         // First, we need the count of the assets.
-        int totalCount = pathEntityList.length;
-
-        // Then we use the [totalCount] to calculate how many placeholders we need.
-        int placeholderCount = 0;
-
-        if (totalCount % gridCount != 0) {
-          // When there are left items that not filled into one row, filled the row
-          // with placeholders.
-          placeholderCount = gridCount - totalCount % gridCount;
-        } else {
-          // Otherwise, we don't need placeholders.
-          placeholderCount = 0;
-        }
-
-        Widget _materialGrid(BuildContext c, Map<AssetPathEntity, Uint8List?> assets){
-          return GridView.extent(
-            childAspectRatio: 0.5,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 16,
-            maxCrossAxisExtent: width / 3,
-            children: [
-              for(int i = 0; i < pathEntityList.length + placeholderCount + gridCount; i++)
-                if(i >= pathEntityList.length)
-                  SizedBox.shrink()
-                else
-                  thumbnailItemBuilder(context, i, assets, pathEntityList.length, placeholderCount)
-            ],
-          );
-        }
-
-        return BlocBuilder<ConcreteCubit<bool>, bool>(
-          builder: (context, state) {
-            return _materialGrid(_, pathEntityList);
-          }
-        );
+        return albumMenuBuilder(pathEntityList, gridScrollController, (AssetPathEntity entity){
+          provider.currentPathEntity = entity;
+          provider.getAssetsFromEntity(0, entity);
+          if(pageCubit.state) pageCubit.emit(false);
+        });
       }
     );
-  } 
+  }
   
   /// Yes, the build method
   Widget build(BuildContext context){
-
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-
-    //height of the screen
-    var height = MediaQuery.of(context).size.height;
-    
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _) {
         return Container(
-          color: backgroundColor,
-          height: height,
-          width: width,
+          color: Colors.grey,
           child: Padding(
-            padding: const EdgeInsets.only(left: 16, right: 16, top: 5),
-            child: assetsGridBuilder(context),
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 5, bottom: 16),
+            child: assetListBuilder(context),
           ),
         );
       }, 

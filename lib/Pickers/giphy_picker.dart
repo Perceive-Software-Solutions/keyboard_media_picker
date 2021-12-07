@@ -1,9 +1,12 @@
+import 'dart:ui';
+
 import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:piky/Pickers/picker.dart';
 import 'package:piky/delegates/giphy_picker_delegate.dart';
 import 'package:piky/provider/giphy_picker_provider.dart';
+import 'package:piky/util/functions.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 
 import 'imager_picker.dart';
@@ -35,6 +38,9 @@ class GiphyPicker extends StatefulWidget {
   /// Search bar color
   final Color searchColor;
 
+  /// Color of the growable Header
+  final Color statusBarPaddingColor;
+
   /// Cancel button
   final TextStyle cancelButtonStyle;
 
@@ -61,10 +67,15 @@ class GiphyPicker extends StatefulWidget {
   Widget? Function(BuildContext, bool)? loadingIndicator;
   Widget? loadingTileIndicator;
 
+  /// Overlay Widget of the selected asset
+  final Widget Function(BuildContext context, int index)? overlayBuilder;
+
   GiphyPicker({
     required Key key,
     required this.apiKey, 
     required this.controller, 
+    this.statusBarPaddingColor = Colors.white,
+    this.overlayBuilder,
     this.minExtent = 0.0,
     this.initialExtent = 0.4,
     this.mediumExtent = 0.4,
@@ -160,6 +171,9 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   /// If the search is currently queued up
   bool queued = true;
 
+  /// Tracks the sheet extent
+  late ConcreteCubit<double> sheetExtent = ConcreteCubit<double>(widget.initialExtent);
+
   //Adds a listener to the scroll position of the staggered grid view
   @override
   void initState() {
@@ -172,7 +186,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
       sheetCubit,
       widget.loadingIndicator,
       widget.loadingTileIndicator,
-      initialExtent: widget.initialExtent,
+      mediumExtent: widget.mediumExtent,
     );
 
     //Initiate animation
@@ -214,17 +228,29 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   /// Matches the sheetController state to the scroll offset of the feed
   void initiateScrollListener(ScrollController scrollController){
     scrollController.addListener(() {
-      if(scrollController.offset <= -20 && !snapping){
-        if(sheetController.state!.extent == 1.0){
+      if(scrollController.offset <= -50 && sheetController.state!.extent != widget.minExtent && !snapping){
+        if(sheetController.state!.extent == widget.expandedExtent){
           snapping = true;
           Future.delayed(Duration(milliseconds: 0), () {
-            sheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
+            sheetController.snapToExtent(widget.mediumExtent, duration: Duration(milliseconds: 300));
             focusNode.unfocus();
             sheetCubit.emit(false);
             scrollController.jumpTo(0.0);
             Future.delayed(Duration(milliseconds: 300)).then((value) => {
               snapping = false
             });
+          });
+        }
+        else if(sheetController.state!.extent == widget.mediumExtent){
+          snapping = true;
+          Future.delayed(Duration.zero, () {
+            sheetController.snapToExtent(widget.minExtent, duration: Duration(milliseconds: 300));
+            focusNode.unfocus();
+            sheetCubit.emit(false);
+            scrollController.jumpTo(0.0);
+          });
+          Future.delayed(Duration(milliseconds: 300)).then((value) => {
+            snapping = false
           });
         }
       }
@@ -249,70 +275,79 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     if(state.extent<= widget.mediumExtent && (state.extent - widget.minExtent) >= 0){
       animationController.animateTo((state.extent - widget.minExtent) / widget.mediumExtent);
     }
+    sheetExtent.emit(state.extent);
   }
 
   @override
   Widget build(BuildContext context) {
-
+    var statusBarHeight = MediaQueryData.fromWindow(window).padding.top;
     return BlocProvider(
       create: (context) => sheetCubit,
       child: BlocBuilder<ConcreteCubit<bool>, bool>(
         bloc: sheetCubit,
         buildWhen: (o, n) => o != n,
         builder: (context, sheetCubitState) {
-          return ColorfulSafeArea(
-            top: sheetCubitState,
-            color: widget.maxBackdropColor,
-            child: SlidingSheet(
-                controller: sheetController,
-                isBackdropInteractable: true,
-                duration: Duration(milliseconds: 300),
-                cornerRadius: 32,
-                cornerRadiusOnFullscreen: 0,
-                backdropColor: colorTween.value,
-                listener: sheetListener,
-                snapSpec: SnapSpec(
-                  initialSnap: widget.initialExtent,
-                  snappings: [widget.minExtent, widget.mediumExtent, widget.expandedExtent],
-                  onSnap: (state, _){
-                    if(state.isCollapsed){
-                      widget.pickerController!.closeGiphyPicker();
-                    }
-                    if(state.extent == widget.mediumExtent){
-                      if(sheetCubitState) sheetCubit.emit(false);
-                    }
-                    else if(state.isExpanded){
-                      sheetCubit.emit(true);
-                    }
-                  },
-                ),
-                headerBuilder: (context, _){
-                  return Container(
-                    color: widget.backgroundColor,
-                    child: _buildHeader(context),
-                  );
-                },
-                customBuilder: (context, controller, sheetState){
-                  controller.addListener(() {
-                    if(controller.offset > 0 && !sheetCubitState){
-                      sheetCubit.emit(true);
-                      sheetController.snapToExtent(widget.expandedExtent);
-                    }
-                  });
-                  if(delegate == null){
-                    return Container();
+          return SlidingSheet(
+              controller: sheetController,
+              isBackdropInteractable: true,
+              duration: Duration(milliseconds: 300),
+              cornerRadius: 32,
+              cornerRadiusOnFullscreen: 0,
+              backdropColor: colorTween.value,
+              listener: sheetListener,
+              snapSpec: SnapSpec(
+                initialSnap: widget.initialExtent,
+                snappings: [widget.minExtent, widget.mediumExtent, widget.expandedExtent],
+                onSnap: (state, _){
+                  if(state.isCollapsed && widget.minExtent == 0){
+                    widget.pickerController!.closeGiphyPicker();
                   }
-                  return SingleChildScrollView(
-                    controller: controller,
-                    physics: AlwaysScrollableScrollPhysics(),
-                    child: Container(
-                      height: MediaQuery.of(context).size.height - HEADER_HEIGHT - MediaQuery.of(context).padding.top,
-                      child: delegate.build(context)
-                    )
-                  );
+                  if(state.extent == widget.mediumExtent){
+                    if(sheetCubitState) sheetCubit.emit(false);
+                  }
+                  else if(state.isExpanded){
+                    sheetCubit.emit(true);
+                  }
                 },
               ),
-          );
+              headerBuilder: (context, _){
+                return BlocBuilder<ConcreteCubit<double>, double>(
+                  bloc: sheetExtent,
+                  builder: (context, extent) {
+                    double topExtentValue = Functions.animateOver(extent, percent: 0.9);
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(height: lerpDouble(0, statusBarHeight, topExtentValue)!, color: widget.statusBarPaddingColor,),
+                        Container(
+                          color: widget.backgroundColor,
+                          child: _buildHeader(context),
+                        ),
+                      ],
+                    );
+                  }
+                );
+              },
+              customBuilder: (context, controller, sheetState){
+                controller.addListener(() {
+                  if(controller.offset > 0 && !sheetCubitState){
+                    sheetCubit.emit(true);
+                    sheetController.snapToExtent(widget.expandedExtent);
+                  }
+                });
+                if(delegate == null){
+                  return Container();
+                }
+                return SingleChildScrollView(
+                  controller: controller,
+                  physics: AlwaysScrollableScrollPhysics(),
+                  child: Container(
+                    height: MediaQuery.of(context).size.height - HEADER_HEIGHT - MediaQuery.of(context).padding.top,
+                    child: delegate.build(context)
+                  )
+                );
+              },
+            );
         }
       )
     );
@@ -365,7 +400,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                           ),
                         ),
                         onChanged: (value){
-                          searchGiphy(value);
+                          // searchGiphy(value);
                         },
                         onTap: (){
                           setState(() {

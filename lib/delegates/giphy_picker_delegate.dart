@@ -15,10 +15,14 @@ class GiphyPickerPickerBuilderDelegate {
     this.sheetCubit,
     this.loadingIndicator,
     this.loadingTileIndicator, {
-      this.initialExtent = 0.4,
+      this.overlayBuilder,
+      this.mediumExtent = 0.4,
       this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
     }
   );
+
+  /// Overlay Widget of the selected asset
+  final Widget Function(BuildContext context, int index)? overlayBuilder;
 
   /// Overlay TextStyle
   final TextStyle overlayStyle;
@@ -45,7 +49,7 @@ class GiphyPickerPickerBuilderDelegate {
   final ConcreteCubit<bool> sheetCubit;
 
   /// Intial Extent
-  final double initialExtent;
+  final double mediumExtent;
 
   /// Primary [TextEditingController] to get the current value of the [TextField]
   TextEditingController searchFieldController = TextEditingController();
@@ -67,36 +71,38 @@ class GiphyPickerPickerBuilderDelegate {
   }
 
   /// Overlays [imageItemBuilder] amd [videoItemBuilder] to display the slected state
-  List<Widget> selectedOverlay(BuildContext context){
+  Widget selectedOverlay(BuildContext context){
 
     //Width of the screen
     var width = MediaQuery.of(context).size.width;
     
-    return [
-      Positioned.fill(
-        child: Opacity(
-          opacity: 0.4,
-          child: Container(
-            height: width / 3,
-            width: width / 3,
-            color: Colors.black,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.4,
+            child: Container(
+              height: width / 3,
+              width: width / 3,
+              color: Colors.black,
+            ),
           ),
         ),
-      ),
-      Align(
-        alignment: Alignment.center,
-        child: Container(
-          height: 30,
-          width: 30,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius:BorderRadius.circular(30)),
-          child: Center(
-            child: Text('1', style: overlayStyle)
-          ),
+        Align(
+          alignment: Alignment.center,
+          child: Container(
+            height: 30,
+            width: 30,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius:BorderRadius.circular(30)),
+            child: Center(
+              child: Text('1', style: overlayStyle)
+            )
+          )
         )
-      )
-    ];
+      ],
+    );
   }
 
   Widget loadingTileIndicatorExample(){
@@ -129,7 +135,7 @@ class GiphyPickerPickerBuilderDelegate {
                   return loadingTileIndicator ?? loadingTileIndicatorExample();
                 }),
               ),
-              if (selectedAsset == currentAssets.keys.elementAt(index)) ...selectedOverlay(context)
+              if (selectedAsset == currentAssets.keys.elementAt(index)) overlayBuilder != null ? overlayBuilder!(context, 1) : selectedOverlay(context)
             ],
           );
         }
@@ -184,7 +190,7 @@ class GiphyPickerPickerBuilderDelegate {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Container(
-                height: !sheetCubitState ? height*initialExtent - 60 : height - 65 - MediaQuery.of(context).padding.top,
+                height: !sheetCubitState ? height*mediumExtent - 60 : height - 65 - MediaQuery.of(context).padding.top,
                 child: StaggeredGridView.countBuilder(
                   controller: gridScrollController,
                   shrinkWrap: true,

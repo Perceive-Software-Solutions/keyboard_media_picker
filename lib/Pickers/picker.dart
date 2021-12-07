@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 
@@ -14,6 +15,12 @@ enum PickerType {
 enum Option {
   Open,
   Close,
+}
+
+enum PickerValue {
+  ImagePicker,
+  GiphyPicker,
+  None,
 }
 
 class Picker extends StatefulWidget {
@@ -64,6 +71,9 @@ class Picker extends StatefulWidget {
   final Color minBackdropColor;
   final Color maxBackdropColor;
 
+  /// Overlay Widget of the selected asset
+  final Widget Function(BuildContext context, int index)? overlayBuilder;
+
   /// GiphyPicker
   Widget? notch;
   TextStyle cancelButtonStyle;
@@ -72,14 +82,20 @@ class Picker extends StatefulWidget {
   Icon icon;
   TextStyle iconStyle;
   Color searchColor;
+  Color gifStatusBarColor;
+
+  /// Initial Picker Value
+  PickerValue initialValue;
 
   Picker({
     required this.apiKey,
     required this.child, 
+    required this.initialValue,
     required this.backgroundColor, 
     required this.controller,  
     required this.imageHeaderBuilder,
     required this.albumMenuBuilder,
+    this.overlayBuilder,
     this.imageLoadingIndicator,
     this.initialExtent = 0.55, 
     this.minExtent = 0.0,
@@ -97,7 +113,8 @@ class Picker extends StatefulWidget {
     this.iconStyle = const TextStyle(color: Colors.grey),
     this.searchColor = Colors.grey,
     this.gifLoadingIndicator,
-    this.gifLoadingTileIndicator
+    this.gifLoadingTileIndicator,
+    this.gifStatusBarColor = Colors.white
   });
 
   @override
@@ -118,6 +135,17 @@ class _PickerState extends State<Picker> {
   @override
   void initState(){
     super.initState();
+
+    if(widget.initialValue != PickerValue.None){
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) { 
+        if(widget.initialValue == PickerValue.ImagePicker){
+          openImagePicker(const [], const DurationConstraint(max: Duration(minutes: 1)), 5, false);
+        }
+        else if(widget.initialValue == PickerValue.GiphyPicker){
+          openGiphyPicker(); 
+        }
+      });
+    }
   }
 
   @override
@@ -267,6 +295,7 @@ class _PickerState extends State<Picker> {
               loadingIndicator: widget.imageLoadingIndicator,
               minBackdropColor: widget.minBackdropColor,
               maxBackdropColor: widget.maxBackdropColor,
+              overlayBuilder: widget.overlayBuilder,
             ) : type == PickerType.GiphyPickerView ? 
             GiphyPicker(
               key: Key('GiphyPicker'), 
@@ -289,6 +318,7 @@ class _PickerState extends State<Picker> {
               maxBackdropColor: widget.maxBackdropColor,
               loadingIndicator: widget.gifLoadingIndicator,
               loadingTileIndicator: widget.gifLoadingTileIndicator,
+              statusBarPaddingColor: widget.gifStatusBarColor,
             ) :
             Container(),
           )

@@ -234,7 +234,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  /// Builds the overlapping thumbnail
+  /// Builds the apping thumbnail
   Widget thumbnailItemBuilder(
     BuildContext context, Uint8List? thumbNail){
       Widget assetItemBuilder(){
@@ -379,10 +379,11 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Picker(
       apiKey: 'OI5ZOVhKTzf16it9QmrOZGSGdRudnk4H',
+      initialValue: PickerValue.ImagePicker,
       controller: pickerController,
       backgroundColor: Colors.white,
-      initialExtent: 0.55,
-      minExtent: 0.0,
+      initialExtent: 0.2,
+      minExtent: 0.2,
       mediumExtent: 0.55,
       expandedExtent: 1.0,
       minBackdropColor: Colors.transparent,

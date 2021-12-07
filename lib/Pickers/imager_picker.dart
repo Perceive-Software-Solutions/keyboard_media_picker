@@ -39,6 +39,9 @@ class ImagePicker extends StatefulWidget {
   /// If not used will have the base [CircularProgressIndicator] as placeholder
   final Widget? loadingIndicator;
 
+  /// Overlay of the selected Asset
+  final Widget Function(BuildContext context, int index)? overlayBuilder;
+
   /// Backdrop Colors
   final Color minBackdropColor;
   final Color maxBackdropColor;
@@ -50,6 +53,7 @@ class ImagePicker extends StatefulWidget {
     required this.albumMenuBuilder,
     this.pickerController,
     this.loadingIndicator,
+    this.overlayBuilder,
     this.minExtent = 0.0,
     this.initialExtent = 0.4,
     this.mediumExtent = 0.4,
@@ -90,6 +94,9 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
 
   /// Animates the color from min extent to medium extent
   late Animation<Color?> colorTween;
+
+  /// Initial extent
+  late ConcreteCubit<double> sheetExtent = ConcreteCubit<double>(widget.initialExtent);
 
   /// The state of the [ImagePicker]
   Option type = Option.Open;
@@ -143,7 +150,8 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       imageGridScrollController,
       widget.controller,
       gridCount: 4,
-      loadingIndicator: widget.loadingIndicator
+      loadingIndicator: widget.loadingIndicator,
+      overlayBuilder: widget.overlayBuilder
     );
 
     //Build album delegate
@@ -188,11 +196,11 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
 
   void initiateListener(ScrollController scrollController){
     scrollController.addListener(() {
-      if(scrollController.offset <= -20 && !snapping){
+      if(scrollController.offset <= -50 && sheetController.state!.extent != widget.minExtent && !snapping){
         if(sheetController.state!.extent == 1.0){
           snapping = true;
           Future.delayed(Duration.zero, () {
-            sheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
+            sheetController.snapToExtent(widget.mediumExtent, duration: Duration(milliseconds: 300));
             sheetCubit.emit(false);
             if(pageCubit.state){
               pageCubit.emit(!pageCubit.state);
@@ -206,7 +214,6 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
           snapping = true;
           Future.delayed(Duration.zero, () {
             sheetController.snapToExtent(widget.minExtent, duration: Duration(milliseconds: 300));
-            widget.pickerController!.closeImagePicker();
           });
           Future.delayed(Duration(milliseconds: 300)).then((value) => {
             snapping = false
@@ -235,14 +242,14 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
   }
 
   void sheetListener(SheetState state){
-    if(state.extent<= widget.mediumExtent && (state.extent - widget.minExtent) >= 0){
+    if(state.extent <= widget.mediumExtent && (state.extent - widget.minExtent) >= 0){
       animationController.animateTo((state.extent - widget.minExtent) / widget.mediumExtent);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
+    
     Widget _buildHeader(BuildContext context, bool sheetCubitState, String path){
       //Max Extent
       return GestureDetector(
@@ -272,91 +279,96 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                 child: AnimatedBuilder(
                   animation: colorTween,
                   builder: (context, child) {
-                    return SlidingSheet(
-                        controller: sheetController,
-                        isBackdropInteractable: true,
-                        duration: Duration(milliseconds: 300),
-                        cornerRadius: 32,
-                        cornerRadiusOnFullscreen: 0,
-                        backdropColor: colorTween.value,
-                        listener: sheetListener,
-                        snapSpec: SnapSpec(
-                          initialSnap: widget.initialExtent,
-                          snappings: [widget.minExtent, widget.mediumExtent, widget.expandedExtent],
-                          onSnap: (state, _){
-                            if(state.isCollapsed){
-                              widget.pickerController!.closeImagePicker();
-                            }
-                            if(state.extent == widget.mediumExtent){
-                              if(sheetCubit.state) sheetCubit.emit(false);
-                              if(pageCubit.state) pageCubit.emit(false);
-                            }
-                            else if(state.isExpanded && !pageCubit.state){
-                              if(!sheetCubit.state) sheetCubit.emit(true);
-                            }
-                          },
-                        ),
-                        headerBuilder: (context, state){
-                          return Container(
-                            height: widget.headerHeight,
-                            color: Colors.white,
-                            child: ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
-                              value: provider,
-                              builder: (context, snapshot) {
-                                return Selector<DefaultAssetPickerProvider, AssetPathEntity?>(
-                                  selector: (_, DefaultAssetPickerProvider p) => p.currentPathEntity,
-                                  builder: (BuildContext context, AssetPathEntity? _path, Widget? child) {
-                                    return AnimatedSwitcher(
-                                      duration: Duration(milliseconds: 400),
-                                      transitionBuilder: (child, animation){
-                                        return FadeTransition(
-                                          opacity: CurvedAnimation(
-                                            parent: animation,
-                                            curve: Curves.easeOut,
-                                          ),
-                                          child: SlideTransition(
-                                            position: Tween<Offset>(
-                                              begin: const Offset(0, -1.5),
-                                              end: Offset.zero,
-                                            ).animate(CurvedAnimation(
-                                              parent: animation,
-                                              curve: Curves.easeInOutQuart,
-                                            )),
-                                            child: child
-                                          ),
+                    return BlocBuilder<ConcreteCubit<double>, double>(
+                      bloc: sheetExtent,
+                      builder: (context, extent) {
+                        return SlidingSheet(
+                            controller: sheetController,
+                            isBackdropInteractable: extent > widget.minExtent ? false : true,
+                            duration: Duration(milliseconds: 300),
+                            cornerRadius: 32,
+                            cornerRadiusOnFullscreen: 0,
+                            backdropColor: colorTween.value,
+                            listener: sheetListener,
+                            snapSpec: SnapSpec(
+                              initialSnap: widget.initialExtent,
+                              snappings: [widget.minExtent, widget.mediumExtent, widget.expandedExtent],
+                              onSnap: (state, _){
+                                if(state.isCollapsed && widget.minExtent == 0){
+                                  widget.pickerController!.closeImagePicker();
+                                }
+                                if(state.extent == widget.mediumExtent){
+                                  if(sheetCubit.state) sheetCubit.emit(false);
+                                  if(pageCubit.state) pageCubit.emit(false);
+                                }
+                                else if(state.isExpanded && !pageCubit.state){
+                                  if(!sheetCubit.state) sheetCubit.emit(true);
+                                }
+                              },
+                            ),
+                            headerBuilder: (context, state){
+                              return Container(
+                                height: widget.headerHeight,
+                                color: Colors.white,
+                                child: ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
+                                  value: provider,
+                                  builder: (context, snapshot) {
+                                    return Selector<DefaultAssetPickerProvider, AssetPathEntity?>(
+                                      selector: (_, DefaultAssetPickerProvider p) => p.currentPathEntity,
+                                      builder: (BuildContext context, AssetPathEntity? _path, Widget? child) {
+                                        return AnimatedSwitcher(
+                                          duration: Duration(milliseconds: 400),
+                                          transitionBuilder: (child, animation){
+                                            return FadeTransition(
+                                              opacity: CurvedAnimation(
+                                                parent: animation,
+                                                curve: Curves.easeOut,
+                                              ),
+                                              child: SlideTransition(
+                                                position: Tween<Offset>(
+                                                  begin: const Offset(0, -1.5),
+                                                  end: Offset.zero,
+                                                ).animate(CurvedAnimation(
+                                                  parent: animation,
+                                                  curve: Curves.easeInOutQuart,
+                                                )),
+                                                child: child
+                                              ),
+                                            );
+                                          },
+                                          child: _buildHeader(context, sheetCubitState, _path?.name ?? "Recents")
                                         );
-                                      },
-                                      child: _buildHeader(context, sheetCubitState, _path?.name ?? "Recents")
+                                      }
                                     );
                                   }
-                                );
-                              }
-                            )
-                          );
-                        },
-                        customBuilder: (context, controller, sheetState){
-                          double SAFE_AREA_PADDING = sheetCubitState ? MediaQuery.of(context).padding.top : 0.0;
-                          double height = sheetCubitState ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*widget.mediumExtent;
-                          return BlocBuilder<ConcreteCubit<bool>, bool>(
-                            bloc: pageCubit,
-                            buildWhen: (o, n) => o != n,
-                            builder: (context, state) {
-                              return SingleChildScrollView(
-                                controller: controller,
-                                child: !state ? Container(
-                                  key: Key("1"), 
-                                  height: height-widget.headerHeight-SAFE_AREA_PADDING,
-                                  child: imageDelegate.build(context)
-                                ) : Container(
-                                  key: Key("2"), 
-                                  height: MediaQuery.of(context).size.height-widget.headerHeight-SAFE_AREA_PADDING,
-                                  child: albumDelegate.build(context)
-                                ),
+                                )
                               );
-                            }
+                            },
+                            customBuilder: (context, controller, sheetState){
+                              double SAFE_AREA_PADDING = sheetCubitState ? MediaQuery.of(context).padding.top : 0.0;
+                              double height = sheetCubitState ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*widget.mediumExtent;
+                              return BlocBuilder<ConcreteCubit<bool>, bool>(
+                                bloc: pageCubit,
+                                buildWhen: (o, n) => o != n,
+                                builder: (context, state) {
+                                  return SingleChildScrollView(
+                                    controller: controller,
+                                    child: !state ? Container(
+                                      key: Key("1"), 
+                                      height: height-widget.headerHeight-SAFE_AREA_PADDING,
+                                      child: imageDelegate.build(context)
+                                    ) : Container(
+                                      key: Key("2"), 
+                                      height: MediaQuery.of(context).size.height-widget.headerHeight-SAFE_AREA_PADDING,
+                                      child: albumDelegate.build(context)
+                                    ),
+                                  );
+                                }
+                              );
+                            },
                           );
-                        },
-                      );
+                      }
+                    );
                   }
                 ),
               );

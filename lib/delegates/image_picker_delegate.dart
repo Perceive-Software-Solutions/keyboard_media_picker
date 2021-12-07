@@ -19,19 +19,15 @@ class ImagePickerBuilderDelegate {
     this.gridScrollController,
     this.imagePickerController, {
       this.loadingIndicator,
+      this.overlayBuilder,
       this.gridCount = 4,
-      this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-      this.backgroundColor = Colors.white,
   });
+
+  /// Overlay that displays if the image is selected
+  final Widget Function(BuildContext context, int index)? overlayBuilder;
 
   /// When fetching the images this loading indicator will be used
   final Widget? loadingIndicator;
-
-  /// Selected overlay style
-  final TextStyle overlayStyle;
-
-  /// Background color behind the loaded images
-  final Color backgroundColor;
 
   /// [ChangeNotifier] for asset picker
   final DefaultAssetPickerProvider provider;
@@ -83,37 +79,39 @@ class ImagePickerBuilderDelegate {
   }
 
   /// Overlays [imageItemBuilder] amd [videoItemBuilder] to display the slected state
-  List<Widget> selectedOverlay(BuildContext context, AssetEntity asset){
+  Widget selectedOverlay(BuildContext context, AssetEntity asset){
 
     //Width of the screen
     var width = MediaQuery.of(context).size.width;
     
-    return [
-      Positioned.fill(
-        child: Opacity(
-          opacity: 0.4,
-          child: Container(
-            height: width / 3,
-            width: width / 3,
-            color: Colors.black,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.4,
+            child: Container(
+              height: width / 3,
+              width: width / 3,
+              color: Colors.black,
+            ),
           ),
         ),
-      ),
-      Align(
-        alignment: Alignment.center,
-        child: Container(
-          height: 30,
-          width: 30,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius:BorderRadius.circular(30)),
-          child: Center(
-            child: Text(
-              (provider.selectedAssets.indexOf(asset) + 1).toString(),
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+        Align(
+          alignment: Alignment.center,
+          child: Container(
+            height: 30,
+            width: 30,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius:BorderRadius.circular(30)),
+            child: Center(
+              child: Text(
+                (provider.selectedAssets.indexOf(asset) + 1).toString(),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+          )),
         )),
-      ))
-    ];
+      ],
+    );
   }
 
   /// Items and placeholders current displayed in the grid
@@ -143,7 +141,9 @@ class ImagePickerBuilderDelegate {
                 failedItemBuilder: failedItemBuilder,
               ),
             ),
-          if (provider.selectedAssets.contains(asset)) ...selectedOverlay(context, asset)
+          if (provider.selectedAssets.contains(asset)) overlayBuilder != null ? 
+          Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : 
+          Positioned.fill(child: selectedOverlay(context, asset))
         ],
         );
       }
@@ -199,8 +199,10 @@ class ImagePickerBuilderDelegate {
                 ),
               ),
             ),
-          if (provider.selectedAssets.contains(asset)) ...selectedOverlay(context, asset)
-        ],
+            if (provider.selectedAssets.contains(asset)) overlayBuilder != null ? 
+              Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : 
+              Positioned.fill(child: selectedOverlay(context, asset))
+          ],
         );
       }
     );

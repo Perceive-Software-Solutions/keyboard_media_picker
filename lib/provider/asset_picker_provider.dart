@@ -25,6 +25,8 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
     }
   }
 
+  bool _mounted = true;
+
   /// Maximum count for asset selection.
   /// 资源选择的最大数量
   final int maxAssets;
@@ -39,18 +41,23 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
   /// 路径选择器中缩略图的大小
   final int pathThumbSize;
 
+
+
   /// Clear all fields when dispose.
   /// 销毁时重置所有内容
   @override
   void dispose() {
+    super.dispose();
     _isAssetsEmpty = false;
     _isSwitchingPath = false;
     _pathEntityList.clear();
     _currentPathEntity = null;
     _currentAssets.clear();
     _selectedAssets.clear();
-    super.dispose();
+    _mounted = false;
   }
+
+  bool get mounted => _mounted;
 
   /// Whether there are assets on the devices.
   /// 设备上是否有资源文件
@@ -63,7 +70,9 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
       return;
     }
     _isAssetsEmpty = value;
-    notifyListeners();
+    if(mounted){
+      notifyListeners();
+    }
   }
 
   /// Whether there are any assets can be displayed.
@@ -77,7 +86,9 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
       return;
     }
     _hasAssetsToDisplay = value;
-    notifyListeners();
+    if(mounted){
+      notifyListeners();
+    }
   }
 
   /// Whether more assets are waiting for a load.
@@ -100,7 +111,9 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
       return;
     }
     _totalAssetsCount = value;
-    notifyListeners();
+    if(mounted){
+      notifyListeners();
+    }
   }
 
   /// If path switcher opened.
@@ -114,8 +127,10 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
       return;
     }
     _isSwitchingPath = value;
-    notifyListeners();
-  }
+    if(mounted){
+      notifyListeners();
+    }
+  } 
 
   /// Map for all path entity.
   /// 所有包含资源的路径里列表
@@ -146,7 +161,9 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
       return;
     }
     _currentPathEntity = value;
-    notifyListeners();
+    if(mounted){
+      notifyListeners();
+    }
   }
 
   /// Assets under current path entity.
@@ -160,7 +177,9 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
       return;
     }
     _currentAssets = List<Asset>.from(value);
-    notifyListeners();
+    if(mounted){
+      notifyListeners();
+    }
   }
 
   /// Selected assets.
@@ -174,7 +193,9 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
       return;
     }
     _selectedAssets = List<Asset>.from(value);
-    notifyListeners();
+    if(mounted){
+      notifyListeners();
+    }
   }
 
   /// Descriptions for selected assets currently.
@@ -321,7 +342,9 @@ class DefaultAssetPickerProvider
       if (requestType != RequestType.audio) {
         getFirstThumbFromPathEntity(pathEntity).then((Uint8List? data) {
           _pathEntityList[pathEntity] = data;
-          notifyListeners();
+          if(mounted){
+            notifyListeners();
+          }
         });
       }
     }
@@ -356,7 +379,9 @@ class DefaultAssetPickerProvider
     //   print( await asset.file);
     // }
     _hasAssetsToDisplay = currentAssets.isNotEmpty;
-    notifyListeners();
+    if(mounted){
+      notifyListeners();
+    }
   }
 
   @override
@@ -401,7 +426,9 @@ class DefaultAssetPickerProvider
     _isSwitchingPath = false;
     _currentPathEntity = pathEntity;
     _totalAssetsCount = pathEntity.assetCount;
-    notifyListeners();
+    if(mounted){
+      notifyListeners();
+    }
     await getAssetsFromEntity(0, currentPathEntity!);
   }
 

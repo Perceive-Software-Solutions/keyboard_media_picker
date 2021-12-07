@@ -379,7 +379,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Picker(
       apiKey: 'OI5ZOVhKTzf16it9QmrOZGSGdRudnk4H',
-      initialValue: PickerValue.ImagePicker,
+      initialValue: PickerType.ImagePicker,
       controller: pickerController,
       backgroundColor: Colors.white,
       initialExtent: 0.2,
@@ -405,10 +405,36 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               Spacer(),
+              GestureDetector(
+                child: Container(
+                  height: 30,
+                  width: 30,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.blue, width: 1.5)),
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: Icon(
+                      Icons.expand,
+                      color: Colors.white,
+                      size: 34,
+                    ),
+                  ),
+                ),
+                onTap: () async {
+                  if(pickerController.isOpen){
+                    pickerController.closePicker();
+                  }
+                  else{
+                    pickerController.openPicker();
+                  }
+                },
+              ),
+              Spacer(),
               Row(
                 children: [
                     Spacer(),
-                    GestureDetector(
+                  GestureDetector(
                     child: Container(
                       height: 30,
                       width: 30,
@@ -449,6 +475,27 @@ class _MyHomePageState extends State<MyHomePage> {
                       pickerController.openGiphyPicker();
                     },
                   ),
+                  Spacer(),
+                  GestureDetector(
+                    child: Container(
+                      height: 30,
+                      width: 30,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey, width: 1.5)),
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Icon(
+                          Icons.add,
+                          color: Colors.grey,
+                          size: 34,
+                        ),
+                      ),
+                    ),
+                    onTap: () async {
+                      pickerController.openCustomPicker();
+                    },
+                  ),
                   Spacer()
                 ],
               ),
@@ -462,6 +509,13 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           )
         ),
+        customBodyBuilder: (context, controller, state){
+          return Text("This is Custom");
+        },
+        headerBuilder: (context, state){
+          return Text("This is custom header");
+        },
+        customStatusBarColor: Colors.white,
     );
 
   }

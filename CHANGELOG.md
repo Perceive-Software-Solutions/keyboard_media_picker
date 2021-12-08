@@ -1,3 +1,9 @@
+## [0.2.3] v0.2.3
+
+* Added lock states to selecting images and videos
+* Updated designs
+* Removed dependencies
+
 ## [0.2.2] v0.2.2
 
 * Added clearing selected values on images and gifs

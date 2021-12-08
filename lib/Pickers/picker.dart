@@ -80,6 +80,9 @@ class Picker extends StatefulWidget {
   /// Overlay Widget of the selected asset
   final Widget Function(BuildContext context, int index)? overlayBuilder;
 
+  /// Overlay displayed when images or videos are locked
+  final Widget Function(BuildContext context, int index)? lockOverlayBuilder;
+
   /// Background color for the image selector
   /// Status color used for the animated status bar color
   /// Background color used behind the image and album delegate
@@ -114,6 +117,7 @@ class Picker extends StatefulWidget {
     required this.controller,  
     required this.imageHeaderBuilder,
     required this.albumMenuBuilder,
+    this.lockOverlayBuilder,
     this.overlayBuilder,
     this.imageLoadingIndicator,
     this.initialExtent = 0.55, 

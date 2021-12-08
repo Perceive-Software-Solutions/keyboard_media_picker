@@ -57,6 +57,9 @@ class ImagePicker extends StatefulWidget {
   /// If the sheet is locked open
   final bool isLocked;
 
+  /// Overlay displayed when images or videos are locked
+  final Widget Function(BuildContext context, int index)? lockOverlayBuilder;
+
   const ImagePicker({ 
     required Key key,
     required this.controller,
@@ -74,7 +77,8 @@ class ImagePicker extends StatefulWidget {
     this.minBackdropColor = Colors.transparent,
     this.maxBackdropColor = Colors.black,
     this.backgroundColor = Colors.white,
-    this.isLocked = false
+    this.isLocked = false,
+    this.lockOverlayBuilder
   }) : super(key: key);
 
   @override

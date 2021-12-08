@@ -206,6 +206,12 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
 
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    widget.controller?._bind(this);
+  }
+
 
 
   // void searchGiphy(String value){
@@ -258,20 +264,6 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
         }
       }
     });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (widget.controller != null) {
-      //Binds the controller to this state
-      widget.controller!._bind(this);
-    }
   }
 
   void sheetListener(SheetState state){
@@ -450,10 +442,14 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
 
     void update() => notifyListeners();
     
+    /// Get individual Gif asset
     String? get gif => _state != null ? _state!.provider.selectedAsset : null;
 
     /// Get the current state of the [ImagePicker]
     Option? get type => _state != null ? type : null;
+
+    /// Clear the selected Gifs
+    void clearGif() => _state != null ? _state!.provider.unSelectAsset() : null;
 
     //Disposes of the controller
     @override

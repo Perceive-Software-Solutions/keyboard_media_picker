@@ -446,6 +446,12 @@ class ImagePickerController extends ChangeNotifier {
   /// Get the current state of the [ImagePicker]
   Option? get type => _state != null ? type : null;
 
+  /// Clean individual asset entity
+  void clearAssetEntity(AssetEntity asset) => _state != null ? _state!.provider.unSelectAsset(asset) : null;
+
+  /// Clear all selected assets
+  void clearAll() => _state != null ? _state!.provider.clearAll() : null;
+
   //Disposes of the controller
   @override
   void dispose() {

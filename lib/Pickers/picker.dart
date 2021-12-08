@@ -326,8 +326,6 @@ class _PickerState extends State<Picker> {
   ///Opens the giphy picker: Called from picker controller
   void openGiphyPicker() async {
 
-    giphyPickerController = GiphyPickerController();
-
     if(currentlyOpen != null && type != PickerType.GiphyPickerView){
       await currentlyOpen!();
     }
@@ -363,12 +361,33 @@ class _PickerState extends State<Picker> {
 
   ///Handles the giphy receiving
   void _giphyReceiver() {
+    if(imagePickerController != null){
+      imagePickerController!.clearAll();
+    }
     widget.controller.onGiphyReceived(giphyPickerController!.gif);
   }
 
   ///Handles the image receiving
   void _imageReceiver() { 
+    if(giphyPickerController != null){
+      giphyPickerController!.clearGif();
+    }
     widget.controller.onImageReceived(imagePickerController!.list);
+  }
+
+  /// Clear Asset Entity
+  void clearAssetEntity(AssetEntity asset){
+    if(imagePickerController != null){
+      imagePickerController?.clearAssetEntity(asset);
+    }
+  }
+
+  /// Clear all assets
+  void clearAllAsset(){
+    if(imagePickerController != null && giphyPickerController != null){
+      giphyPickerController?.clearGif();
+      imagePickerController?.clearAll();
+    }
   }
 
   @override
@@ -519,6 +538,11 @@ class PickerController extends ChangeNotifier{
   ///Returns the image picker controller
   ImagePickerController? get imageController => _state!.imagePickerController;
 
+  /// Clears an indivudal asset
+  void clearAssetEntity(AssetEntity asset) => _state != null ? _state!.clearAssetEntity(asset) : null;
+
+  /// Clear every asset
+  void clearAll() => _state != null ? _state!.clearAllAsset() : null;
 
   ///Notifies all listners
   void _update() => notifyListeners();

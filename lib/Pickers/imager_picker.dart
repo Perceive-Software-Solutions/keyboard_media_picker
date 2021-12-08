@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:piky/Pickers/picker.dart';
 import 'package:piky/delegates/album_picker_delegate.dart';
@@ -29,10 +29,6 @@ class ImagePicker extends StatefulWidget {
   final double mediumExtent;
   final double minExtent;
 
-  /// Header Height
-  /// Must pass the height of the header widget to avoid overflow
-  final double headerHeight;
-
   /// Header of the Media Picker at min Extent
   /// Contains a String defining the most recent or current album name
   final Widget Function(String, bool) headerBuilder;
@@ -55,7 +51,14 @@ class ImagePicker extends StatefulWidget {
   /// Color of the growable Header
   final Color statusBarPaddingColor;
 
+  /// Background color displayed behind the images and albums
+  final Color backgroundColor;
+
+  /// If the sheet is locked open
   final bool isLocked;
+
+  /// Overlay displayed when images or videos are locked
+  final Widget Function(BuildContext context, int index)? lockOverlayBuilder;
 
   const ImagePicker({ 
     required Key key,
@@ -70,11 +73,12 @@ class ImagePicker extends StatefulWidget {
     this.initialExtent = 0.4,
     this.mediumExtent = 0.4,
     this.expandedExtent = 1.0,
-    this.headerHeight = 50,
     this.statusBarPaddingColor = Colors.white,
     this.minBackdropColor = Colors.transparent,
     this.maxBackdropColor = Colors.black,
-    this.isLocked = false
+    this.backgroundColor = Colors.white,
+    this.isLocked = false,
+    this.lockOverlayBuilder
   }) : super(key: key);
 
   @override
@@ -135,6 +139,9 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
 
   /// If the sliding sheet is currently snapping
   bool snapping = false;
+
+  /// HeaderBuilder height
+  double HEADER_HEIGHT = 60;
 
   @override
   void initState() {
@@ -340,8 +347,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                               children: [
                                 Container(height: lerpDouble(0, statusBarHeight, topExtentValue)!, color: widget.statusBarPaddingColor,),
                                 Container(
-                                  height: widget.headerHeight,
-                                  color: Colors.white,
+                                  height: HEADER_HEIGHT,
                                   child: ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
                                     value: provider,
                                     builder: (context, snapshot) {
@@ -388,12 +394,14 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                                 return SingleChildScrollView(
                                   controller: controller,
                                   child: !state ? Container(
+                                    color: widget.backgroundColor,
                                     key: Key("1"), 
-                                    height: height-widget.headerHeight-SAFE_AREA_PADDING,
+                                    height: height-HEADER_HEIGHT-SAFE_AREA_PADDING,
                                     child: imageDelegate.build(context)
                                   ) : Container(
+                                    color: widget.backgroundColor,
                                     key: Key("2"), 
-                                    height: MediaQuery.of(context).size.height-widget.headerHeight-SAFE_AREA_PADDING,
+                                    height: MediaQuery.of(context).size.height-HEADER_HEIGHT-SAFE_AREA_PADDING,
                                     child: albumDelegate.build(context)
                                   ),
                                 );
@@ -445,6 +453,12 @@ class ImagePickerController extends ChangeNotifier {
 
   /// Get the current state of the [ImagePicker]
   Option? get type => _state != null ? type : null;
+
+  /// Clean individual asset entity
+  void clearAssetEntity(AssetEntity asset) => _state != null ? _state!.provider.unSelectAsset(asset) : null;
+
+  /// Clear all selected assets
+  void clearAll() => _state != null ? _state!.provider.clearAll() : null;
 
   //Disposes of the controller
   @override

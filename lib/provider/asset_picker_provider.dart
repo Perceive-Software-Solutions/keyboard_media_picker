@@ -250,6 +250,10 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
     selectedAssets = _set;
   }
 
+  void clearAll(){
+    selectedAssets = <Asset>[];
+  }
+
   /// Switch path entity.
   /// 切换路径
   Future<void> switchPath([Path? pathEntity]);

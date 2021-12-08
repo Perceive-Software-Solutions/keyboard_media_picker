@@ -18,6 +18,7 @@ class AlbumPickerBuilderDelegate {
     this.pageCubit,
     this.gridScrollController,
     this.albumMenuBuilder,
+
     this.imagePickerController, {
       this.gridCount = 3,
 
@@ -124,12 +125,9 @@ class AlbumPickerBuilderDelegate {
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _) {
-        return Container(
-          color: Colors.grey,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 16, right: 16, top: 5, bottom: 16),
-            child: assetListBuilder(context),
-          ),
+        return Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16),
+          child: assetListBuilder(context),
         );
       }, 
     );

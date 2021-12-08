@@ -53,10 +53,11 @@ class _MyHomePageState extends State<MyHomePage> {
     scrollController = ScrollController();
     pickerController = PickerController(
       onGiphyReceived: (value){
-        setState(() {
-          imageAssets.clear();
-          gifAsset = value!;
-        });
+        print(value);
+        // setState(() {
+        //   imageAssets.clear();
+        //   gifAsset = value!;
+        // });
       },
       onImageReceived: (value){
         setState(() {

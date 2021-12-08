@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:piky/Pickers/picker.dart';
 import 'package:piky/delegates/giphy_picker_delegate.dart';
@@ -31,11 +32,11 @@ class GiphyPicker extends StatefulWidget {
   final double mediumExtent;
   final double expandedExtent;
 
-  /// Height of the header widget
-  final double headerHeight;
-
   /// Background color when images are not loaded in
   final Color backgroundColor;
+
+  /// Header color displayed behind the search bar 
+  final Color headerColor;
 
   /// Search bar color
   final Color searchColor;
@@ -80,15 +81,15 @@ class GiphyPicker extends StatefulWidget {
     required this.controller,
     required this.sheetController, 
     this.statusBarPaddingColor = Colors.white,
+    this.headerColor = Colors.white,
     this.overlayBuilder,
     this.minExtent = 0.0,
     this.initialExtent = 0.4,
     this.mediumExtent = 0.4,
     this.expandedExtent = 1.0,
-    this.headerHeight = 50,
     this.pickerController,
     this.notch,
-    this.cancelButtonStyle = const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black),
+    this.cancelButtonStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
     this.hiddentTextStyle = const TextStyle(fontSize: 14, color: Colors.black),
     this.style = const TextStyle(fontSize: 14),
     this.icon = const Icon(Icons.search, size: 24, color: Colors.black),
@@ -118,7 +119,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
  
 */
 
-  static const double HEADER_HEIGHT = 60;
+  double HEADER_HEIGHT = 60;
 
 /*
  
@@ -206,6 +207,12 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
 
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    widget.controller?._bind(this);
+  }
+
 
 
   // void searchGiphy(String value){
@@ -260,20 +267,6 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (widget.controller != null) {
-      //Binds the controller to this state
-      widget.controller!._bind(this);
-    }
-  }
-
   void sheetListener(SheetState state){
     if(state.extent<= widget.mediumExtent && (state.extent - widget.minExtent) >= 0){
       animationController.animateTo((state.extent - widget.minExtent) / widget.mediumExtent);
@@ -326,7 +319,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                       children: [
                         Container(height: lerpDouble(0, statusBarHeight, topExtentValue)!, color: widget.statusBarPaddingColor,),
                         Container(
-                          color: widget.backgroundColor,
+                          color: widget.headerColor,
                           child: _buildHeader(context),
                         ),
                       ],
@@ -346,6 +339,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                       controller: controller,
                       physics: AlwaysScrollableScrollPhysics(),
                       child: Container(
+                        color: widget.backgroundColor,
                         height: MediaQuery.of(context).size.height - HEADER_HEIGHT - MediaQuery.of(context).padding.top,
                         child: delegate.build(context)
                       )
@@ -386,7 +380,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                   Padding(
                     padding: EdgeInsets.only(left: 16, right: !focusNode.hasFocus ? 16 : 0),
                     child: Container(
-                      width: focusNode.hasFocus ? width*0.876 - 26 : width - 32,
+                      width: focusNode.hasFocus ? width - 91 : width - 32,
                       height: 36,
                       child: TextFormField(
                         controller: searchFieldController,
@@ -423,7 +417,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                   ),
                   focusNode.hasFocus ? GestureDetector(
                     child: Padding(
-                      padding: EdgeInsets.only(left: 10, right: 16, top: 10),
+                      padding: EdgeInsets.only(left: 10, right: 16, top: 1),
                       child: Text('Cancel', style: widget.cancelButtonStyle),
                     ),
                     onTap: (){
@@ -450,10 +444,14 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
 
     void update() => notifyListeners();
     
+    /// Get individual Gif asset
     String? get gif => _state != null ? _state!.provider.selectedAsset : null;
 
     /// Get the current state of the [ImagePicker]
     Option? get type => _state != null ? type : null;
+
+    /// Clear the selected Gifs
+    void clearGif() => _state != null ? _state!.provider.unSelectAsset() : null;
 
     //Disposes of the controller
     @override

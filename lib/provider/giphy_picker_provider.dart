@@ -29,19 +29,16 @@ class GiphyPickerProvider extends ChangeNotifier {
   late GiphyClient client;
 
   /// Stores the current selected Asset
-  String? _selectedAsset;
+  String _selectedAsset = '';
 
   /// 
   bool assetsLoadingComplete = true;
 
   /// Get [_selectedAsset]
-  String? get selectedAsset => _selectedAsset;
+  String get selectedAsset => _selectedAsset;
 
   /// Set [_selectedAsset]
-  set selectedAsset(String? value) {
-    if (value == _selectedAsset) {
-      return;
-    }
+  set selectedAsset(String value) {
     _selectedAsset = value;
     notifyListeners();
   }
@@ -97,7 +94,7 @@ class GiphyPickerProvider extends ChangeNotifier {
     if (asset == '' || selectedAsset == asset) {
       return;
     }
-    if(selectedAsset != null || selectedAsset != ''){
+    if(selectedAsset != ''){
       unSelectAsset();
     }
     selectedAsset = asset;

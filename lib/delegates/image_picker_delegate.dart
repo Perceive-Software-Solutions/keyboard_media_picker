@@ -20,11 +20,15 @@ class ImagePickerBuilderDelegate {
     this.imagePickerController, {
       this.loadingIndicator,
       this.overlayBuilder,
+      this.lockOverlayBuilder,
       this.gridCount = 4,
   });
 
   /// Overlay that displays if the image is selected
   final Widget Function(BuildContext context, int index)? overlayBuilder;
+
+  /// Overlay displayed when images or videos are locked
+  final Widget Function(BuildContext context, int index)? lockOverlayBuilder;
 
   /// When fetching the images this loading indicator will be used
   final Widget? loadingIndicator;
@@ -114,6 +118,28 @@ class ImagePickerBuilderDelegate {
     );
   }
 
+  /// Overlays [imageItemBuilder] amd [videoItemBuilder] to display the slected state
+  Widget greyOverlay(BuildContext context, AssetEntity asset){
+
+    //Width of the screen
+    var width = MediaQuery.of(context).size.width;
+    
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.4,
+            child: Container(
+              height: width / 3,
+              width: width / 3,
+              color: Colors.blue,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Items and placeholders current displayed in the grid
   int assetGridItemCount(List<AssetEntity> assets, {int placeholderCount = 0}){
     return assets.length + placeholderCount;
@@ -133,6 +159,10 @@ class ImagePickerBuilderDelegate {
     return Selector<DefaultAssetPickerProvider, int>(
       selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
       builder: (BuildContext context, int selectedCount, Widget? child) {
+        bool lock = false;
+        if(provider.selectedAssets.length >= 4){
+          lock = true;
+        }
         return Stack(
           children: [
             Positioned.fill(
@@ -143,7 +173,17 @@ class ImagePickerBuilderDelegate {
             ),
           if (provider.selectedAssets.contains(asset)) overlayBuilder != null ? 
           Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : 
-          Positioned.fill(child: selectedOverlay(context, asset))
+          Positioned.fill(child: selectedOverlay(context, asset)),
+
+          if(!provider.selectedAssets.contains(asset) && lock)
+          lockOverlayBuilder != null ? lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1) : greyOverlay(context, asset),
+
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white) : Border.all(width: 0)
+            ),
+          )
         ],
         );
       }
@@ -164,6 +204,14 @@ class ImagePickerBuilderDelegate {
     return Selector<DefaultAssetPickerProvider, int>(
       selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
       builder: (BuildContext context, int selectedCount, Widget? child) {
+        bool videoLock = false;
+        bool lock = false;
+        if(provider.selectedAssets.length >= 4){
+          lock = true;
+        }
+        else if(provider.selectedAssets.where((element) => element.duration > 0).isNotEmpty){
+          videoLock = true;
+        }
         return Stack(
           children: [
             Positioned.fill(
@@ -199,9 +247,16 @@ class ImagePickerBuilderDelegate {
                 ),
               ),
             ),
-            if (provider.selectedAssets.contains(asset)) overlayBuilder != null ? 
-              Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : 
-              Positioned.fill(child: selectedOverlay(context, asset))
+            if (provider.selectedAssets.contains(asset)) 
+            overlayBuilder != null ? Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : Positioned.fill(child: selectedOverlay(context, asset)),
+            if(!provider.selectedAssets.contains(asset) && (lock || videoLock)) 
+            lockOverlayBuilder != null ? lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1) : greyOverlay(context, asset),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white) : Border.all(width: 0)
+              ),
+            )
           ],
         );
       }
@@ -228,34 +283,40 @@ class ImagePickerBuilderDelegate {
       provider.loadMoreAssets();
     }
 
-    return AnimationConfiguration.staggeredGrid(
-      columnCount: (index / gridCount).floor(),
-      position: index,
-      duration: const Duration(milliseconds: 375),
-      child: ScaleAnimation(
-        child: FadeInAnimation(
-          child: GestureDetector(
-            child: child,
-            onTap:(){
-              if(provider.selectedAssets.contains(currentAssets[index]))
-                provider.unSelectAsset(currentAssets[index]);
-              else if(currentAssets[index].videoDuration.inMilliseconds > 0){
-                provider.selectedAssets.clear();
-                provider.selectAsset(currentAssets[index]);
-              }
-              else provider.selectAsset(currentAssets[index]);
+    return Selector<DefaultAssetPickerProvider, int>(
+      selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
+      builder: (BuildContext context, int selectedCount, Widget? _) {
+        bool videoLock = false;
+        bool lock = false;
+        if(provider.selectedAssets.length >= 4){
+          lock = true;
+        }
+        else if(provider.selectedAssets.where((element) => element.duration > 0).isNotEmpty){
+          videoLock = true;
+        }
+        return AnimationConfiguration.staggeredGrid(
+          columnCount: (index / gridCount).floor(),
+          position: index,
+          duration: const Duration(milliseconds: 375),
+          child: ScaleAnimation(
+            child: FadeInAnimation(
+              child: GestureDetector(
+                child: child,
+                onTap: !provider.selectedAssets.contains(currentAssets[index]) && (lock || (videoLock && currentAssets[index].duration > 0)) ? null : (){
+                  if(provider.selectedAssets.contains(currentAssets[index])){
+                    provider.unSelectAsset(currentAssets[index]);
+                  }
+                  else{
+                    provider.selectAsset(currentAssets[index]);
+                  }
 
-              if(provider.selectedAssets.isNotEmpty){
-                if(provider.selectedAssets[0].videoDuration.inMilliseconds > 0 && provider.selectedAssets[0] != currentAssets[index]){
-                  provider.unSelectAsset(provider.selectedAssets[0]);
+                  imagePickerController!.update();
                 }
-              }
-
-              imagePickerController!.update();
-            }
+              )
+            ),
           )
-        ),
-      )
+        );
+      }
     );
   }
 

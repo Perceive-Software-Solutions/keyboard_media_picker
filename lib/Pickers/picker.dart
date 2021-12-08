@@ -80,18 +80,26 @@ class Picker extends StatefulWidget {
   /// Overlay Widget of the selected asset
   final Widget Function(BuildContext context, int index)? overlayBuilder;
 
+  /// Background color for the image selector
+  /// Status color used for the animated status bar color
+  /// Background color used behind the image and album delegate
+  final Color imageBackgroundColor;
+  final Color imageStatusBarColor;
+
   /// GiphyPicker
-  Widget? notch;
-  TextStyle cancelButtonStyle;
-  TextStyle hiddenTextStyle;
-  TextStyle style;
-  Icon icon;
-  TextStyle iconStyle;
-  Color searchColor;
-  Color gifStatusBarColor;
+  final TextStyle cancelButtonStyle;
+  final Widget? notch;
+  final TextStyle hiddenTextStyle;
+  final TextStyle style;
+  final Icon icon;
+  final TextStyle iconStyle;
+  final Color searchColor;
+  final Color gifStatusBarColor;
+  final Color gifBackgroundColor;
+
 
   /// Initial Picker Value
-  PickerType initialValue;
+  final PickerType initialValue;
 
   /// Custom picker
   final Widget Function(BuildContext context, ScrollController scrollController, SheetState state)? customBodyBuilder;
@@ -115,6 +123,8 @@ class Picker extends StatefulWidget {
     this.headerHeight = 50,
     this.minBackdropColor = Colors.transparent,
     this.maxBackdropColor = Colors.black,
+    this.imageStatusBarColor = Colors.white,
+    this.imageBackgroundColor = Colors.white,
     // Giphy Picker
     this.notch,
     this.cancelButtonStyle = const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black),
@@ -126,6 +136,7 @@ class Picker extends StatefulWidget {
     this.gifLoadingIndicator,
     this.gifLoadingTileIndicator,
     this.gifStatusBarColor = Colors.white,
+    this.gifBackgroundColor = Colors.white,
     // Custom Picker
     this.customBodyBuilder,
     this.headerBuilder,
@@ -216,7 +227,7 @@ class _PickerState extends State<Picker> {
     bool? onlyPhotos
   }) async {
     type = (index ?? widget.initialValue);
-    bottomPadding = (MediaQuery.of(context).size.height*(widget.initialExtent)) - 5;
+    bottomPadding = (MediaQuery.of(context).size.height*(widget.minExtent));
     setState((){});
     await Future.delayed(Duration(milliseconds: 50));
     if(type == PickerType.ImagePicker){
@@ -408,28 +419,25 @@ class _PickerState extends State<Picker> {
             padding: EdgeInsets.only(bottom: bottomPadding),
             child: widget.child,
           ),
-
-          // type == PickerType.ImagePicker ? 
           ImagePicker(
             key: Key('ImagePicker'), 
             isLocked: type == PickerType.ImagePicker,
             sheetController: imageSheetController,
             controller: imagePickerController, 
             pickerController: widget.controller, 
-            // initialExtent: 0,
             initialExtent: widget.initialExtent, 
             minExtent: 0,
             mediumExtent: widget.mediumExtent,
             expandedExtent: widget.expandedExtent,
             headerBuilder: widget.imageHeaderBuilder,
             albumMenuBuilder: widget.albumMenuBuilder,
-            headerHeight: widget.headerHeight,
             loadingIndicator: widget.imageLoadingIndicator,
             minBackdropColor: widget.minBackdropColor,
             maxBackdropColor: widget.maxBackdropColor,
             overlayBuilder: widget.overlayBuilder,
+            statusBarPaddingColor: widget.imageStatusBarColor,
+            backgroundColor: widget.imageBackgroundColor,
           ),
-          // ) : type == PickerType.GiphyPickerView ? 
           GiphyPicker(
             key: Key('GiphyPicker'), 
             isLocked: type == PickerType.GiphyPickerView,
@@ -437,7 +445,6 @@ class _PickerState extends State<Picker> {
             sheetController: gifSheetController,
             controller: giphyPickerController, 
             pickerController: widget.controller,
-            // initialExtent: 0,
             initialExtent: widget.initialExtent, 
             minExtent: 0,
             mediumExtent: widget.mediumExtent,
@@ -448,22 +455,21 @@ class _PickerState extends State<Picker> {
             style: widget.style,
             icon: widget.icon,
             iconStyle: widget.iconStyle,
-            backgroundColor: widget.backgroundColor,
+            backgroundColor: widget.gifBackgroundColor,
             searchColor: widget.searchColor,
             minBackdropColor: widget.minBackdropColor,
             maxBackdropColor: widget.maxBackdropColor,
             loadingIndicator: widget.gifLoadingIndicator,
             loadingTileIndicator: widget.gifLoadingTileIndicator,
             statusBarPaddingColor: widget.gifStatusBarColor,
+            overlayBuilder: widget.overlayBuilder,
           ) ,
-          // : type == PickerType.Custom ? 
           CustomPicker(
             isLocked: type == PickerType.Custom,
             sheetController: customSheetController, 
             pickerController: widget.controller, 
             customBodyBuilder: widget.customBodyBuilder!, 
             headerBuilder: widget.headerBuilder!,
-            // initialExtent: 0,
             initialExtent: widget.initialExtent, 
             minExtent: 0,
             mediumExtent: widget.mediumExtent,
@@ -472,7 +478,6 @@ class _PickerState extends State<Picker> {
             minBackdropColor: widget.minBackdropColor,
             maxBackdropColor: widget.maxBackdropColor,
           ) 
-          // : Container()
         ],
       ),
     );

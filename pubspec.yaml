@@ -1,6 +1,6 @@
 name: piky
 description: Multi Media Picker
-version: 0.2.1
+version: 0.2.2
 homepage: "https://perceivedev.com/#/"
 
 environment:
@@ -16,7 +16,6 @@ dependencies:
   giphy_get: ^2.0.3
   sliding_sheet: ^0.5.2
   extended_image: ^4.1.0
-  colorful_safe_area: ^0.3.0
   flutter:
     sdk: flutter
 

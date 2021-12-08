@@ -363,6 +363,7 @@ class _PickerState extends State<Picker> {
   void _giphyReceiver() {
     if(imagePickerController != null){
       imagePickerController!.clearAll();
+      widget.controller.onImageReceived([]);
     }
     widget.controller.onGiphyReceived(giphyPickerController!.gif);
   }
@@ -371,6 +372,7 @@ class _PickerState extends State<Picker> {
   void _imageReceiver() { 
     if(giphyPickerController != null){
       giphyPickerController!.clearGif();
+      widget.controller.onGiphyReceived('');
     }
     widget.controller.onImageReceived(imagePickerController!.list);
   }

@@ -1,3 +1,8 @@
+## [0.2.2] v0.2.2
+
+* Added clearing selected values on images and gifs
+* Fixed receiving gif values
+
 ## [0.2.1] v0.2.1
 
 * Added Android compatability.

@@ -176,7 +176,7 @@ class ImagePickerBuilderDelegate {
           Positioned.fill(child: selectedOverlay(context, asset)),
 
           if(!provider.selectedAssets.contains(asset) && lock)
-          lockOverlayBuilder != null ? lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1) : greyOverlay(context, asset),
+          lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
 
           Container(
             decoration: BoxDecoration(
@@ -250,7 +250,7 @@ class ImagePickerBuilderDelegate {
             if (provider.selectedAssets.contains(asset)) 
             overlayBuilder != null ? Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : Positioned.fill(child: selectedOverlay(context, asset)),
             if(!provider.selectedAssets.contains(asset) && (lock || videoLock)) 
-            lockOverlayBuilder != null ? lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1) : greyOverlay(context, asset),
+            lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
             Container(
               decoration: BoxDecoration(
                 color: Colors.transparent,

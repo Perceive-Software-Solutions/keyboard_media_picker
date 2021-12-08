@@ -467,6 +467,7 @@ class _PickerState extends State<Picker> {
             loadingTileIndicator: widget.gifLoadingTileIndicator,
             statusBarPaddingColor: widget.gifStatusBarColor,
             overlayBuilder: widget.overlayBuilder,
+            headerColor: widget.gifStatusBarColor,
           ) ,
           CustomPicker(
             isLocked: type == PickerType.Custom,

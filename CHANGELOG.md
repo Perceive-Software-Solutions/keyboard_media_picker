@@ -1,3 +1,10 @@
+## [0.2.9] v0.2.9
+
+* Added 2 overlay builders to ImagePicker
+* Added overlay builder to giphyPicker
+* Adjustable padding depending on the sheetState
+* Fixed designs
+
 ## [0.2.3] v0.2.3
 
 * Added lock states to selecting images and videos

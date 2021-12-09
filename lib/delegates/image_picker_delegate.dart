@@ -181,7 +181,7 @@ class ImagePickerBuilderDelegate {
           Container(
             decoration: BoxDecoration(
               color: Colors.transparent,
-              border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white) : Border.all(width: 0)
+              border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
             ),
           )
         ],
@@ -254,7 +254,7 @@ class ImagePickerBuilderDelegate {
             Container(
               decoration: BoxDecoration(
                 color: Colors.transparent,
-                border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white) : Border.all(width: 0)
+                border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
               ),
             )
           ],

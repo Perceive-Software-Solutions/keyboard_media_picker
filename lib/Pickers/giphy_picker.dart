@@ -73,13 +73,18 @@ class GiphyPicker extends StatefulWidget {
   /// Overlay Widget of the selected asset
   final Widget Function(BuildContext context, int index)? overlayBuilder;
 
+  /// If the giphy picker is in a locked state
   bool isLocked;
+
+  /// Allows the picker to see the sheetstate
+  final Function(SheetState state) listener;
 
   GiphyPicker({
     required Key key,
     required this.apiKey, 
     required this.controller,
     required this.sheetController, 
+    required this.listener,
     this.statusBarPaddingColor = Colors.white,
     this.headerColor = Colors.white,
     this.overlayBuilder,
@@ -276,6 +281,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     if(state.extent <= widget.initialExtent/3 && widget.isLocked){
       widget.sheetController.snapToExtent(widget.initialExtent);
     }
+    widget.listener(state);
   }
 
   @override

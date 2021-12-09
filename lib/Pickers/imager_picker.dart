@@ -59,6 +59,9 @@ class ImagePicker extends StatefulWidget {
 
   /// Overlay displayed when images or videos are locked
   final Widget Function(BuildContext context, int index)? lockOverlayBuilder;
+  
+  /// Allows the picker to see the sheetstate
+  final Function(SheetState state) listener;
 
   const ImagePicker({ 
     required Key key,
@@ -66,6 +69,7 @@ class ImagePicker extends StatefulWidget {
     required this.headerBuilder,
     required this.albumMenuBuilder,
     required this.sheetController,
+    required this.listener,
     this.pickerController,
     this.loadingIndicator,
     this.overlayBuilder,
@@ -78,7 +82,7 @@ class ImagePicker extends StatefulWidget {
     this.maxBackdropColor = Colors.black,
     this.backgroundColor = Colors.white,
     this.isLocked = false,
-    this.lockOverlayBuilder
+    this.lockOverlayBuilder,
   }) : super(key: key);
 
   @override
@@ -279,8 +283,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
     if(state.extent <= widget.initialExtent/3 && widget.isLocked){
       widget.sheetController.snapToExtent(widget.initialExtent);
     }
-
-    // print(state.extent);
+    widget.listener(state);
   }
 
   Widget _buildHeader(BuildContext context, bool sheetCubitState, String path){

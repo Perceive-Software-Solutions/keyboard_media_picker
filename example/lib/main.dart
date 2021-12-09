@@ -401,6 +401,19 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Scaffold(
           resizeToAvoidBottomInset: false,
           backgroundColor: Colors.white,
+          floatingActionButton: GestureDetector(
+            child: Container(
+              height: 100,
+              width: 100,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(100),
+                color: Colors.blue
+              ),
+            ),
+            onTap: (){
+              pickerController.closePicker();
+            },
+          ),
           body: Column(
             children: [
               Spacer(),
@@ -456,7 +469,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     onTap: () async {
-                      pickerController.openImagePicker(imageCount: 5);
+                      if(pickerController.isOpen){
+                        pickerController.openImagePicker(imageCount: 5, overrideLock: true);
+                      }
+                      else{
+                        pickerController.openImagePicker(imageCount: 5, overrideLock: false);
+                      }
                     },
                   ),
                   Spacer(),
@@ -477,7 +495,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     onTap: () async {
-                      pickerController.openGiphyPicker();
+                      if(pickerController.isOpen){
+                        pickerController.openGiphyPicker(true);
+                      }
+                      else{
+                        pickerController.openGiphyPicker(false);
+                      }
                     },
                   ),
                   Spacer(),
@@ -498,7 +521,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     onTap: () async {
-                      pickerController.openCustomPicker();
+                      if(pickerController.isOpen){
+                        pickerController.openCustomPicker(true);
+                      }
+                      else{
+                        pickerController.openCustomPicker(false);
+                      }
                     },
                   ),
                   Spacer()

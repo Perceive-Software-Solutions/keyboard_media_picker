@@ -2,10 +2,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:piky/Pickers/custom_picker.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:piky/piky.dart';
+import 'package:piky/util/functions.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 
 import 'imager_picker.dart';
@@ -178,9 +180,17 @@ class _PickerState extends State<Picker> {
 
   bool get isOpen => bottomPadding > 0;
 
+  late ConcreteCubit<double> sheetState;
+
+  /// If the padding is locked in place
+  bool paddingLock = false;
+
   @override
   void initState(){
     super.initState();
+
+    /// Extent of all 3 sliding sheets
+    sheetState = ConcreteCubit<double>(widget.initialExtent);
 
      /// Intialize the [ImagePickerController]
     imagePickerController = ImagePickerController(
@@ -202,7 +212,7 @@ class _PickerState extends State<Picker> {
 
     if(widget.initialValue != PickerType.None){
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) { 
-        openPicker();
+        openPicker(overrideLock: false);
       });
     }
   }
@@ -223,22 +233,36 @@ class _PickerState extends State<Picker> {
     }
   }
 
+  void multiSheetStateListener(SheetState state){
+    sheetState.emit(state.extent);
+  }
+
   void openPicker({
     PickerType? index,
     List<AssetEntity>? selectedAssets, 
     DurationConstraint? duration, 
     int? imageCount, 
-    bool? onlyPhotos
+    bool? onlyPhotos,
+    bool? overrideLock
   }) async {
     type = (index ?? widget.initialValue);
     bottomPadding = (MediaQuery.of(context).size.height*(widget.minExtent));
+    if(overrideLock != null){
+      paddingLock = overrideLock;
+    }
+    else{
+      paddingLock = true;
+    }
     setState((){});
     await Future.delayed(Duration(milliseconds: 50));
     if(type == PickerType.ImagePicker){
-      openImagePicker(selectedAssets ?? const [], const DurationConstraint(max: Duration(minutes: 1)), imageCount ?? 5, onlyPhotos ?? false);
+      openImagePicker(selectedAssets ?? const [], const DurationConstraint(max: Duration(minutes: 1)), imageCount ?? 5, onlyPhotos ?? false).then((value) {
+        print("unlocked");
+        paddingLock = false;
+      });
     }
     else if(type == PickerType.GiphyPickerView){
-      openGiphyPicker(); 
+      openGiphyPicker();
     }
     else if(type == PickerType.Custom){
       openCustomPicker();
@@ -259,11 +283,12 @@ class _PickerState extends State<Picker> {
   }
 
   ///Opens the image picker: Called from picker controller
-  void openImagePicker(
+  Future<void> openImagePicker(
     List<AssetEntity> selectedAssets, 
     DurationConstraint duration, 
     int imageCount, 
-    bool onlyPhotos) async {
+    bool onlyPhotos,
+    [bool? overrideLock]) async {
     
     /// Intialize the [ImagePickerController]
     // imagePickerController = ImagePickerController(
@@ -272,6 +297,15 @@ class _PickerState extends State<Picker> {
     //   imageCount: imageCount, 
     //   onlyPhotos: onlyPhotos
     // );
+
+    bottomPadding = (MediaQuery.of(context).size.height*(widget.minExtent));
+
+    if(overrideLock != null){
+      paddingLock = overrideLock;
+    }
+    else{
+      paddingLock = true;
+    }
 
     if(currentlyOpen != null && type != PickerType.ImagePicker){
       await currentlyOpen!();
@@ -282,11 +316,13 @@ class _PickerState extends State<Picker> {
 
     currentlyOpen = closeImagePicker;
 
-    await imageSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
-
-    setState((){});
-
-    widget.controller._update();
+    imageSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300))?.then((value) {
+      print("Unlocked");
+      paddingLock = false;
+    }) ?? Future.delayed(Duration(milliseconds: 300)).then((value) {
+      print("Unlocked");
+      paddingLock = false;
+    });
   }
 
   ///Close the image picker: Called from image controller
@@ -295,12 +331,6 @@ class _PickerState extends State<Picker> {
     type = null;
 
     setState((){});
-
-    // imagePickerController!.removeListener(_imageReceiver);
-
-    // imagePickerController?.dispose();
-
-    // imagePickerController = null;
 
     widget.controller._update();
 
@@ -314,12 +344,6 @@ class _PickerState extends State<Picker> {
     type = null;
 
     setState((){});
-
-    // giphyPickerController!.removeListener(_giphyReceiver);
-
-    // giphyPickerController?.dispose();
-
-    // giphyPickerController = null;
 
     widget.controller._update();
 
@@ -339,7 +363,16 @@ class _PickerState extends State<Picker> {
   }
 
   ///Opens the giphy picker: Called from picker controller
-  void openGiphyPicker() async {
+  Future<void> openGiphyPicker([bool? overrideLock]) async {
+
+    bottomPadding = (MediaQuery.of(context).size.height*(widget.minExtent));
+    
+    if(overrideLock != null){
+      paddingLock = overrideLock;
+    }
+    else{
+      paddingLock = true;
+    }
 
     if(currentlyOpen != null && type != PickerType.GiphyPickerView){
       await currentlyOpen!();
@@ -349,15 +382,23 @@ class _PickerState extends State<Picker> {
 
     currentlyOpen = closeGiphyPicker;
 
-    await gifSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
-
-    setState((){});
-
-    widget.controller._update();
-
+    gifSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300))?.then((value) {
+      paddingLock = false;
+    }) ?? Future.delayed(Duration(milliseconds: 300)).then((value) {
+      paddingLock = false;
+    });
   }
 
-  void openCustomPicker() async {
+  Future<void> openCustomPicker([bool? overrideLock]) async {
+
+    bottomPadding = (MediaQuery.of(context).size.height*(widget.minExtent));
+
+    if(overrideLock != null){
+      paddingLock = overrideLock;
+    }
+    else{
+      paddingLock = true;
+    }
 
     if(currentlyOpen != null && type != PickerType.Custom){
       await currentlyOpen!();
@@ -367,11 +408,11 @@ class _PickerState extends State<Picker> {
 
     currentlyOpen = closeCustomPicker;
 
-    await customSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
-
-    setState((){});
-
-    widget.controller._update();
+    await customSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300))!.then((value) {
+      paddingLock = false;
+    }) ?? Future.delayed(Duration(milliseconds: 300)).then((value) {
+      paddingLock = false;
+    });
   }
 
   ///Handles the giphy receiving
@@ -417,11 +458,17 @@ class _PickerState extends State<Picker> {
       backgroundColor: widget.backgroundColor,
       body: Stack(
         children: [
-          AnimatedPadding(
-            duration: Duration(milliseconds: 300),
-            curve: Curves.linear,
-            padding: EdgeInsets.only(bottom: bottomPadding),
-            child: widget.child,
+          BlocBuilder<ConcreteCubit<double>, double>(
+            bloc: sheetState,
+            builder: (context, extent) {
+              print(extent);
+              return AnimatedPadding(
+                duration: Duration(milliseconds: 0),
+                curve: Curves.linear,
+                padding: EdgeInsets.only(bottom: extent > widget.initialExtent || paddingLock ? bottomPadding : (bottomPadding/widget.minExtent)*extent),
+                child: widget.child,
+              );
+            }
           ),
           ImagePicker(
             key: Key('ImagePicker'), 
@@ -442,6 +489,7 @@ class _PickerState extends State<Picker> {
             statusBarPaddingColor: widget.imageStatusBarColor,
             backgroundColor: widget.imageBackgroundColor,
             lockOverlayBuilder: widget.lockOverlayBuilder,
+            listener: multiSheetStateListener,
           ),
           GiphyPicker(
             key: Key('GiphyPicker'), 
@@ -469,6 +517,7 @@ class _PickerState extends State<Picker> {
             statusBarPaddingColor: widget.gifStatusBarColor,
             overlayBuilder: widget.overlayBuilder,
             headerColor: widget.gifStatusBarColor,
+            listener: multiSheetStateListener,
           ) ,
           CustomPicker(
             isLocked: type == PickerType.Custom,
@@ -483,6 +532,7 @@ class _PickerState extends State<Picker> {
             statusBarPaddingColor: widget.customStatusBarColor,
             minBackdropColor: widget.minBackdropColor,
             maxBackdropColor: widget.maxBackdropColor,
+            listener: multiSheetStateListener,
           ) 
         ],
       ),
@@ -513,9 +563,11 @@ class PickerController extends ChangeNotifier{
 
     int imageCount = 5,
 
-    bool onlyPhotos = false
+    bool onlyPhotos = false,
 
-  }) => _state!.openImagePicker(selectedAssets, duration, imageCount, onlyPhotos);
+    bool? overrideLock
+
+  }) => _state!.openImagePicker(selectedAssets, duration, imageCount, onlyPhotos, overrideLock);
 
   void closePicker() => _state!.closePicker();
   
@@ -537,9 +589,9 @@ class PickerController extends ChangeNotifier{
 
   void closeGiphyPicker() => _state!.closeGiphyPicker();
 
-  void openGiphyPicker() => _state!.openGiphyPicker();
+  void openGiphyPicker(bool? overrideLock) => _state!.openGiphyPicker(overrideLock);
 
-  void openCustomPicker() => _state!.openCustomPicker();
+  void openCustomPicker(bool? overrideLock) => _state!.openCustomPicker(overrideLock);
 
   void closeCustomPicker() => _state!.closeCustomPicker();
 

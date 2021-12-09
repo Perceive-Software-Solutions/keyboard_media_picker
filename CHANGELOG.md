@@ -1,3 +1,7 @@
+## [0.2.13] v0.2.13
+
+* Updated scrolling functionality
+
 ## [0.2.12] v0.2.12
 
 * Bug fixes

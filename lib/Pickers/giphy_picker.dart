@@ -85,6 +85,7 @@ class GiphyPicker extends StatefulWidget {
     required this.controller,
     required this.sheetController, 
     required this.listener,
+    required this.isLocked,
     this.statusBarPaddingColor = Colors.white,
     this.headerColor = Colors.white,
     this.overlayBuilder,
@@ -105,7 +106,6 @@ class GiphyPicker extends StatefulWidget {
     this.maxBackdropColor = Colors.black,
     this.loadingIndicator,
     this.loadingTileIndicator,
-    this.isLocked = false
   }) : super(key: key);
   @override
   _GiphyPickerState createState() => _GiphyPickerState();

@@ -17,15 +17,11 @@ class GiphyPickerPickerBuilderDelegate {
     this.loadingTileIndicator, {
       this.overlayBuilder,
       this.mediumExtent = 0.4,
-      this.overlayStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
     }
   );
 
   /// Overlay Widget of the selected asset
   final Widget Function(BuildContext context, int index)? overlayBuilder;
-
-  /// Overlay TextStyle
-  final TextStyle overlayStyle;
 
   /// Loading Indicator before any Gifs are loaded
   final Widget? Function(BuildContext, bool)? loadingIndicator;
@@ -97,7 +93,7 @@ class GiphyPickerPickerBuilderDelegate {
               color: Colors.white,
               borderRadius:BorderRadius.circular(30)),
             child: Center(
-              child: Text('1', style: overlayStyle)
+              child: Text('1', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))
             )
           )
         )

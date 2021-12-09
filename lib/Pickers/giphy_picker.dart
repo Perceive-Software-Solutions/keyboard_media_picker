@@ -191,6 +191,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
       widget.loadingIndicator,
       widget.loadingTileIndicator,
       mediumExtent: widget.mediumExtent,
+      overlayBuilder: widget.overlayBuilder
     );
 
     //Initiate animation

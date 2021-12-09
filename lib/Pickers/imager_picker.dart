@@ -172,7 +172,8 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       widget.controller,
       gridCount: 4,
       loadingIndicator: widget.loadingIndicator,
-      overlayBuilder: widget.overlayBuilder
+      overlayBuilder: widget.overlayBuilder,
+      lockOverlayBuilder: widget.lockOverlayBuilder
     );
 
     //Build album delegate

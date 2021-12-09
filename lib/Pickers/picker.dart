@@ -441,6 +441,7 @@ class _PickerState extends State<Picker> {
             overlayBuilder: widget.overlayBuilder,
             statusBarPaddingColor: widget.imageStatusBarColor,
             backgroundColor: widget.imageBackgroundColor,
+            lockOverlayBuilder: widget.lockOverlayBuilder,
           ),
           GiphyPicker(
             key: Key('GiphyPicker'), 

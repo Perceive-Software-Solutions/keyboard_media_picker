@@ -91,7 +91,7 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
   }
 
   void sheetListener(SheetState state){
-    if(state.extent <= widget.mediumExtent && (state.extent - widget.minExtent) >= 0){
+    if(state.extent<= widget.mediumExtent && (state.extent - widget.minExtent) >= 0){
       animationController.animateTo((state.extent - widget.minExtent) / widget.mediumExtent);
     }
     sheetExtent.emit(state.extent);

@@ -1,3 +1,7 @@
+## [0.2.11] v0.2.11
+
+* Bug fixes
+
 ## [0.2.9] v0.2.9
 
 * Added 2 overlay builders to ImagePicker

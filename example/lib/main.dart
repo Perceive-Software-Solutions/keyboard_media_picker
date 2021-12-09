@@ -382,7 +382,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Picker(
-      apiKey: 'Example',
+      apiKey: 'oJwtzrKQKhVvDfUShkeRV7Lb88CllYgn',
       initialValue: PickerType.ImagePicker,
       controller: pickerController,
       backgroundColor: Colors.white,

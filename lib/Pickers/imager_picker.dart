@@ -389,25 +389,32 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                             );
                           },
                           customBuilder: (context, controller, sheetState){
-                            double SAFE_AREA_PADDING = sheetCubitState ? MediaQuery.of(context).padding.top : 0.0;
-                            double height = sheetCubitState ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height*widget.mediumExtent;
-                            return BlocBuilder<ConcreteCubit<bool>, bool>(
-                              bloc: pageCubit,
-                              buildWhen: (o, n) => o != n,
-                              builder: (context, state) {
-                                return SingleChildScrollView(
-                                  controller: controller,
-                                  child: !state ? Container(
-                                    color: widget.backgroundColor,
-                                    key: Key("1"), 
-                                    height: height-HEADER_HEIGHT-SAFE_AREA_PADDING,
-                                    child: imageDelegate.build(context)
-                                  ) : Container(
-                                    color: widget.backgroundColor,
-                                    key: Key("2"), 
-                                    height: MediaQuery.of(context).size.height-HEADER_HEIGHT-SAFE_AREA_PADDING,
-                                    child: albumDelegate.build(context)
-                                  ),
+                            double pageHeight = MediaQuery.of(context).size.height;
+                            return BlocBuilder<ConcreteCubit<double>, double>(
+                              bloc: sheetExtent,
+                              builder: (context, extent) {
+                                double height = extent > 0.55 ? (extent == 1.0 ? extent*pageHeight - MediaQuery.of(context).padding.top - 60 : extent > 0.8 ? 
+                                extent*pageHeight - MediaQuery.of(context).padding.top : extent*pageHeight - 60) : 
+                                pageHeight*0.55 - 60;
+                                return BlocBuilder<ConcreteCubit<bool>, bool>(
+                                  bloc: pageCubit,
+                                  buildWhen: (o, n) => o != n,
+                                  builder: (context, state) {
+                                    return SingleChildScrollView(
+                                      controller: controller,
+                                      child: !state ? Container(
+                                        color: widget.backgroundColor,
+                                        key: Key("1"), 
+                                        height: height,
+                                        child: imageDelegate.build(context)
+                                      ) : Container(
+                                        color: widget.backgroundColor,
+                                        key: Key("2"), 
+                                        height: height,
+                                        child: albumDelegate.build(context)
+                                      ),
+                                    );
+                                  }
                                 );
                               }
                             );

@@ -174,6 +174,7 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
 
               child: SingleChildScrollView(
                 controller: controller,
+                physics: AlwaysScrollableScrollPhysics(),
                 child: widget.customBodyBuilder(context, scrollController, sheetState),
               ),
             );

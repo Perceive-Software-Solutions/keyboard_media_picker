@@ -189,9 +189,11 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     super.initState();
     provider = GiphyPickerProvider(pageSize: 40, apiKey: widget.apiKey);
     delegate = GiphyPickerPickerBuilderDelegate(
+
       provider,
       giphyScrollController, 
       widget.controller,
+      sheetExtent,
       sheetCubit,
       widget.loadingIndicator,
       widget.loadingTileIndicator,
@@ -321,6 +323,10 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                     },
                   ),
                   headerBuilder: (context, _){
+                    // return Container(
+                    //   color: Colors.blue,
+                    //   height: 60,
+                    // );
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -345,11 +351,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                     return SingleChildScrollView(
                       controller: controller,
                       physics: AlwaysScrollableScrollPhysics(),
-                      child: Container(
-                        color: widget.backgroundColor,
-                        height: MediaQuery.of(context).size.height - HEADER_HEIGHT - MediaQuery.of(context).padding.top,
-                        child: delegate.build(context)
-                      )
+                      child: delegate.build(context)
                     );
                   },
                 );

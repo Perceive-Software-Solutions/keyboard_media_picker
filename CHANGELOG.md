@@ -1,3 +1,7 @@
+## [0.2.16] v0.2.16
+
+* Added ability to snap the current sheet controller to a predefined snapping mode.
+
 ## [0.2.13] v0.2.13
 
 * Updated scrolling functionality

@@ -25,6 +25,14 @@ enum Option {
   Close,
 }
 
+enum PickerExpansion {
+  MINIMUM,
+  INITIAL,
+  MIDDLE,
+  EXPANDED
+}
+
+
 // enum PickerValue {
 //   ImagePicker,
 //   GiphyPicker,
@@ -236,6 +244,44 @@ class _PickerState extends State<Picker> {
     }
   }
 
+  ///Snaps the currently open picker to the defined extent
+  void snapPickerTo(PickerExpansion extent){
+    
+    //Retreive picker sheet controller
+    late SheetController currentSheetController;
+    switch (type.state) {
+      case PickerType.Custom:
+        currentSheetController = customSheetController;
+        break;
+      case PickerType.GiphyPickerView:
+        currentSheetController = gifSheetController;
+        break;
+      case PickerType.ImagePicker:
+        currentSheetController = imageSheetController;
+        break;
+      default:
+        throw 'Picker Closed';
+    }
+
+    switch (extent) {
+      case PickerExpansion.MINIMUM:
+        currentSheetController.snapToExtent(widget.minExtent, duration: Duration(milliseconds: 300));
+        break;
+      case PickerExpansion.INITIAL:
+        currentSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
+        break;
+      case PickerExpansion.MIDDLE:
+        currentSheetController.snapToExtent(widget.mediumExtent, duration: Duration(milliseconds: 300));
+        break;
+      case PickerExpansion.EXPANDED:
+        currentSheetController.snapToExtent(widget.expandedExtent, duration: Duration(milliseconds: 300));
+        break;
+      default:
+        throw 'Invalid Extent';
+    }
+
+  }
+
   void multiSheetStateListener(SheetState state){
     sheetState.emit(state.extent);
   }
@@ -289,7 +335,7 @@ class _PickerState extends State<Picker> {
     if(type.state == PickerType.ImagePicker){
       currentlyOpen = closeImagePicker;
       imageSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300))?.then((value) {
-      paddingLock = false;
+        paddingLock = false;
       }) ?? Future.delayed(Duration(milliseconds: 300)).then((value) {
         paddingLock = false;
       });
@@ -656,6 +702,10 @@ class PickerController extends ChangeNotifier{
 
   /// Clear every asset
   void clearAll() => _state != null ? _state!.clearAllAsset() : null;
+
+  /// Snaps the current sheet controller to an extent
+  /// Picker must be open to an index
+  void snap(PickerExpansion extent) => _state != null ? _state!.snapPickerTo(extent) : null;
 
   ///Notifies all listners
   void _update() => notifyListeners();

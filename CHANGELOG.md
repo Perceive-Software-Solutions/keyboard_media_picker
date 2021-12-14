@@ -1,3 +1,7 @@
+## [0.2.19] v0.2.19
+
+* Bug fixes.
+
 ## [0.2.18] v0.2.18
 
 * Quick fix for listeners.

@@ -510,7 +510,6 @@ class _PickerState extends State<Picker> {
   void clearAssetEntity(AssetEntity asset){
     if(imagePickerController != null){
       imagePickerController?.clearAssetEntity(asset);
-      imagePickerController!.update();
     }
   }
 
@@ -519,8 +518,8 @@ class _PickerState extends State<Picker> {
     if(imagePickerController != null && giphyPickerController != null){
       giphyPickerController?.clearGif();
       imagePickerController?.clearAll();
-      imagePickerController!.update();
-      giphyPickerController!.update();
+      widget.controller.onImageReceived([]);
+      widget.controller.onGiphyReceived('');
     }
   }
 

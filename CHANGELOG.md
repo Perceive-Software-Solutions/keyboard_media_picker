@@ -1,3 +1,6 @@
+## [0.2.17] v0.2.17
+
+* Added controller updates on clearing assets.
 ## [0.2.16] v0.2.16
 
 * Added ability to snap the current sheet controller to a predefined snapping mode.

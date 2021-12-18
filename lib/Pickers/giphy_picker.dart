@@ -247,6 +247,11 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   //   }
   // }
 
+  void unSelectAsset(){
+    provider.unSelectAsset();
+    widget.controller?.update();
+  }
+
   /// Matches the widget.sheetController state to the scroll offset of the feed
   void initiateScrollListener(ScrollController scrollController){
     scrollController.addListener(() {
@@ -464,7 +469,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     Option? get type => _state != null ? type : null;
 
     /// Clear the selected Gifs
-    void clearGif() => _state != null ? _state!.provider.unSelectAsset() : null;
+    void clearGif() => _state != null ? _state!.unSelectAsset() : null;
 
     void addAsset(String gif) => _state != null ? _state!.addAsset(gif) : null;
 

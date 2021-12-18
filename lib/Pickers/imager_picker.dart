@@ -227,6 +227,11 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
     provider.dispose();
   }
 
+  void unSelectAsset(AssetEntity asset){
+    provider.unSelectAsset(asset);
+    widget.controller?.update();
+  }
+
 
   void initiateListener(ScrollController scrollController){
     scrollController.addListener(() {
@@ -471,7 +476,7 @@ class ImagePickerController extends ChangeNotifier {
   Option? get type => _state != null ? type : null;
 
   /// Clean individual asset entity
-  void clearAssetEntity(AssetEntity asset) => _state != null ? _state!.provider.unSelectAsset(asset) : null;
+  void clearAssetEntity(AssetEntity asset) => _state != null ? _state!.unSelectAsset(asset) : null;
 
   /// Clear all selected assets
   void clearAll() => _state != null ? _state!.provider.clearAll() : null;

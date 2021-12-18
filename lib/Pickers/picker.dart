@@ -338,7 +338,7 @@ class _PickerState extends State<Picker> {
     bool onlyPhotos,
     [bool? overrideLock]) async {
 
-    if(selectedAssets.isNotEmpty){
+    if(selectedAssets.isNotEmpty && mounted){
       imagePickerController!.addAssets(selectedAssets);
     }
 

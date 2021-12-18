@@ -242,7 +242,8 @@ class _PickerState extends State<Picker> {
 
   void openPicker({
     PickerType? index,
-    List<AssetEntity>? selectedAssets, 
+    List<AssetEntity>? selectedAssets,
+    String? gif,
     DurationConstraint? duration, 
     int? imageCount, 
     bool? onlyPhotos,
@@ -263,52 +264,10 @@ class _PickerState extends State<Picker> {
       });
     }
     else if(type.state == PickerType.GiphyPickerView){
-      openGiphyPicker(overrideLock);
+      openGiphyPicker(gif ?? '', overrideLock);
     }
     else if(type.state == PickerType.Custom){
       openCustomPicker(overrideLock);
-    }
-  }
-
-  Future<void> instantOpen({
-    PickerType? index,
-    List<AssetEntity>? selectedAssets, 
-    DurationConstraint? duration, 
-    int? imageCount, 
-    bool? onlyPhotos,
-    bool? overrideLock,
-  }) async {
-    type.emit(index);
-    bottomPadding = (MediaQuery.of(context).size.height*(widget.minExtent));
-    if(overrideLock != null){
-      paddingLock = overrideLock;
-    }
-    else{
-      paddingLock = true;
-    }
-    if(type.state == PickerType.ImagePicker){
-      currentlyOpen = closeImagePicker;
-      imageSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300))?.then((value) {
-      paddingLock = false;
-      }) ?? Future.delayed(Duration(milliseconds: 300)).then((value) {
-        paddingLock = false;
-      });
-    }
-    else if(type.state == PickerType.GiphyPickerView){
-      currentlyOpen = closeGiphyPicker;
-      gifSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300))?.then((value) {
-      paddingLock = false;
-      }) ?? Future.delayed(Duration(milliseconds: 300)).then((value) {
-        paddingLock = false;
-      });
-    }
-    if(type.state == PickerType.Custom){
-      currentlyOpen = closeCustomPicker;
-      customSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300))?.then((value) {
-      paddingLock = false;
-      }) ?? Future.delayed(Duration(milliseconds: 300)).then((value) {
-        paddingLock = false;
-      });
     }
   }
 
@@ -332,14 +291,10 @@ class _PickerState extends State<Picker> {
     int imageCount, 
     bool onlyPhotos,
     [bool? overrideLock]) async {
-    
-    /// Intialize the [ImagePickerController]
-    // imagePickerController = ImagePickerController(
-    //   selectedAssets: selectedAssets, 
-    //   duration: duration, 
-    //   imageCount: imageCount, 
-    //   onlyPhotos: onlyPhotos
-    // );
+
+    if(selectedAssets.isNotEmpty){
+      imagePickerController!.addAssets(selectedAssets);
+    }
 
     bottomPadding = (MediaQuery.of(context).size.height*(widget.minExtent));
 
@@ -390,7 +345,11 @@ class _PickerState extends State<Picker> {
   }
 
   ///Opens the giphy picker: Called from picker controller
-  Future<void> openGiphyPicker([bool? overrideLock]) async {
+  Future<void> openGiphyPicker(String gif, [bool? overrideLock]) async {
+
+    if(gif != '' && mounted){
+      giphyPickerController!.addAsset(gif);
+    }
 
     bottomPadding = (MediaQuery.of(context).size.height*(widget.minExtent));
     
@@ -601,6 +560,7 @@ class PickerController extends ChangeNotifier{
 
   void closePicker() => _state!.closePicker();
   
+  /// Initially open picker
   void openPicker({
     PickerType? index,
     List<AssetEntity>? selectedAssets, 
@@ -617,31 +577,20 @@ class PickerController extends ChangeNotifier{
     overrideLock: overrideLock
   );
 
+  /// Close the image picker
   void closeImagePicker() => _state!.closeImagePicker();
 
+  /// Close the giphy picker
   void closeGiphyPicker() => _state!.closeGiphyPicker();
 
-  void openGiphyPicker(bool? overrideLock) => _state!.openGiphyPicker(overrideLock);
+  /// Open the giphy picker
+  void openGiphyPicker(bool? overrideLock) => _state!.openGiphyPicker('', overrideLock);
 
+  /// Open the custom picker (specified by user)
   void openCustomPicker(bool? overrideLock) => _state!.openCustomPicker(overrideLock);
 
+  /// Close the custom picker (specified by user)
   void closeCustomPicker() => _state!.closeCustomPicker();
-
-  void instantOpen({
-    PickerType? index,
-    List<AssetEntity>? selectedAssets, 
-    DurationConstraint? duration, 
-    int? imageCount, 
-    bool? onlyPhotos,
-    bool? overrideLock
-  }) => _state!.instantOpen(
-    index: index, 
-    selectedAssets: selectedAssets, 
-    duration: duration, 
-    imageCount: imageCount, 
-    onlyPhotos: onlyPhotos,
-    overrideLock: overrideLock
-  );
 
   PickerType? get type => _state != null ? _state!.type.state : null;
 

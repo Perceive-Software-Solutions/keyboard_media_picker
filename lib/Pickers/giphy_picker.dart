@@ -189,7 +189,6 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     super.initState();
     provider = GiphyPickerProvider(pageSize: 40, apiKey: widget.apiKey);
     delegate = GiphyPickerPickerBuilderDelegate(
-
       provider,
       giphyScrollController, 
       widget.controller,
@@ -219,6 +218,11 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   void didChangeDependencies() {
     super.didChangeDependencies();
     widget.controller?._bind(this);
+  }
+
+  /// Add asset to the giphy provider
+  void addAsset(String gif){
+    provider.selectAsset(gif);
   }
 
 
@@ -461,6 +465,8 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
 
     /// Clear the selected Gifs
     void clearGif() => _state != null ? _state!.provider.unSelectAsset() : null;
+
+    void addAsset(String gif) => _state != null ? _state!.addAsset(gif) : null;
 
     //Disposes of the controller
     @override

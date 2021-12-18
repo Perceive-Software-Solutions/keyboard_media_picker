@@ -275,6 +275,11 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
     }
   }
 
+  /// Add assets through the image picker controller
+  void addAssets(List<AssetEntity> assets){
+    initialSelect(assets);
+  }
+
   void sheetListener(SheetState state){
     if(state.extent <= widget.mediumExtent && (state.extent - widget.initialExtent) >= 0){
       animationController.animateTo((state.extent - widget.initialExtent) / widget.mediumExtent);
@@ -470,6 +475,9 @@ class ImagePickerController extends ChangeNotifier {
 
   /// Clear all selected assets
   void clearAll() => _state != null ? _state!.provider.clearAll() : null;
+
+  /// Add assets to the imageProvider
+  void addAssets(List<AssetEntity> assets) => _state != null ? _state!.addAssets(assets) : null;
 
   //Disposes of the controller
   @override

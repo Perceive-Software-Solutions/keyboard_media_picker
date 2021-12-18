@@ -611,7 +611,8 @@ class PickerController extends ChangeNotifier{
   /// Initially open picker
   void openPicker({
     PickerType? index,
-    List<AssetEntity>? selectedAssets, 
+    List<AssetEntity>? selectedAssets,
+    String? gif, 
     DurationConstraint? duration, 
     int? imageCount, 
     bool? onlyPhotos,
@@ -619,6 +620,7 @@ class PickerController extends ChangeNotifier{
   }) => _state!.openPicker(
     index: index,
     selectedAssets: selectedAssets,
+    gif: gif,
     duration: duration,
     imageCount: imageCount,
     onlyPhotos: onlyPhotos,

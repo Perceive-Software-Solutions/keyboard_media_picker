@@ -1,3 +1,7 @@
+## [0.2.20] v0.2.20
+
+* Add item functionality
+
 ## [0.2.19] v0.2.19
 
 * Bug fixes.

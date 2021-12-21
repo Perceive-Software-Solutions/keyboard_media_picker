@@ -158,9 +158,6 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
               else if(state.isExpanded){
                 // if(!sheetCubit.state) sheetCubit.emit(true);
               }
-              if(state.extent == 0){
-                widget.sheetController.snapToExtent(widget.initialExtent);
-              }
             },
           ),
           headerBuilder: (context, state){

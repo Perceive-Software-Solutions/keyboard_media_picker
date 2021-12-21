@@ -333,7 +333,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                       double topExtentValue = Functions.animateOver(extent, percent: 0.9);
                       return SlidingSheet(
                           controller: widget.sheetController,
-                          isBackdropInteractable: extent > widget.initialExtent ? false : true,
+                          isBackdropInteractable: false,
                           duration: Duration(milliseconds: 300),
                           cornerRadius: 32,
                           cornerRadiusOnFullscreen: 0,
@@ -352,6 +352,9 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                               }
                               else if(state.isExpanded && !pageCubit.state){
                                 if(!sheetCubit.state) sheetCubit.emit(true);
+                              }
+                              if(state.extent == 0){
+                                widget.sheetController.snapToExtent(widget.initialExtent);
                               }
                             },
                           ),

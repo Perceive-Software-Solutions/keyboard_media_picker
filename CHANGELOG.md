@@ -1,3 +1,7 @@
+## [0.2.22] v0.2.22
+
+* Added non interacable background
+
 ## [0.2.20] v0.2.20
 
 * Add item functionality

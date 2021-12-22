@@ -15,6 +15,7 @@ class GiphyPickerPickerBuilderDelegate {
     this.sheetExtent,
     this.sheetState,
     this.loadingIndicator,
+    this.connectivityIndicator,
     this.loadingTileIndicator, {
       this.overlayBuilder,
       this.mediumExtent = 0.4,
@@ -26,6 +27,9 @@ class GiphyPickerPickerBuilderDelegate {
 
   /// Loading Indicator before any Gifs are loaded
   final Widget? Function(BuildContext, double)? loadingIndicator;
+
+  /// When the giphy picker is not connected to the internet
+  final Widget? Function(BuildContext, double)? connectivityIndicator;
 
   /// Individual Gif loading indicator
   final Widget? loadingTileIndicator;
@@ -110,6 +114,14 @@ class GiphyPickerPickerBuilderDelegate {
       decoration: BoxDecoration(
         color: Colors.grey,
         borderRadius: BorderRadius.circular(12)
+      ),
+    );
+  }
+
+  Widget connectivityIndicatorExample(){
+    return Container(
+      child: Center(
+        child: Text("Not Connected to the internel"),
       ),
     );
   }
@@ -216,15 +228,28 @@ class GiphyPickerPickerBuilderDelegate {
       value: provider,
       builder: (BuildContext context, _) {
         return Selector<GiphyPickerProvider, bool>(
-          selector: (_, GiphyPickerProvider provider) => provider.hasAssetsToDisplay,
-          builder: (_, bool hasAssetsToDisplay, __) {
-            return BlocBuilder<ConcreteCubit<bool>, bool>(
-              bloc: sheetState,
-              builder: (context, state) {
-                return BlocBuilder<ConcreteCubit<double>, double>(
-                  bloc: sheetExtent,
-                  builder: (BuildContext context, double extent) {
-                    return hasAssetsToDisplay ? assetsGridBuilder(context, extent) : loadingIndicator!(context, extent) ?? loadingIndicatorExample(context);
+          selector: (_, GiphyPickerProvider provider) => provider.connectivityStatus,
+          builder: (_, connectivity, child) {
+            return Selector<GiphyPickerProvider, bool>(
+              selector: (_, GiphyPickerProvider provider) => provider.hasAssetsToDisplay,
+              builder: (_, bool hasAssetsToDisplay, __) {
+                return BlocBuilder<ConcreteCubit<bool>, bool>(
+                  bloc: sheetState,
+                  builder: (context, state) {
+                    return BlocBuilder<ConcreteCubit<double>, double>(
+                      bloc: sheetExtent,
+                      builder: (BuildContext context, double extent) {
+                        if(!hasAssetsToDisplay && !connectivity){
+                          return connectivityIndicator!(context, extent) ?? connectivityIndicatorExample();
+                        }
+                        else if(hasAssetsToDisplay){
+                          return assetsGridBuilder(context, extent);
+                        }
+                        else{
+                          return loadingIndicator!(context, extent) ?? loadingIndicatorExample(context);
+                        }
+                      }
+                    );
                   }
                 );
               }

@@ -8,7 +8,6 @@ import 'package:piky/Pickers/custom_picker.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:piky/piky.dart';
-import 'package:piky/util/functions.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 
 import 'imager_picker.dart';
@@ -81,6 +80,9 @@ class Picker extends StatefulWidget {
   ///Loading Indicator for the Gif viewer when no Gifs are loaded
   final Widget? Function(BuildContext, double)? gifLoadingIndicator;
 
+  ///Connectivity Indiciator when there are no gifs and not connected to the internet
+  final Widget? Function(BuildContext, double)? gifconnectivityIndicator;
+
   ///Loading Indicator for the Gif viewer when Gifs are currently beiing rendered
   final Widget? gifLoadingTileIndicator;
 
@@ -149,6 +151,7 @@ class Picker extends StatefulWidget {
     this.iconStyle = const TextStyle(color: Colors.grey),
     this.searchColor = Colors.grey,
     this.gifLoadingIndicator,
+    this.gifconnectivityIndicator,
     this.gifLoadingTileIndicator,
     this.gifStatusBarColor = Colors.white,
     this.gifBackgroundColor = Colors.white,
@@ -199,6 +202,8 @@ class _PickerState extends State<Picker> {
   @override
   void initState(){
     super.initState();
+
+
 
     /// Extent of all 3 sliding sheets
     sheetState = ConcreteCubit<double>(widget.initialExtent);
@@ -548,6 +553,7 @@ class _PickerState extends State<Picker> {
                 minBackdropColor: widget.minBackdropColor,
                 maxBackdropColor: widget.maxBackdropColor,
                 loadingIndicator: widget.gifLoadingIndicator,
+                connectivityIndicator: widget.gifconnectivityIndicator,
                 loadingTileIndicator: widget.gifLoadingTileIndicator,
                 statusBarPaddingColor: widget.gifStatusBarColor,
                 overlayBuilder: widget.overlayBuilder,

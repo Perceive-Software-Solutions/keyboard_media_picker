@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -68,6 +69,7 @@ class GiphyPicker extends StatefulWidget {
 
   /// Loading Indicators
   Widget? Function(BuildContext, double)? loadingIndicator;
+  Widget? Function(BuildContext, double)? connectivityIndicator;
   Widget? loadingTileIndicator;
 
   /// Overlay Widget of the selected asset
@@ -106,6 +108,7 @@ class GiphyPicker extends StatefulWidget {
     this.maxBackdropColor = Colors.black,
     this.loadingIndicator,
     this.loadingTileIndicator,
+    this.connectivityIndicator
   }) : super(key: key);
   @override
   _GiphyPickerState createState() => _GiphyPickerState();
@@ -195,6 +198,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
       sheetExtent,
       sheetCubit,
       widget.loadingIndicator,
+      widget.connectivityIndicator,
       widget.loadingTileIndicator,
       mediumExtent: widget.mediumExtent,
       overlayBuilder: widget.overlayBuilder
@@ -212,6 +216,14 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     initiateScrollListener(giphyScrollController);
     // initiateSearchListener();
 
+    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+      if(result == ConnectivityResult.none){
+        provider.connectivityStatus = false;
+      }
+      else{
+        provider.connectivityStatus = true;
+      }
+    });
   }
 
   @override
@@ -223,6 +235,10 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   /// Add asset to the giphy provider
   void addAsset(String gif){
     provider.selectAsset(gif);
+  }
+
+  Future<void> reload() async {
+    await provider.reload(widget.apiKey);
   }
 
 
@@ -472,6 +488,8 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     void clearGif() => _state != null ? _state!.unSelectAsset() : null;
 
     void addAsset(String gif) => _state != null ? _state!.addAsset(gif) : null;
+
+    void reload() => _state != null ? _state!.reload() : null;
 
     //Disposes of the controller
     @override

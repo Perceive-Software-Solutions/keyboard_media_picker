@@ -31,7 +31,9 @@ class GiphyPickerProvider extends ChangeNotifier {
   /// Stores the current selected Asset
   String _selectedAsset = '';
 
-  /// 
+  /// If connected to the internet
+  bool connectivity = true;
+
   bool assetsLoadingComplete = true;
 
   /// Get [_selectedAsset]
@@ -61,6 +63,18 @@ class GiphyPickerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set the connectivity status
+  set connectivityStatus(bool connectivityStatus){
+    if(connectivityStatus == connectivity){
+      return;
+    }
+    connectivity = connectivityStatus;
+    notifyListeners();
+  }
+
+  /// Current connectivity status
+  bool get connectivityStatus => connectivity;
+
   /// [Map] for all giphy assets
   /// 
   /// Using [Map] in order to store how the assets should be displayed
@@ -77,6 +91,13 @@ class GiphyPickerProvider extends ChangeNotifier {
     }
     _displayAssets = Map<String, double>.from(value);
     notifyListeners();
+  }
+
+  Future<void> reload(String apiKey) async {
+    /// Initialize API Client
+    initializeGiphyClient(apiKey);
+    /// Load initial state
+    await loadMoreAssetsFromTrending(0);
   }
 
   void initializeGiphyClient(String apiKey){
@@ -109,21 +130,24 @@ class GiphyPickerProvider extends ChangeNotifier {
   Future<void> loadMoreAssetsFromTrending(int offset) async {
     assetsLoadingComplete = false;
     notifyListeners();
-    GiphyCollection collection = await client.trending(offset: offset, limit: pageSize).then((value) {
-      return value;
-    });
-    List<GiphyGif>? _list = collection.data;
-    if(offset == 0){
-      reset();
+    try{
+      GiphyCollection collection = await client.trending(offset: offset, limit: pageSize).then((value) {
+        return value;
+      });
+      List<GiphyGif>? _list = collection.data;
+      if(offset == 0){
+        reset();
+      }
+      totalAssetsCount += _list!.length;
+      for(GiphyGif _gif in _list){
+        String _url = _gif.images!.fixedWidth.url;
+        double _displaySize = double.parse(_gif.images!.fixedWidthDownsampled!.width)/double.parse(_gif.images!.fixedWidthDownsampled!.height);
+        _displayAssets[_url] = _displaySize;
+      }
+      assetsLoadingComplete = true;
+      notifyListeners();
     }
-    totalAssetsCount += _list!.length;
-    for(GiphyGif _gif in _list){
-      String _url = _gif.images!.fixedWidth.url;
-      double _displaySize = double.parse(_gif.images!.fixedWidthDownsampled!.width)/double.parse(_gif.images!.fixedWidthDownsampled!.height);
-      _displayAssets[_url] = _displaySize;
-    }
-    assetsLoadingComplete = true;
-    notifyListeners();
+    catch(e){}
   }
   
   /// Load more assets from searching state

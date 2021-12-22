@@ -343,8 +343,40 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget gifLoadingIndicator(BuildContext context, ScrollController controller, double extent){
-    return Container(
-      child: Text("This is the loading state"),
+    return SizedBox(
+      height: 1000,
+      child: ListView(
+        controller: controller,
+        children: [
+          SizedBox(
+            height: 200,
+          ),
+          Text("This is the loading state"),
+          SizedBox(
+            height: 200,
+          ),
+          Text("This is the loading state"),
+          SizedBox(
+            height: 200,
+          ),
+          Text("This is the loading state"),
+          SizedBox(
+            height: 200,
+          ),
+          Text("This is the loading state"),
+          SizedBox(
+            height: 200,
+          ),
+          Text("This is the loading state"),
+          SizedBox(
+            height: 200,
+          ),
+          Text("This is the loading state"),
+          SizedBox(
+            height: 200,
+          ),
+        ],
+      ),
     );
   }
 
@@ -357,7 +389,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Picker(
-      apiKey: 'OI5ZOVhKTzf16it9QmrOZGSGdRudnk4H',
+      apiKey: 'Example',
       initialValue: PickerType.ImagePicker,
       controller: pickerController,
       backgroundColor: Colors.white,

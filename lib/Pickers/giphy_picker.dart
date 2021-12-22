@@ -67,7 +67,7 @@ class GiphyPicker extends StatefulWidget {
   final Color maxBackdropColor;
 
   /// Loading Indicators
-  Widget? Function(BuildContext, bool)? loadingIndicator;
+  Widget? Function(BuildContext, double)? loadingIndicator;
   Widget? loadingTileIndicator;
 
   /// Overlay Widget of the selected asset

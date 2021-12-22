@@ -79,7 +79,7 @@ class Picker extends StatefulWidget {
   final Widget? imageLoadingIndicator;
 
   ///Loading Indicator for the Gif viewer when no Gifs are loaded
-  final Widget? Function(BuildContext, bool)? gifLoadingIndicator;
+  final Widget? Function(BuildContext, double)? gifLoadingIndicator;
 
   ///Loading Indicator for the Gif viewer when Gifs are currently beiing rendered
   final Widget? gifLoadingTileIndicator;

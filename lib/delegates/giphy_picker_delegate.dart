@@ -25,7 +25,7 @@ class GiphyPickerPickerBuilderDelegate {
   final Widget Function(BuildContext context, int index)? overlayBuilder;
 
   /// Loading Indicator before any Gifs are loaded
-  final Widget? Function(BuildContext, bool)? loadingIndicator;
+  final Widget? Function(BuildContext, double)? loadingIndicator;
 
   /// Individual Gif loading indicator
   final Widget? loadingTileIndicator;
@@ -224,7 +224,7 @@ class GiphyPickerPickerBuilderDelegate {
                 return BlocBuilder<ConcreteCubit<double>, double>(
                   bloc: sheetExtent,
                   builder: (BuildContext context, double extent) {
-                    return hasAssetsToDisplay ? assetsGridBuilder(context, extent) : loadingIndicator!(context, state) ?? loadingIndicatorExample(context);
+                    return hasAssetsToDisplay ? assetsGridBuilder(context, extent) : loadingIndicator!(context, extent) ?? loadingIndicatorExample(context);
                   }
                 );
               }

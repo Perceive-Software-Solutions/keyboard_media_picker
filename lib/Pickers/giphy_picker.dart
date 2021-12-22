@@ -216,12 +216,15 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     initiateScrollListener(giphyScrollController);
     // initiateSearchListener();
 
+    checkConnectivity();
+
     Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
       if(result == ConnectivityResult.none){
         provider.connectivityStatus = false;
       }
       else{
         provider.connectivityStatus = true;
+        reload();
       }
     });
   }
@@ -230,6 +233,10 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   void didChangeDependencies() {
     super.didChangeDependencies();
     widget.controller?._bind(this);
+  }
+
+  void checkConnectivity() async {
+    provider.connectivityStatus = (await Connectivity().checkConnectivity()) != ConnectivityResult.none;
   }
 
   /// Add asset to the giphy provider

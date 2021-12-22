@@ -342,10 +342,22 @@ class _MyHomePageState extends State<MyHomePage> {
     return _cupertinoList(pathEntityList);
   }
 
+  Widget gifLoadingIndicator(BuildContext context, double extent){
+    return Container(
+      child: Text("This is the loading state"),
+    );
+  }
+
+  Widget gifConnectivityIndicator(BuildContext context, double extent){
+    return Container(
+      child: Text("This is the connectivity loading state"),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Picker(
-      apiKey: 'Example',
+      apiKey: 'OI5ZOVhKTzf16it9QmrOZGSGdRudnk4H',
       initialValue: PickerType.ImagePicker,
       controller: pickerController,
       backgroundColor: Colors.white,
@@ -359,6 +371,8 @@ class _MyHomePageState extends State<MyHomePage> {
       gifLoadingTileIndicator: gifTileLoadingIndicator(),
       imageHeaderBuilder: imageHeaderBuilder,
       albumMenuBuilder: albumMenuBuilder,
+      gifLoadingIndicator: gifLoadingIndicator,
+
       child: Scaffold(
           resizeToAvoidBottomInset: false,
           backgroundColor: Colors.white,

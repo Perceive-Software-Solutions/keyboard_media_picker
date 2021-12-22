@@ -240,13 +240,13 @@ class GiphyPickerPickerBuilderDelegate {
                       bloc: sheetExtent,
                       builder: (BuildContext context, double extent) {
                         if(!hasAssetsToDisplay && !connectivity){
-                          return connectivityIndicator!(context, extent) ?? connectivityIndicatorExample();
+                          return connectivityIndicator == null ? connectivityIndicatorExample() : connectivityIndicator!(context, extent)!;
                         }
                         else if(hasAssetsToDisplay){
                           return assetsGridBuilder(context, extent);
                         }
                         else{
-                          return loadingIndicator!(context, extent) ?? loadingIndicatorExample(context);
+                          return loadingIndicator == null ? loadingIndicatorExample(context) : loadingIndicator!(context, extent)!;
                         }
                       }
                     );

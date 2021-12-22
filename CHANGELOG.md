@@ -1,3 +1,7 @@
+## [0.2.24] v0.2.24
+
+* Added gif connectivity and loading indicator to gif
+
 ## [0.2.22] v0.2.22
 
 * Added non interacable background

@@ -68,7 +68,7 @@ class GiphyPicker extends StatefulWidget {
   final Color maxBackdropColor;
 
   /// Loading Indicators
-  Widget? Function(BuildContext, double)? loadingIndicator;
+  Widget? Function(BuildContext, ScrollController,  double)? loadingIndicator;
   Widget? Function(BuildContext, double)? connectivityIndicator;
   Widget? loadingTileIndicator;
 

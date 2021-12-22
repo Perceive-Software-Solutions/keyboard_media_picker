@@ -26,7 +26,7 @@ class GiphyPickerPickerBuilderDelegate {
   final Widget Function(BuildContext context, int index)? overlayBuilder;
 
   /// Loading Indicator before any Gifs are loaded
-  final Widget? Function(BuildContext, double)? loadingIndicator;
+  final Widget? Function(BuildContext, ScrollController, double)? loadingIndicator;
 
   /// When the giphy picker is not connected to the internet
   final Widget? Function(BuildContext, double)? connectivityIndicator;
@@ -246,7 +246,7 @@ class GiphyPickerPickerBuilderDelegate {
                           return assetsGridBuilder(context, extent);
                         }
                         else{
-                          return loadingIndicator == null ? loadingIndicatorExample(context) : loadingIndicator!(context, extent)!;
+                          return loadingIndicator == null ? loadingIndicatorExample(context) : loadingIndicator!(context, gridScrollController, extent)!;
                         }
                       }
                     );

@@ -342,7 +342,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return _cupertinoList(pathEntityList);
   }
 
-  Widget gifLoadingIndicator(BuildContext context, double extent){
+  Widget gifLoadingIndicator(BuildContext context, ScrollController controller, double extent){
     return Container(
       child: Text("This is the loading state"),
     );

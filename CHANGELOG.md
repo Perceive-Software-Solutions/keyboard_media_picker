@@ -1,3 +1,7 @@
+## [0.2.31] v0.2.31
+
+* Optamized album delegate
+
 ## [0.2.29] v0.2.29
 
 * Added image tile loading indicator

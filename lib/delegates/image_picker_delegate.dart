@@ -382,10 +382,13 @@ class ImagePickerBuilderDelegate {
                 builder: (context, state) {
                   return CustomScrollView(
                     scrollDirection: Axis.vertical,
-                    physics: AlwaysScrollableScrollPhysics(),
+                    physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                     controller: gridScrollController,
                     slivers: [
-                      _sliverGrid(_, assets)
+                      _sliverGrid(_, assets),
+                      SliverSafeArea(
+                        sliver: SliverToBoxAdapter(child: Container(height: MediaQuery.of(context).size.width/4,)),
+                      )
                     ],
                   );
                 }

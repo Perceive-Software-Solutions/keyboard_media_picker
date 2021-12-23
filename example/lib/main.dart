@@ -258,10 +258,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget albumMenuBuilder(Map<AssetPathEntity, Uint8List?> pathEntityList, ScrollController controller, dynamic Function(AssetPathEntity) onTap){
 
-    controller.addListener(() { 
-      print(controller.offset);
-    });
-
     pathEntityList.removeWhere((key, value) => value == null);
 
     AssetPathEntity? recents; 

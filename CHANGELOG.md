@@ -1,3 +1,7 @@
+## [0.2.29] v0.2.29
+
+* Added image tile loading indicator
+
 ## [0.2.28] v0.2.28
 
 * Added new album transition to images

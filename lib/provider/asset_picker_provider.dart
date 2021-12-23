@@ -79,6 +79,22 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
   /// 是否有资源可供显示
   bool _hasAssetsToDisplay = false;
 
+  /// Whether there are any assets can be displayed.
+  /// 是否有资源可供显示
+  bool _hasAlbumsToDisplay = false;
+
+  bool get hasAlbumsToDisplay => _hasAlbumsToDisplay;
+
+  set hasAlbumsToDisplay(bool value){
+    if (value == _hasAlbumsToDisplay) {
+      return;
+    }
+    _hasAlbumsToDisplay = value;
+    if(mounted){
+      notifyListeners();
+    }
+  }
+
   bool get hasAssetsToDisplay => _hasAssetsToDisplay;
 
   set hasAssetsToDisplay(bool value) {
@@ -147,8 +163,7 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
   /// This getter provides a "Should Rebuild" condition judgement to [Selector]
   /// with the path entities widget.
   /// 它为目录部件展示部分的 [Selector] 提供了是否重建的条件。
-  int get validPathThumbCount =>
-      _pathEntityList.values.where((Uint8List? d) => d != null).length;
+  int get validPathThumbCount => _pathEntityList.values.where((Uint8List? d) => d != null).length;
 
   /// The path which is currently using.
   /// 正在查看的资源路径
@@ -280,6 +295,7 @@ class DefaultAssetPickerProvider
     Future<void>.delayed(routeDuration).then(
       (dynamic _) async {
         await getAssetPathList();
+        // hasAlbumsToDisplay = true;
         await getAssetList();
       },
     );
@@ -340,21 +356,25 @@ class DefaultAssetPickerProvider
     // Add recents into the first index
     _list.insert(0, _other.first);
 
+    List<Future<void>> otherList = [];
+
     for (final AssetPathEntity pathEntity in _list) {
       // Use sync method to avoid unnecessary wait.
       _pathEntityList[pathEntity] = null;
       if (requestType != RequestType.audio) {
-        getFirstThumbFromPathEntity(pathEntity).then((Uint8List? data) {
+        final x = getFirstThumbFromPathEntity(pathEntity).then((Uint8List? data) {
           _pathEntityList[pathEntity] = data;
-          if(mounted){
-            notifyListeners();
-          }
         });
+        otherList.add(x);
       }
     }
 
+    await Future.wait(otherList);
+
     // Set first path entity as current path entity.
     if (_pathEntityList.isNotEmpty) {
+      hasAlbumsToDisplay = true;
+      notifyListeners();
       _currentPathEntity ??= pathEntityList.keys.elementAt(0);
     }
   }

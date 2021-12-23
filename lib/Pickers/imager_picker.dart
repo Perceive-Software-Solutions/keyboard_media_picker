@@ -107,6 +107,9 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
   /// Primary provider for loading assets
   late DefaultAssetPickerProvider provider;
 
+  /// Primary provider for loading assets
+  late DefaultAssetPickerProvider provider2;
+
   /// Primary delegate for displaying assets
   late ImagePickerBuilderDelegate imageDelegate;
 
@@ -178,6 +181,17 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       RequestType.all,
       filterOptions: filer
     );
+
+    // provider2 = DefaultAssetPickerProvider(
+    //   maxAssets: widget.controller!.imageCount, 
+    //   pageSize: 120,
+    //   pathThumbSize: 80,
+    //   requestType: 
+    //   widget.controller!.onlyPhotos ? 
+    //   RequestType.image : 
+    //   RequestType.all,
+    //   filterOptions: filer
+    // );
 
     albumDelegate = AlbumPickerBuilderDelegate(
       // provider,
@@ -407,14 +421,14 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                                   builder: (context, state) {
                                     if(albumPage != state && state){
                                       key.currentState!.push(_createRoute((_){    
-                                      // if(albumChild == null){
-                                      //   albumChild = albumDelegate.build(context, provider);
-                                      // }
-                                        return Container(
-                                          key: Key("2"),
-                                          color: widget.backgroundColor,
-                                          child: albumDelegate.build(context, provider)
-                                        );
+                                      if(albumChild == null){
+                                        albumChild = albumDelegate.build(context, provider);
+                                      }
+                                      return Container(
+                                        key: Key("2"),
+                                        color: widget.backgroundColor,
+                                        child: albumChild
+                                      );
                                       }));
                                     }
                                     else if(albumPage != state && !state){

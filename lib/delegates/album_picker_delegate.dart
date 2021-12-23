@@ -102,16 +102,12 @@ class AlbumPickerBuilderDelegate {
   }
 
   Widget assetListBuilder(BuildContext context, DefaultAssetPickerProvider provider){
-    return Selector<DefaultAssetPickerProvider, Map<AssetPathEntity, Uint8List?>>(
-      selector: (_, DefaultAssetPickerProvider p) => p.pathEntityList,
-      builder: (_, Map<AssetPathEntity, Uint8List?> pathEntityList, __) {
-        return albumMenuBuilder(pathEntityList, gridScrollController, (AssetPathEntity entity){
-          provider.currentPathEntity = entity;
-          provider.getAssetsFromEntity(0, entity);
-          if(pageCubit.state) pageCubit.emit(false);
-        });
-      }
-    );
+    print(provider.pathEntityList.length);
+    return albumMenuBuilder(provider.pathEntityList, gridScrollController, (AssetPathEntity entity){
+      provider.currentPathEntity = entity;
+      provider.getAssetsFromEntity(0, entity);
+      if(pageCubit.state) pageCubit.emit(false);
+    });
   }
   
   /// Yes, the build method
@@ -121,7 +117,12 @@ class AlbumPickerBuilderDelegate {
       builder: (BuildContext context, _) {
         return Padding(
           padding: const EdgeInsets.only(left: 16, right: 16),
-          child: assetListBuilder(context, provider),
+          child: Selector<DefaultAssetPickerProvider, int>(
+            selector: (_, DefaultAssetPickerProvider provider) => provider.pathEntityList.length,
+            builder: (_, int length, __) {
+              return length != 0 ? assetListBuilder(context, provider) : Container();
+            }
+          ),
         );
       }, 
     );

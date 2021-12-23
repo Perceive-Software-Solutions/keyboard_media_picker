@@ -331,9 +331,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           ) : SizedBox.shrink()
                         ],
                       ),
-                    Container(
-                      height: 120,
-                    )
                   ]
                 ),
               ),

@@ -237,15 +237,12 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
 
   void initiateListener(ScrollController scrollController){
     scrollController.addListener(() {
-      if(scrollController.offset <= -50 && widget.sheetController.state!.extent != widget.minExtent && !snapping){
+      if(scrollController.offset <= -50 && widget.sheetController.state!.extent != widget.minExtent && !snapping){ 
         if(widget.sheetController.state!.extent == 1.0){
           snapping = true;
           Future.delayed(Duration.zero, () {
             widget.sheetController.snapToExtent(widget.mediumExtent, duration: Duration(milliseconds: 300));
             sheetCubit.emit(false);
-            if(pageCubit.state){
-              pageCubit.emit(!pageCubit.state);
-            }
             Future.delayed(Duration(milliseconds: 300)).then((value) => {
               snapping = false
             });
@@ -304,8 +301,9 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       onTap: () {
         provider.getAssetPathList();
         pageCubit.emit(!pageCubit.state);
-        sheetCubit.emit(true);
-        widget.sheetController.expand();
+        if(pageCubit.state && widget.sheetController.state!.extent < widget.mediumExtent){
+          widget.sheetController.snapToExtent(widget.mediumExtent);
+        }
       },
       child: widget.headerBuilder(path, sheetCubitState) 
     );
@@ -344,15 +342,6 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                           snapSpec: SnapSpec(
                             initialSnap: widget.minExtent,
                             snappings: [widget.minExtent, widget.initialExtent, widget.mediumExtent, widget.expandedExtent],
-                            onSnap: (state, _){
-                              if(state.extent == widget.mediumExtent){
-                                if(sheetCubit.state) sheetCubit.emit(false);
-                                if(pageCubit.state) pageCubit.emit(false);
-                              }
-                              else if(state.isExpanded && !pageCubit.state){
-                                if(!sheetCubit.state) sheetCubit.emit(true);
-                              }
-                            },
                           ),
                           headerBuilder: (context, state){
                             return Column(
@@ -425,7 +414,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                                     return SingleChildScrollView(
                                       controller: controller,
                                       child: Container(
-                                        height: MediaQuery.of(context).size.height,
+                                        height: MediaQuery.of(context).size.height*extent,
                                         width: MediaQuery.of(context).size.width,
                                         child: Navigator(
                                           key: key,

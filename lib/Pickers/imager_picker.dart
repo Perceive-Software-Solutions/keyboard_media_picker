@@ -302,7 +302,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
     widget.listener(state);
   }
 
-  Widget _buildHeader(BuildContext context, bool sheetCubitState, String path){
+  Widget _buildHeader(BuildContext context, bool pageCubitState, String path){
     //Max Extent
     return GestureDetector(
       onTap: () {
@@ -312,7 +312,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
           widget.sheetController.snapToExtent(widget.mediumExtent);
         }
       },
-      child: widget.headerBuilder(path, sheetCubitState) 
+      child: widget.headerBuilder(path, pageCubitState) 
     );
   }
 
@@ -328,9 +328,9 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
         child: BlocProvider(
           create: (context) => sheetCubit,
           child: BlocBuilder<ConcreteCubit<bool>, bool>(
-            bloc: sheetCubit,
+            bloc: pageCubit,
             buildWhen: (o, n) => o != n,
-            builder: (context, sheetCubitState) {
+            builder: (context, pageCubitState) {
               return AnimatedBuilder(
                 animation: colorTween,
                 builder: (context, child) {
@@ -383,7 +383,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                                                 ),
                                               );
                                             },
-                                            child: _buildHeader(context, sheetCubitState, _path?.name ?? "Recents")
+                                            child: _buildHeader(context, pageCubitState, _path?.name ?? "Recents")
                                           );
                                         }
                                       );

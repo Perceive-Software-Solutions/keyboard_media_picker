@@ -29,7 +29,7 @@ class CustomPicker extends StatefulWidget {
   final Color maxBackdropColor;
 
   /// Custom picker body builder
-  final Widget Function(BuildContext context, ScrollController scrollController, SheetState state) customBodyBuilder;
+  final Widget Function(BuildContext context, double extent, ScrollController scrollController, SheetState state) customBodyBuilder;
 
   final Widget Function(BuildContext context, SheetState state) headerBuilder;
 
@@ -175,7 +175,7 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
               child: SingleChildScrollView(
                 controller: controller,
                 physics: AlwaysScrollableScrollPhysics(),
-                child: widget.customBodyBuilder(context, scrollController, sheetState),
+                child: widget.customBodyBuilder(context, extent, scrollController, sheetState),
               ),
             );
           },

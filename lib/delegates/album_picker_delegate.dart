@@ -18,10 +18,8 @@ class AlbumPickerBuilderDelegate {
     this.pageCubit,
     this.gridScrollController,
     this.albumMenuBuilder,
-
     this.imagePickerController, {
-      this.gridCount = 3,
-
+    this.gridCount = 3,
   });
 
   final Widget Function(Map<AssetPathEntity, Uint8List?>, ScrollController controller, dynamic Function(AssetPathEntity)) albumMenuBuilder;
@@ -121,7 +119,7 @@ class AlbumPickerBuilderDelegate {
   }
   
   /// Yes, the build method
-  Widget build(BuildContext context){
+  Widget build(BuildContext _){
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _) {

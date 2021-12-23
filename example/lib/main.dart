@@ -258,6 +258,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget albumMenuBuilder(Map<AssetPathEntity, Uint8List?> pathEntityList, ScrollController controller, dynamic Function(AssetPathEntity) onTap){
 
+    controller.addListener(() { 
+      print(controller.offset);
+    });
+
     pathEntityList.removeWhere((key, value) => value == null);
 
     AssetPathEntity? recents; 
@@ -275,6 +279,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     Widget _cupertinoList(Map<AssetPathEntity, Uint8List?> assets){
       return ListView(
+        shrinkWrap: true,
         padding: const EdgeInsets.only(top: 16, bottom: 16, left: 8, right: 8),
         physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         controller: controller,
@@ -299,7 +304,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       color: Colors.grey.withOpacity(0.4),
                     ),
                   ),
-                  tileItemBuilder(context, favorites, pathEntityList[favorites], onTap)
+                  tileItemBuilder(context, favorites, pathEntityList[favorites], onTap),
                 ],
               ),
             ),
@@ -329,7 +334,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ) : SizedBox.shrink()
                         ],
-                      )
+                      ),
+                    Container(
+                      height: 120,
+                    )
                   ]
                 ),
               ),
@@ -549,7 +557,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           )
         ),
-        customBodyBuilder: (context, controller, state){
+        customBodyBuilder: (context, extent, controller, state){
           return Text("This is Custom");
         },
         headerBuilder: (context, state){

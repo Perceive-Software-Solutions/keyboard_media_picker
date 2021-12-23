@@ -135,6 +135,8 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
   /// The primary [Cubit] for the page transition between [AssetPathEntity] and [AssetEntity]
   ConcreteCubit<bool> pageCubit = ConcreteCubit<bool>(false);
 
+  bool albumPage = false;
+
   /// The [ScrollController] for the image preview grid
   ScrollController imageGridScrollController = ScrollController();
 
@@ -146,6 +148,8 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
 
   /// HeaderBuilder height
   double HEADER_HEIGHT = 60;
+
+  GlobalKey<NavigatorState> key = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -169,6 +173,15 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       filterOptions: filer
     );
 
+    albumDelegate = AlbumPickerBuilderDelegate(
+      provider,
+      pageCubit,
+      albumGridScrollController,
+      widget.albumMenuBuilder,
+      widget.controller,
+      gridCount: 2
+    );
+
     //Build image delegate
     imageDelegate = ImagePickerBuilderDelegate(
       provider,
@@ -178,17 +191,6 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       loadingIndicator: widget.loadingIndicator,
       overlayBuilder: widget.overlayBuilder,
       lockOverlayBuilder: widget.lockOverlayBuilder
-    );
-
-    //Build album delegate
-    albumDelegate = AlbumPickerBuilderDelegate(
-      provider,
-      pageCubit,
-      albumGridScrollController,
-
-      widget.albumMenuBuilder,
-      widget.controller,
-      gridCount: 2
     );
 
     //Initiate animation
@@ -410,19 +412,38 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                                   bloc: pageCubit,
                                   buildWhen: (o, n) => o != n,
                                   builder: (context, state) {
+                                    if(albumPage != state && state){
+                                      key.currentState!.push(_createRoute((){     
+                                        return Container(
+                                          color: widget.backgroundColor,
+                                          key: Key("1"), 
+                                          child: albumDelegate.build(key.currentContext!)
+                                        );
+                                      }
+                                      ));
+                                    }
+                                    else if(albumPage != state && !state){
+                                      key.currentState!.pop();
+                                    }
+                                    albumPage = state;
                                     return SingleChildScrollView(
                                       controller: controller,
-                                      child: !state ? Container(
-                                        color: widget.backgroundColor,
-                                        key: Key("1"), 
-                                        height: height,
-                                        child: imageDelegate.build(context)
-                                      ) : Container(
-                                        color: widget.backgroundColor,
-                                        key: Key("2"), 
-                                        height: height,
-                                        child: albumDelegate.build(context)
-                                      ),
+                                      child: Container(
+                                        height: MediaQuery.of(context).size.height,
+                                        width: MediaQuery.of(context).size.width,
+                                        child: Navigator(
+                                          key: key,
+                                          onGenerateRoute: (route) => _createRoute((){
+                                              return Container(
+                                                color: widget.backgroundColor,
+                                                key: Key("1"), 
+                                                height: height,
+                                                child: imageDelegate.build(context)
+                                              );
+                                            }
+                                          )
+                                        ),
+                                      )
                                     );
                                   }
                                 );
@@ -493,4 +514,23 @@ class ImagePickerController extends ChangeNotifier {
 
 class ConcreteCubit<T> extends Cubit<T> {
   ConcreteCubit(T initialState) : super(initialState);
+}
+
+Route _createRoute(Widget Function() nextPage) {
+  return PageRouteBuilder(
+    maintainState: true,
+    pageBuilder: (context, animation, secondaryAnimation) => nextPage(),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(0.0, 1.0);
+      const end = Offset.zero;
+      const curve = Curves.ease;
+
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: child,
+      );
+    },
+  );
 }

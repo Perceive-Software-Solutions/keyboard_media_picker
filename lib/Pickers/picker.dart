@@ -77,6 +77,10 @@ class Picker extends StatefulWidget {
   ///If not used [CircularProgressIndicator] will be its placeholder
   final Widget? imageLoadingIndicator;
 
+  /// Loading Indicator for the albums inside Media Viewer
+  /// If not used [CircularProgressIndicator] will be its placeholder
+  final Widget? albumLoadingIndicator;
+
   ///Loading Indicator for the Gif viewer when no Gifs are loaded
   final Widget? Function(BuildContext, ScrollController, double)? gifLoadingIndicator;
 
@@ -118,7 +122,7 @@ class Picker extends StatefulWidget {
   final PickerType initialValue;
 
   /// Custom picker
-  final Widget Function(BuildContext context, ScrollController scrollController, SheetState state)? customBodyBuilder;
+  final Widget Function(BuildContext context, double extent, ScrollController scrollController, SheetState state)? customBodyBuilder;
   final Widget Function(BuildContext context, SheetState state)? headerBuilder;
   Color customStatusBarColor;
 
@@ -133,6 +137,7 @@ class Picker extends StatefulWidget {
     this.lockOverlayBuilder,
     this.overlayBuilder,
     this.imageLoadingIndicator,
+    this.albumLoadingIndicator,
     this.initialExtent = 0.55, 
     this.minExtent = 0.0,
     this.mediumExtent = 0.55,

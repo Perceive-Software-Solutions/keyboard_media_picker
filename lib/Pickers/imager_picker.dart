@@ -345,9 +345,6 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                             initialSnap: widget.minExtent,
                             snappings: [widget.minExtent, widget.initialExtent, widget.mediumExtent, widget.expandedExtent],
                             onSnap: (state, _){
-                              // if(state.isCollapsed && widget.minExtent == 0){
-                              //   widget.pickerController!.closeImagePicker();
-                              // }
                               if(state.extent == widget.mediumExtent){
                                 if(sheetCubit.state) sheetCubit.emit(false);
                                 if(pageCubit.state) pageCubit.emit(false);
@@ -419,8 +416,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                                           key: Key("1"), 
                                           child: albumDelegate.build(key.currentContext!)
                                         );
-                                      }
-                                      ));
+                                      }));
                                     }
                                     else if(albumPage != state && !state){
                                       key.currentState!.pop();

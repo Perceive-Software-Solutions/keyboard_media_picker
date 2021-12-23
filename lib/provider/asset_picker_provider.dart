@@ -374,14 +374,13 @@ class DefaultAssetPickerProvider
 
   @override
   Future<void> getAssetsFromEntity(int page, AssetPathEntity pathEntity) async {
-    _currentAssets.clear();
+    // _currentAssets.clear();
     _currentAssets = (await pathEntity.getAssetListPaged(
       page,
       pageSize,
     )).toList();
-    // for(AssetEntity asset in _currentAssets){
-    //   print( await asset.file);
-    // }
+
+    _currentAssets = _currentAssets.toSet().toList();
     _hasAssetsToDisplay = currentAssets.isNotEmpty;
     if(mounted){
       notifyListeners();

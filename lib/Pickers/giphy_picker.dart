@@ -343,9 +343,6 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                     initialSnap: widget.minExtent,
                     snappings: [widget.minExtent, widget.initialExtent, widget.mediumExtent, widget.expandedExtent],
                     onSnap: (state, _){
-                      // if(state.isCollapsed && widget.minExtent == 0){
-                      //   widget.pickerController!.closeGiphyPicker();
-                      // }
                       if(state.extent == widget.mediumExtent){
                         if(sheetCubitState) sheetCubit.emit(false);
                       }

@@ -19,10 +19,13 @@ class ImagePickerBuilderDelegate {
     this.gridScrollController,
     this.imagePickerController, {
       this.loadingIndicator,
+      this.tileLoadingIndicator,
       this.overlayBuilder,
       this.lockOverlayBuilder,
       this.gridCount = 4,
   });
+
+  final Widget? tileLoadingIndicator;
 
   /// Overlay that displays if the image is selected
   final Widget Function(BuildContext context, int index)? overlayBuilder;
@@ -156,6 +159,14 @@ class ImagePickerBuilderDelegate {
       thumbSize: <int>[defaultGridThumbSize, defaultGridThumbSize],
     );
 
+    ConcreteCubit<bool> loading = ConcreteCubit<bool>(true);
+
+    imageProvider.resolve(new ImageConfiguration()).addListener(ImageStreamListener(
+      (_, done){
+        loading.emit(false);
+      }
+    ));
+
     return Selector<DefaultAssetPickerProvider, int>(
       selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
       builder: (BuildContext context, int selectedCount, Widget? child) {
@@ -178,13 +189,28 @@ class ImagePickerBuilderDelegate {
           if(!provider.selectedAssets.contains(asset) && lock)
           lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
 
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
-            ),
+          BlocBuilder<ConcreteCubit<bool>, bool>(
+            bloc: loading,
+            builder: (context, load) {
+              if(load){
+                return loadingIndicator ?? Container(
+                  width: MediaQuery.of(context).size.width/4,
+                  height: MediaQuery.of(context).size.width/4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+                  ),
+                );
+              }
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+                  ),
+                );
+            }
           )
-        ],
+          ],
         );
       }
     );
@@ -200,6 +226,14 @@ class ImagePickerBuilderDelegate {
       isOriginal: false,
       thumbSize: <int>[defaultGridThumbSize, defaultGridThumbSize],
     );
+
+    ConcreteCubit<bool> loading = ConcreteCubit<bool>(true);
+
+    imageProvider.resolve(new ImageConfiguration()).addListener(ImageStreamListener(
+      (_, done){
+        loading.emit(false);
+      }
+    ));
 
     return Selector<DefaultAssetPickerProvider, int>(
       selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
@@ -251,11 +285,26 @@ class ImagePickerBuilderDelegate {
             overlayBuilder != null ? Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : Positioned.fill(child: selectedOverlay(context, asset)),
             if(!provider.selectedAssets.contains(asset) && (lock || videoLock)) 
             lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
-              ),
+            BlocBuilder<ConcreteCubit<bool>, bool>(
+              bloc: loading,
+              builder: (context, load) {
+                if(load){
+                  return loadingIndicator ?? Container(
+                    width: MediaQuery.of(context).size.width/4,
+                    height: MediaQuery.of(context).size.width/4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+                    ),
+                  );
+                }
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+                  ),
+                );
+              }
             )
           ],
         );
@@ -378,20 +427,13 @@ class ImagePickerBuilderDelegate {
           selector: (_, DefaultAssetPickerProvider provider) => provider.currentAssets,
           builder: (_, List<AssetEntity> assets, __) {
             return AnimationLimiter(
-              child: BlocBuilder<ConcreteCubit<bool>, bool>(
-                builder: (context, state) {
-                  return CustomScrollView(
-                    scrollDirection: Axis.vertical,
-                    physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                    controller: gridScrollController,
-                    slivers: [
-                      _sliverGrid(_, assets),
-                      SliverSafeArea(
-                        sliver: SliverToBoxAdapter(child: Container(height: MediaQuery.of(context).size.width/4,)),
-                      )
-                    ],
-                  );
-                }
+              child: CustomScrollView(
+                scrollDirection: Axis.vertical,
+                physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                controller: gridScrollController,
+                slivers: [
+                  _sliverGrid(_, assets),
+                ],
               ),
             );
           }

@@ -1,3 +1,8 @@
+## [0.2.28] v0.2.28
+
+* Added new album transition to images
+* Fixed auto expanding of sliding sheet
+
 ## [0.2.24] v0.2.24
 
 * Added gif connectivity and loading indicator to gif

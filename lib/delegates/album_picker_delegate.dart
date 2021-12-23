@@ -14,7 +14,6 @@ import 'package:sliding_sheet/sliding_sheet.dart';
 
 class AlbumPickerBuilderDelegate {
   AlbumPickerBuilderDelegate(
-    this.provider,
     this.pageCubit,
     this.gridScrollController,
     this.albumMenuBuilder,
@@ -26,9 +25,6 @@ class AlbumPickerBuilderDelegate {
 
   /// The [ScrollController] for the preview grid.
   final ScrollController gridScrollController;
-
-  /// [ChangeNotifier] for asset picker
-  final DefaultAssetPickerProvider provider;
 
   /// Primary cubit for initiating page transitions
   final ConcreteCubit<bool> pageCubit;
@@ -105,7 +101,7 @@ class AlbumPickerBuilderDelegate {
     
   }
 
-  Widget assetListBuilder(BuildContext context){
+  Widget assetListBuilder(BuildContext context, DefaultAssetPickerProvider provider){
     return Selector<DefaultAssetPickerProvider, Map<AssetPathEntity, Uint8List?>>(
       selector: (_, DefaultAssetPickerProvider p) => p.pathEntityList,
       builder: (_, Map<AssetPathEntity, Uint8List?> pathEntityList, __) {
@@ -119,13 +115,13 @@ class AlbumPickerBuilderDelegate {
   }
   
   /// Yes, the build method
-  Widget build(BuildContext _){
+  Widget build(BuildContext context, DefaultAssetPickerProvider provider){
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _) {
         return Padding(
           padding: const EdgeInsets.only(left: 16, right: 16),
-          child: assetListBuilder(context),
+          child: assetListBuilder(context, provider),
         );
       }, 
     );

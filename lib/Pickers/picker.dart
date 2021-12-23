@@ -76,6 +76,7 @@ class Picker extends StatefulWidget {
   ///Loading Indicator for the Media Viewer
   ///If not used [CircularProgressIndicator] will be its placeholder
   final Widget? imageLoadingIndicator;
+  final Widget? imageTileLoadingIndicator;
 
   /// Loading Indicator for the albums inside Media Viewer
   /// If not used [CircularProgressIndicator] will be its placeholder
@@ -136,6 +137,7 @@ class Picker extends StatefulWidget {
     required this.albumMenuBuilder,
     this.lockOverlayBuilder,
     this.overlayBuilder,
+    this.imageTileLoadingIndicator,
     this.imageLoadingIndicator,
     this.albumLoadingIndicator,
     this.initialExtent = 0.55, 
@@ -528,6 +530,7 @@ class _PickerState extends State<Picker> {
                 headerBuilder: widget.imageHeaderBuilder,
                 albumMenuBuilder: widget.albumMenuBuilder,
                 loadingIndicator: widget.imageLoadingIndicator,
+                tileLoadingIndicator: widget.imageTileLoadingIndicator,
                 minBackdropColor: widget.minBackdropColor,
                 maxBackdropColor: widget.maxBackdropColor,
                 overlayBuilder: widget.overlayBuilder,

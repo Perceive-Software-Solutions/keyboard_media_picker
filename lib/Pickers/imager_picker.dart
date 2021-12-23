@@ -40,6 +40,7 @@ class ImagePicker extends StatefulWidget {
   /// Loading indicator when ImagePickerProvidor is still fetching the images
   /// If not used will have the base [CircularProgressIndicator] as placeholder
   final Widget? loadingIndicator;
+  final Widget? tileLoadingIndicator;
 
   /// Overlay of the selected Asset
   final Widget Function(BuildContext context, int index)? overlayBuilder;
@@ -72,6 +73,7 @@ class ImagePicker extends StatefulWidget {
     required this.listener,
     this.pickerController,
     this.loadingIndicator,
+    this.tileLoadingIndicator,
     this.overlayBuilder,
     this.minExtent = 0.0,
     this.initialExtent = 0.4,
@@ -151,6 +153,10 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
 
   GlobalKey<NavigatorState> key = GlobalKey<NavigatorState>();
 
+  Widget? imageChild;
+
+  Widget? albumChild;
+
   @override
   void initState() {
     super.initState();
@@ -174,7 +180,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
     );
 
     albumDelegate = AlbumPickerBuilderDelegate(
-      provider,
+      // provider,
       pageCubit,
       albumGridScrollController,
       widget.albumMenuBuilder,
@@ -188,6 +194,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       imageGridScrollController,
       widget.controller,
       gridCount: 4,
+
       loadingIndicator: widget.loadingIndicator,
       overlayBuilder: widget.overlayBuilder,
       lockOverlayBuilder: widget.lockOverlayBuilder
@@ -399,11 +406,14 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                                   buildWhen: (o, n) => o != n,
                                   builder: (context, state) {
                                     if(albumPage != state && state){
-                                      key.currentState!.push(_createRoute((){     
+                                      key.currentState!.push(_createRoute((_){    
+                                      // if(albumChild == null){
+                                      //   albumChild = albumDelegate.build(context, provider);
+                                      // }
                                         return Container(
+                                          key: Key("2"),
                                           color: widget.backgroundColor,
-                                          key: Key("1"), 
-                                          child: albumDelegate.build(key.currentContext!)
+                                          child: albumDelegate.build(context, provider)
                                         );
                                       }));
                                     }
@@ -414,16 +424,19 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                                     return SingleChildScrollView(
                                       controller: controller,
                                       child: Container(
-                                        height: MediaQuery.of(context).size.height*extent,
+                                        height: height,
                                         width: MediaQuery.of(context).size.width,
                                         child: Navigator(
                                           key: key,
-                                          onGenerateRoute: (route) => _createRoute((){
+                                          onGenerateRoute: (route) => _createRoute((_){
+                                              if(imageChild == null){
+                                                imageChild = imageDelegate.build(context);
+                                              }
                                               return Container(
                                                 color: widget.backgroundColor,
                                                 key: Key("1"), 
                                                 height: height,
-                                                child: imageDelegate.build(context)
+                                                child: imageChild
                                               );
                                             }
                                           )
@@ -501,10 +514,26 @@ class ConcreteCubit<T> extends Cubit<T> {
   ConcreteCubit(T initialState) : super(initialState);
 }
 
-Route _createRoute(Widget Function() nextPage) {
+Route _createRoute(Widget Function(BuildContext) nextPage) {
+  Widget buildContent(BuildContext context) => nextPage(context);
   return PageRouteBuilder(
     maintainState: true,
-    pageBuilder: (context, animation, secondaryAnimation) => nextPage(),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      Widget result = buildContent(context);
+      assert(() {
+        if (result == null) {
+          throw FlutterError(
+            'Route builders must never return null.',
+          );
+        }
+        return true;
+      }());
+      return Semantics(
+        scopesRoute: true,
+        explicitChildNodes: true,
+        child: result,
+      );
+    },
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       const begin = Offset(0.0, 1.0);
       const end = Offset.zero;

@@ -159,13 +159,13 @@ class ImagePickerBuilderDelegate {
       thumbSize: <int>[defaultGridThumbSize, defaultGridThumbSize],
     );
 
-    ConcreteCubit<bool> loading = ConcreteCubit<bool>(true);
+    // ConcreteCubit<bool> loading = ConcreteCubit<bool>(true);
 
-    imageProvider.resolve(new ImageConfiguration()).addListener(ImageStreamListener(
-      (_, done){
-        loading.emit(false);
-      }
-    ));
+    // imageProvider.resolve(new ImageConfiguration()).addListener(ImageStreamListener(
+    //   (_, done){
+    //     loading.emit(false);
+    //   }
+    // ));
 
     return Selector<DefaultAssetPickerProvider, int>(
       selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
@@ -188,28 +188,12 @@ class ImagePickerBuilderDelegate {
 
           if(!provider.selectedAssets.contains(asset) && lock)
           lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
-
-          BlocBuilder<ConcreteCubit<bool>, bool>(
-            bloc: loading,
-            builder: (context, load) {
-              if(load){
-                return loadingIndicator ?? Container(
-                  width: MediaQuery.of(context).size.width/4,
-                  height: MediaQuery.of(context).size.width/4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                    border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
-                  ),
-                );
-              }
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
-                  ),
-                );
-            }
-          )
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+              ),
+            )
           ],
         );
       }
@@ -227,13 +211,13 @@ class ImagePickerBuilderDelegate {
       thumbSize: <int>[defaultGridThumbSize, defaultGridThumbSize],
     );
 
-    ConcreteCubit<bool> loading = ConcreteCubit<bool>(true);
+    // ConcreteCubit<bool> loading = ConcreteCubit<bool>(true);
 
-    imageProvider.resolve(new ImageConfiguration()).addListener(ImageStreamListener(
-      (_, done){
-        loading.emit(false);
-      }
-    ));
+    // imageProvider.resolve(new ImageConfiguration()).addListener(ImageStreamListener(
+    //   (_, done){
+    //     loading.emit(false);
+    //   }
+    // ));
 
     return Selector<DefaultAssetPickerProvider, int>(
       selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
@@ -285,27 +269,11 @@ class ImagePickerBuilderDelegate {
             overlayBuilder != null ? Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : Positioned.fill(child: selectedOverlay(context, asset)),
             if(!provider.selectedAssets.contains(asset) && (lock || videoLock)) 
             lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
-            BlocBuilder<ConcreteCubit<bool>, bool>(
-              bloc: loading,
-              builder: (context, load) {
-                if(load){
-                  return loadingIndicator ?? Container(
-                    width: MediaQuery.of(context).size.width/4,
-                    height: MediaQuery.of(context).size.width/4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
-                      border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
-                    ),
-                  );
-                }
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
-                  ),
-                );
-              }
-            )
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+              )),
           ],
         );
       }

@@ -6,7 +6,6 @@ import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/provider/asset_picker_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 
@@ -102,11 +101,10 @@ class AlbumPickerBuilderDelegate {
   }
 
   Widget assetListBuilder(BuildContext context, DefaultAssetPickerProvider provider){
-    print(provider.pathEntityList.length);
     return albumMenuBuilder(provider.pathEntityList, gridScrollController, (AssetPathEntity entity){
       provider.currentPathEntity = entity;
-      provider.getAssetsFromEntity(0, entity);
       if(pageCubit.state) pageCubit.emit(false);
+      provider.getAssetsFromEntity(0, entity);
     });
   }
   

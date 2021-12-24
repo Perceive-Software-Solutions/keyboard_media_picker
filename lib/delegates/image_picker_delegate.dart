@@ -176,6 +176,12 @@ class ImagePickerBuilderDelegate {
         }
         return Stack(
           children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+              ),
+            ),
             Positioned.fill(
               child: AssetEntityGridItemBuilder(
                 image: imageProvider,
@@ -211,14 +217,6 @@ class ImagePickerBuilderDelegate {
       thumbSize: <int>[defaultGridThumbSize, defaultGridThumbSize],
     );
 
-    // ConcreteCubit<bool> loading = ConcreteCubit<bool>(true);
-
-    // imageProvider.resolve(new ImageConfiguration()).addListener(ImageStreamListener(
-    //   (_, done){
-    //     loading.emit(false);
-    //   }
-    // ));
-
     return Selector<DefaultAssetPickerProvider, int>(
       selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
       builder: (BuildContext context, int selectedCount, Widget? child) {
@@ -232,6 +230,12 @@ class ImagePickerBuilderDelegate {
         }
         return Stack(
           children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+              ),
+            ),
             Positioned.fill(
               child: AssetEntityGridItemBuilder(
                 image: imageProvider,
@@ -291,6 +295,7 @@ class ImagePickerBuilderDelegate {
     // If the asset is a video 
     bool isVideo = currentAssets[index].videoDuration.inMilliseconds > 0;
 
+    
     Widget child = isVideo ? 
       videoItemBuilder(context, currentAssets[index]) : 
       imageItemBuilder(context, currentAssets[index]);
@@ -326,7 +331,6 @@ class ImagePickerBuilderDelegate {
                   else{
                     provider.selectAsset(currentAssets[index]);
                   }
-
                   imagePickerController!.update();
                 }
               )
@@ -372,16 +376,16 @@ class ImagePickerBuilderDelegate {
                 assets,
                 placeholderCount: placeholderCount
               ),
-              findChildIndexCallback: (Key key) {
-                if (key is ValueKey<String>) {
-                  return findChildIndexBuilder(
-                    key.value,
-                    assets,
-                    placeholderCount: placeholderCount,
-                  );
-                }
-                return null;
-              },
+              // findChildIndexCallback: (Key key) {
+              //   if (key is ValueKey<String>) {
+              //     return findChildIndexBuilder(
+              //       key.value,
+              //       assets,
+              //       placeholderCount: placeholderCount,
+              //     );
+              //   }
+              //   return null;
+              // },
             ), 
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: gridCount,

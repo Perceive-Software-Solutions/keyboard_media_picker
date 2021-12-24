@@ -7,6 +7,7 @@ import 'package:piky/piky.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tuple/tuple.dart';
 
 
 void main() {
@@ -256,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget albumMenuBuilder(Map<AssetPathEntity, Uint8List?> pathEntityList, ScrollController controller, dynamic Function(AssetPathEntity) onTap){
+  Widget albumMenuBuilder(Map<String, Tuple2<AssetPathEntity, Uint8List?>?> pathEntityList, ScrollController controller, dynamic Function(AssetPathEntity) onTap){
 
     pathEntityList.removeWhere((key, value) => value == null);
 
@@ -264,16 +265,16 @@ class _MyHomePageState extends State<MyHomePage> {
     AssetPathEntity? favorites;
     if(pathEntityList.isNotEmpty){
       try{
-        recents = pathEntityList.keys.firstWhere((element) => element.name == (Platform.isIOS ? "Recents" : "Recent"));
-        favorites = pathEntityList.keys.firstWhere((element) => element.name == (Platform.isIOS ? "Favorites" : "Camera"));
+        recents = pathEntityList.values.firstWhere((element) => element?.item1.name == (Platform.isIOS ? "Recents" : "Recent"))?.item1;
+        favorites = pathEntityList.values.firstWhere((element) => element?.item1.name == (Platform.isIOS ? "Favorites" : "Camera"))?.item1;
       }catch(e){}
     }
     List<Widget> children = [];
     pathEntityList.forEach((key, value) { 
-      if(key.name != (Platform.isIOS ? "Recents" : "Recent") && key.name != (Platform.isIOS ? "Favorites" : "Camera"))
-        children.add(tileItemBuilder(context, key, value, onTap));
+      if(value?.item1.name != (Platform.isIOS ? "Recents" : "Recent") && value?.item1.name != (Platform.isIOS ? "Favorites" : "Camera"))
+        children.add(tileItemBuilder(context, value?.item1, value?.item2, onTap));
     });
-    Widget _cupertinoList(Map<AssetPathEntity, Uint8List?> assets){
+    Widget _cupertinoList(){
       return ListView(
         shrinkWrap: true,
         padding: const EdgeInsets.only(top: 16, bottom: 16, left: 8, right: 8),
@@ -292,7 +293,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  tileItemBuilder(context, recents, pathEntityList[recents], onTap),
+                  tileItemBuilder(context, recents, pathEntityList.values.firstWhere((element) => element?.item1 == recents)?.item2, onTap),
                   Padding(
                     padding: const EdgeInsets.only(left: 62, top: 10, bottom: 10),
                     child: Container(
@@ -300,7 +301,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       color: Colors.grey.withOpacity(0.4),
                     ),
                   ),
-                  tileItemBuilder(context, favorites, pathEntityList[favorites], onTap),
+                  tileItemBuilder(context, favorites, pathEntityList.values.firstWhere((element) => element?.item1 == favorites)?.item2, onTap),
                 ],
               ),
             ),
@@ -340,7 +341,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    return _cupertinoList(pathEntityList);
+    return _cupertinoList();
   }
 
   Widget gifLoadingIndicator(BuildContext context, ScrollController controller, double extent){

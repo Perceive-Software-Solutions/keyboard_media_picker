@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:tuple/tuple.dart';
 
 /// [ChangeNotifier] for assets picker.
 ///
@@ -153,9 +154,9 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
   ///
   /// Using [Map] in order to save the thumb data for the first asset under the path.
   /// 使用[Map]来保存路径下第一个资源的缩略数据。
-  final Map<Path, Uint8List?> _pathEntityList = <Path, Uint8List?>{};
+  final Map<String, Tuple2<Path, Uint8List?>?> _pathEntityList = {};
 
-  Map<Path, Uint8List?> get pathEntityList => _pathEntityList;
+  Map<String, Tuple2<Path, Uint8List?>?> get pathEntityList => _pathEntityList;
 
   /// How many path has a valid thumb data.
   /// 当前有多少目录已经正常载入了缩略图
@@ -163,7 +164,7 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
   /// This getter provides a "Should Rebuild" condition judgement to [Selector]
   /// with the path entities widget.
   /// 它为目录部件展示部分的 [Selector] 提供了是否重建的条件。
-  int get validPathThumbCount => _pathEntityList.values.where((Uint8List? d) => d != null).length;
+  int get validPathThumbCount => _pathEntityList.values.where((Tuple2<Path, Uint8List?>? d) => d != null).length;
 
   /// The path which is currently using.
   /// 正在查看的资源路径
@@ -315,7 +316,7 @@ class DefaultAssetPickerProvider
   @override
   Future<void> getAssetPathList() async {
 
-    _pathEntityList.clear();
+    // _pathEntityList.clear();
 
     // Initial base options.
     // Enable need title for audios and image to get proper display.
@@ -359,12 +360,13 @@ class DefaultAssetPickerProvider
 
     for (final AssetPathEntity pathEntity in _list) {
       // Use sync method to avoid unnecessary wait.
-      _pathEntityList[pathEntity] = null;
-      if (requestType != RequestType.audio) {
-        final x = getFirstThumbFromPathEntity(pathEntity).then((Uint8List? data) {
-          _pathEntityList[pathEntity] = data;
-        });
-        otherList.add(x);
+      if(_pathEntityList[pathEntity.id] == null){
+        if (requestType != RequestType.audio) {
+          final x = getFirstThumbFromPathEntity(pathEntity).then((Uint8List? data) {
+            _pathEntityList[pathEntity.id] = Tuple2(pathEntity, data);
+          });
+          otherList.add(x);
+        }
       }
     }
 
@@ -374,7 +376,7 @@ class DefaultAssetPickerProvider
     if (_pathEntityList.isNotEmpty) {
       hasAlbumsToDisplay = true;
       notifyListeners();
-      _currentPathEntity ??= pathEntityList.keys.elementAt(0);
+      _currentPathEntity ??= pathEntityList.values.elementAt(0)?.item1;
     }
   }
 
@@ -382,7 +384,7 @@ class DefaultAssetPickerProvider
   /// 从当前已选路径获取资源列表
   Future<void> getAssetList() async {
     if (_pathEntityList.isNotEmpty) {
-      _currentPathEntity = _pathEntityList.keys.elementAt(0);
+      _currentPathEntity = _pathEntityList.values.elementAt(0)?.item1;
       totalAssetsCount = currentPathEntity!.assetCount;
       await getAssetsFromEntity(0, currentPathEntity!);
       // Update total assets count.

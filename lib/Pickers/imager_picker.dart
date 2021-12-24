@@ -13,6 +13,7 @@ import 'package:piky/util/keep_alive.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:provider/provider.dart';
+import 'package:tuple/tuple.dart';
 
 class ImagePicker extends StatefulWidget {
 
@@ -35,7 +36,7 @@ class ImagePicker extends StatefulWidget {
 
   /// Builds the album menu of the image picker
   /// Contains a list of [AssetEntity] mapped to [Uint8List]'s for thumbnails and information
-  final Widget Function(Map<AssetPathEntity, Uint8List?>, ScrollController, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+  final Widget Function(Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController, dynamic Function(AssetPathEntity)) albumMenuBuilder;
 
   /// Loading indicator when ImagePickerProvidor is still fetching the images
   /// If not used will have the base [CircularProgressIndicator] as placeholder
@@ -194,7 +195,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
     // );
 
     albumDelegate = AlbumPickerBuilderDelegate(
-      // provider,
+      provider,
       pageCubit,
       albumGridScrollController,
       widget.albumMenuBuilder,
@@ -422,7 +423,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                                     if(albumPage != state && state){
                                       key.currentState!.push(_createRoute((_){    
                                       if(albumChild == null){
-                                        albumChild = albumDelegate.build(context, provider);
+                                        albumChild = albumDelegate.build(context);
                                       }
                                       return Container(
                                         key: Key("2"),

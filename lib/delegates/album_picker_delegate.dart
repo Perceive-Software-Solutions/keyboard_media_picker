@@ -8,11 +8,13 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/widgets.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
+import 'package:tuple/tuple.dart';
 
 
 
 class AlbumPickerBuilderDelegate {
   AlbumPickerBuilderDelegate(
+    this.provider,
     this.pageCubit,
     this.gridScrollController,
     this.albumMenuBuilder,
@@ -20,7 +22,9 @@ class AlbumPickerBuilderDelegate {
     this.gridCount = 3,
   });
 
-  final Widget Function(Map<AssetPathEntity, Uint8List?>, ScrollController controller, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+  final Widget Function(Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController controller, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+
+  final DefaultAssetPickerProvider provider;
 
   /// The [ScrollController] for the preview grid.
   final ScrollController gridScrollController;
@@ -109,7 +113,7 @@ class AlbumPickerBuilderDelegate {
   }
   
   /// Yes, the build method
-  Widget build(BuildContext context, DefaultAssetPickerProvider provider){
+  Widget build(BuildContext context){
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _) {

@@ -9,6 +9,7 @@ import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:piky/piky.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
+import 'package:tuple/tuple.dart';
 
 import 'imager_picker.dart';
 
@@ -66,7 +67,7 @@ class Picker extends StatefulWidget {
 
   /// Builds the album menu of the image picker
   /// Contains a list of [AssetEntity] mapped to [Uint8List]'s for thumbnails and information
-  final Widget Function(Map<AssetPathEntity, Uint8List?>, ScrollController, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+  final Widget Function(Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController, dynamic Function(AssetPathEntity)) albumMenuBuilder;
 
   ///The height of either the minExtentHeaderBuilder or the height of the maxExtentHeaderBuilder
   ///Header height should always be passed in specifying the height of maxExtentImageHeaderBuilder

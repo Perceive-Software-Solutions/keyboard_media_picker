@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:fort/fort.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/provider/giphy_picker_provider.dart';
+import 'package:piky/state/state.dart';
 import 'package:provider/provider.dart';
 
 class GiphyPickerPickerBuilderDelegate {
@@ -35,7 +37,7 @@ class GiphyPickerPickerBuilderDelegate {
   final Widget? loadingTileIndicator;
 
   /// [ChangeNotifier] for giphy picker
-  final GiphyPickerProvider provider;
+  final Store<GiphyState> provider;
 
   /// The [ScrollController] for the preview grid.
   final ScrollController gridScrollController;
@@ -130,52 +132,52 @@ class GiphyPickerPickerBuilderDelegate {
   Widget assetItemBuilder(String url, Map<String, double> currentAssets, int index){
 
     // Render individual asset
-    Widget _displayImage(){
-      return  Selector<GiphyPickerProvider, String?>(
-      selector: (_, GiphyPickerProvider p) => p.selectedAsset,
-      builder: (BuildContext context, String? selectedAsset, Widget? child) {
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: Image.network(url,
-                fit: BoxFit.cover,
-                loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress){
-                  if(loadingProgress == null) return child;
-                  return loadingTileIndicator ?? loadingTileIndicatorExample();
-                }),
-              ),
-              if (selectedAsset == currentAssets.keys.elementAt(index)) overlayBuilder != null ? overlayBuilder!(context, 1) : selectedOverlay(context)
-            ],
-          );
-        }
+    Widget _displayImage(BuildContext context, String? selectedAsset){
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: Image.network(url,
+            fit: BoxFit.cover,
+            loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress){
+              if(loadingProgress == null) return child;
+              return loadingTileIndicator ?? loadingTileIndicatorExample();
+            }),
+          ),
+          if (selectedAsset == currentAssets.keys.elementAt(index)) overlayBuilder != null ? overlayBuilder!(context, 1) : selectedOverlay(context)
+        ],
       );
     }
 
-    return FlatButton(
-      padding: EdgeInsets.zero,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: 300,
-          minHeight: 125, 
-        ),
-        child: AnimationConfiguration.staggeredGrid(
-          columnCount: (index / 2).floor(),
-          position: index,
-          duration: const Duration(milliseconds: 375),
-          child: ScaleAnimation(
-            child: FadeInAnimation(
-              child: _displayImage()
+    return StoreConnector<GiphyState, String?>(
+      converter: (store) => store.state.selectedAsset,
+      builder: (context, selectedAsset) {
+        return FlatButton(
+          padding: EdgeInsets.zero,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: 300,
+              minHeight: 125, 
+            ),
+            child: AnimationConfiguration.staggeredGrid(
+              columnCount: (index / 2).floor(),
+              position: index,
+              duration: const Duration(milliseconds: 375),
+              child: ScaleAnimation(
+                child: FadeInAnimation(
+                  child: _displayImage(context, selectedAsset)
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-      onPressed: (){
-        if(provider.selectedAsset == currentAssets.keys.elementAt(index))
-          provider.unSelectAsset();
-        else provider.selectAsset(currentAssets.keys.elementAt(index));
+          onPressed: (){
+            if(selectedAsset == currentAssets.keys.elementAt(index))
+              provider.dispatch(unSelectAsset());
+            else provider.dispatch(selectAsset(currentAssets.keys.elementAt(index)));
 
-        giphyPickerController!.update();
-      },
+            giphyPickerController!.update();
+          },
+        );
+      }
     );
   }
 
@@ -188,72 +190,53 @@ class GiphyPickerPickerBuilderDelegate {
     //Width of the screen
     var width = MediaQuery.of(context).size.width;
 
-    return Selector<GiphyPickerProvider, int>(
-      selector: (_, GiphyPickerProvider provider) => provider.displayAssets.length,
-      builder: (_, int length, __) {
-      return Selector<GiphyPickerProvider, Map<String, double>>(
-        selector: (_, GiphyPickerProvider provider) => provider.displayAssets,
-        builder: (_, Map<String, double> assets, __) {
-          List<double> urlRatio = assets.values.toList();
-          return Container(
-            height: extent > 0.55 ? (extent == 1.0 ? 
-            extent*height - MediaQuery.of(context).padding.top - 60 : extent > 0.8 ? 
-            extent*height - MediaQuery.of(context).padding.top : extent*height - 60) : 
-            height*0.55 - 60,
-            alignment: Alignment.topCenter,
-            child: StaggeredGridView.countBuilder(
-              controller: gridScrollController,
-              shrinkWrap: false,
-              mainAxisSpacing: 1,
-              crossAxisSpacing: 1,
-              padding: EdgeInsets.zero,
-              itemCount: provider.totalAssetsCount,
-              scrollDirection: Axis.vertical,
-              crossAxisCount: 2,
-              itemBuilder: (context, i){
-                return assetItemBuilder(assets.keys.elementAt(i), assets, i);
-              },
-              staggeredTileBuilder: (int index) => StaggeredTile.extent(1, (width*0.5)/urlRatio[index] - 15),
-            ),
-          );
-        }
-      );
-    }
-  );
+
+    return StoreConnector<GiphyState, Map<String, double>>(
+      converter: (store) => store.state.displayAssets,
+      builder: (context, displayAssets) {
+        List<double> urlRatio = displayAssets.values.toList();
+        return Container(
+          height: extent > 0.55 ? (extent == 1.0 ? 
+          extent*height - MediaQuery.of(context).padding.top - 60 : extent > 0.8 ? 
+          extent*height - MediaQuery.of(context).padding.top : extent*height - 60) : 
+          height*0.55 - 60,
+          alignment: Alignment.topCenter,
+          child: StaggeredGridView.countBuilder(
+            controller: gridScrollController,
+            shrinkWrap: false,
+            mainAxisSpacing: 1,
+            crossAxisSpacing: 1,
+            padding: EdgeInsets.zero,
+            itemCount: displayAssets.length,
+            scrollDirection: Axis.vertical,
+            crossAxisCount: 2,
+            itemBuilder: (context, i){
+              return assetItemBuilder(displayAssets.keys.elementAt(i), displayAssets, i);
+            },
+            staggeredTileBuilder: (int index) => StaggeredTile.extent(1, (width*0.5)/urlRatio[index] - 15),
+          ),
+        );
+      }
+    );
   }
 
   /// Yes, the build method
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: provider,
-      builder: (BuildContext context, _) {
-        return Selector<GiphyPickerProvider, bool>(
-          selector: (_, GiphyPickerProvider provider) => provider.connectivityStatus,
-          builder: (_, connectivity, child) {
-            return Selector<GiphyPickerProvider, bool>(
-              selector: (_, GiphyPickerProvider provider) => provider.hasAssetsToDisplay,
-              builder: (_, bool hasAssetsToDisplay, __) {
-                return BlocBuilder<ConcreteCubit<bool>, bool>(
-                  bloc: sheetState,
-                  builder: (context, state) {
-                    return BlocBuilder<ConcreteCubit<double>, double>(
-                      bloc: sheetExtent,
-                      builder: (BuildContext context, double extent) {
-                        if(!hasAssetsToDisplay && !connectivity){
-                          return connectivityIndicator == null ? connectivityIndicatorExample() : connectivityIndicator!(context, extent)!;
-                        }
-                        else if(hasAssetsToDisplay){
-                          return assetsGridBuilder(context, extent);
-                        }
-                        else{
-                          return loadingIndicator == null ? loadingIndicatorExample(context) : loadingIndicator!(context, gridScrollController, extent)!;
-                        }
-                      }
-                    );
-                  }
-                );
-              }
-            );
+    return StoreConnector<GiphyState, GiphyState>(
+      converter: (store) => store.state,
+      builder: (context, state){
+        return BlocBuilder(
+          bloc: sheetExtent,
+          builder: (BuildContext context, double extent){
+            if(state.displayAssets.length == 0 && !state.connectivity){
+              return connectivityIndicator == null ? connectivityIndicatorExample() : connectivityIndicator!(context, extent)!;
+            }
+            else if(state.displayAssets.length > 0){
+              return assetsGridBuilder(context, extent);
+            }
+            else{
+              return loadingIndicator == null ? loadingIndicatorExample(context) : loadingIndicator!(context, gridScrollController, extent)!;
+            }
           }
         );
       }

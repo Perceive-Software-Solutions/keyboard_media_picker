@@ -44,12 +44,8 @@ class GiphyState extends FortState{
     this.connectivity = true,
     this.displayAssets = const {},
   }){
-    Future<void>.delayed(routeDuration).then(
-      (dynamic _) async {
-        /// Initialize API Client
-        initializeGiphyClient(apiKey);
-      },
-    );
+    /// Initialize API Client
+    initializeGiphyClient(apiKey);
   }
 
   void initializeGiphyClient(String apiKey){

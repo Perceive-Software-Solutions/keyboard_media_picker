@@ -1,13 +1,16 @@
 part of 'state.dart';
 
-Stream<dynamic> autocompleteEpic(
+Stream<dynamic> giphySearchEpic(
   Stream<dynamic> actions,
   EpicStore<GiphyState> store,
 ) {
   return actions
       .whereType<LoadAssetsFromSearching>()
+      // .debounce(new Duration(milliseconds: 150))
       .switchMap((action) {
-        return Stream.fromFuture(GiphyFunctions().loadAssetsFromSearching(action.offset, action.value, action.store)
-        .then((results) => SetDisplayAssets(results)));
+        return Stream.fromFuture(GiphyFunctions.loadAssetsFromSearching(action.offset, action.value, action.store)
+        .then((results) => SetDisplayAssets(results)))
+        .takeUntil(actions.whereType<CancelSearchAction>());
+        
   });
 }

@@ -4,10 +4,13 @@ import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fort/fort.dart';
 import 'package:piky/Pickers/picker.dart';
 import 'package:piky/delegates/giphy_picker_delegate.dart';
 import 'package:piky/provider/giphy_picker_provider.dart';
+import 'package:piky/state/state.dart';
 import 'package:piky/util/functions.dart';
+import 'package:redux_epics/redux_epics.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 
 import 'imager_picker.dart';
@@ -146,9 +149,6 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   /// The currently slected Gif
   String? selectedAsset;
 
-  /// Primary provider for loading assets
-  late GiphyPickerProvider provider;
-
   /// The current state of the [GiphyPicker]
   Option type = Option.Open;
 
@@ -186,13 +186,21 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   /// Tracks the sheet extent
   late ConcreteCubit<double> sheetExtent = ConcreteCubit<double>(widget.initialExtent);
 
+  late Store<GiphyState> store;
+
   //Adds a listener to the scroll position of the staggered grid view
   @override
   void initState() {
     super.initState();
-    provider = GiphyPickerProvider(pageSize: 40, apiKey: widget.apiKey);
+
+    store = Store<GiphyState>(
+      giphyStateReducer,
+      initialState: GiphyState.initial(widget.apiKey),
+      middleware: [thunkMiddleware, ...[EpicMiddleware<GiphyState>(giphySearchEpic)]],
+    );
+
     delegate = GiphyPickerPickerBuilderDelegate(
-      provider,
+      store,
       giphyScrollController, 
       widget.controller,
       sheetExtent,
@@ -214,19 +222,20 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
 
     // Initiate Listeners
     initiateScrollListener(giphyScrollController);
-    // initiateSearchListener();
 
     checkConnectivity();
 
     Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
       if(result == ConnectivityResult.none){
-        provider.connectivityStatus = false;
+        store.dispatch(ChangeConnectivityStatus(false));
       }
       else{
-        provider.connectivityStatus = true;
+        store.dispatch(ChangeConnectivityStatus(true));
         reload();
       }
     });
+
+    store.dispatch(hydrateAction());
   }
 
   @override
@@ -236,16 +245,16 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   }
 
   void checkConnectivity() async {
-    provider.connectivityStatus = (await Connectivity().checkConnectivity()) != ConnectivityResult.none;
+    store.dispatch(ChangeConnectivityStatus((await Connectivity().checkConnectivity()) != ConnectivityResult.none));
   }
 
   /// Add asset to the giphy provider
   void addAsset(String gif){
-    provider.selectAsset(gif);
+    store.dispatch(SetSelectedAsset(gif));
   }
 
   Future<void> reload() async {
-    await provider.reload(widget.apiKey);
+    await store.dispatch(hydrateAction);
   }
 
 
@@ -271,7 +280,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   // }
 
   void unSelectAsset(){
-    provider.unSelectAsset();
+    store.dispatch(unSelectAsset);
     widget.controller?.update();
   }
 
@@ -321,73 +330,76 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     var statusBarHeight = MediaQueryData.fromWindow(window).padding.top;
-    return BlocProvider(
-      create: (context) => sheetCubit,
-      child: BlocBuilder<ConcreteCubit<bool>, bool>(
-        bloc: sheetCubit,
-        buildWhen: (o, n) => o != n,
-        builder: (context, sheetCubitState) {
-          return BlocBuilder<ConcreteCubit<double>, double>(
-            bloc: sheetExtent,
-            builder: (context, extent) {
-              double topExtentValue = Functions.animateOver(extent, percent: 0.9);
-              return SlidingSheet(
-                  controller: widget.sheetController,
-                  isBackdropInteractable: false,
-                  duration: Duration(milliseconds: 300),
-                  cornerRadius: 32,
-                  cornerRadiusOnFullscreen: 0,
-                  backdropColor: extent > widget.initialExtent ? colorTween.value : null,
-                  listener: sheetListener,
-                  snapSpec: SnapSpec(
-                    initialSnap: widget.minExtent,
-                    snappings: [widget.minExtent, widget.initialExtent, widget.mediumExtent, widget.expandedExtent],
-                    onSnap: (state, _){
-                      if(state.extent == widget.mediumExtent){
-                        if(sheetCubitState) sheetCubit.emit(false);
-                      }
-                      else if(state.isExpanded){
-                        sheetCubit.emit(true);
-                      }
+    return StoreProvider(
+      store: store,
+      child: BlocProvider(
+        create: (context) => sheetCubit,
+        child: BlocBuilder<ConcreteCubit<bool>, bool>(
+          bloc: sheetCubit,
+          buildWhen: (o, n) => o != n,
+          builder: (context, sheetCubitState) {
+            return BlocBuilder<ConcreteCubit<double>, double>(
+              bloc: sheetExtent,
+              builder: (context, extent) {
+                double topExtentValue = Functions.animateOver(extent, percent: 0.9);
+                return SlidingSheet(
+                    controller: widget.sheetController,
+                    isBackdropInteractable: false,
+                    duration: Duration(milliseconds: 300),
+                    cornerRadius: 32,
+                    cornerRadiusOnFullscreen: 0,
+                    backdropColor: extent > widget.initialExtent ? colorTween.value : null,
+                    listener: sheetListener,
+                    snapSpec: SnapSpec(
+                      initialSnap: widget.minExtent,
+                      snappings: [widget.minExtent, widget.initialExtent, widget.mediumExtent, widget.expandedExtent],
+                      onSnap: (state, _){
+                        if(state.extent == widget.mediumExtent){
+                          if(sheetCubitState) sheetCubit.emit(false);
+                        }
+                        else if(state.isExpanded){
+                          sheetCubit.emit(true);
+                        }
+                      },
+                    ),
+                    headerBuilder: (context, _){
+                      // return Container(
+                      //   color: Colors.blue,
+                      //   height: 60,
+                      // );
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(height: lerpDouble(0, statusBarHeight, topExtentValue)!, color: widget.statusBarPaddingColor,),
+                          Container(
+                            color: widget.headerColor,
+                            child: _buildHeader(context),
+                          ),
+                        ],
+                      );
                     },
-                  ),
-                  headerBuilder: (context, _){
-                    // return Container(
-                    //   color: Colors.blue,
-                    //   height: 60,
-                    // );
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(height: lerpDouble(0, statusBarHeight, topExtentValue)!, color: widget.statusBarPaddingColor,),
-                        Container(
-                          color: widget.headerColor,
-                          child: _buildHeader(context),
-                        ),
-                      ],
-                    );
-                  },
-                  customBuilder: (context, controller, sheetState){
-                    controller.addListener(() {
-                      if(controller.offset > 0 && !sheetCubitState){
-                        sheetCubit.emit(true);
-                        widget.sheetController.snapToExtent(widget.expandedExtent);
+                    customBuilder: (context, controller, sheetState){
+                      controller.addListener(() {
+                        if(controller.offset > 0 && !sheetCubitState){
+                          sheetCubit.emit(true);
+                          widget.sheetController.snapToExtent(widget.expandedExtent);
+                        }
+                      });
+                      if(delegate == null){
+                        return Container();
                       }
-                    });
-                    if(delegate == null){
-                      return Container();
-                    }
-                    return SingleChildScrollView(
-                      controller: controller,
-                      physics: AlwaysScrollableScrollPhysics(),
-                      child: delegate.build(context)
-                    );
-                  },
-                );
-            }
-          );
-        }
-      )
+                      return SingleChildScrollView(
+                        controller: controller,
+                        physics: AlwaysScrollableScrollPhysics(),
+                        child: delegate.build(context)
+                      );
+                    },
+                  );
+              }
+            );
+          }
+        )
+      ),
     );
   }
 
@@ -483,7 +495,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     void update() => notifyListeners();
     
     /// Get individual Gif asset
-    String? get gif => _state != null ? _state!.provider.selectedAsset : null;
+    String? get gif => _state != null ? _state!.store.state.selectedAsset : null;
 
     /// Get the current state of the [ImagePicker]
     Option? get type => _state != null ? type : null;

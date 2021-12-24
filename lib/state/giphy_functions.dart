@@ -5,7 +5,7 @@ import 'package:piky/state/state.dart';
 class GiphyFunctions{
 
   /// Load more assets from trending state
-  Future<Map<String, double>> loadAssetsFromTrending(int offset, Store<GiphyState> store) async {
+  static Future<Map<String, double>> loadAssetsFromTrending(int offset, Store<GiphyState> store) async {
     try{
       Map<String, double> _displayAssets = {};
       GiphyCollection collection = await store.state.giphyClient!.trending(offset: offset, limit: store.state.pageSize).then((value) {
@@ -29,8 +29,8 @@ class GiphyFunctions{
     }
   }
 
-  Future<Map<String, double>> loadAssetsFromSearching(int offset, String value, Store<GiphyState> store) async{
-    if(value == '' || value == null){
+  static Future<Map<String, double>> loadAssetsFromSearching(int offset, String value, Store<GiphyState> store) async{
+    if(value == ''){
       return loadAssetsFromTrending(offset, store);
     }
     else{

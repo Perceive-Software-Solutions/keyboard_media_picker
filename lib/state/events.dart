@@ -29,15 +29,6 @@ class SetSelectedAsset extends GiphyEvent{
   SetSelectedAsset(this.asset);
 }
 
-// class SelectAsset extends GiphyEvent{
-//   String asset;
-//   SelectAsset(this.asset);
-// }
-
-// class UnselectAsset extends GiphyEvent{
-//   UnselectAsset();
-// }
-
 class SetDisplayAssets extends GiphyEvent{
   Map<String, double> displayAssets;
   SetDisplayAssets(this.displayAssets);
@@ -52,3 +43,42 @@ class SearchCancelAction extends GiphyEvent{
   SearchCancelAction();
 }
 
+class CancelSearchAction extends GiphyEvent{
+  CancelSearchAction();
+}
+
+/*
+ 
+      _        _   _                 
+     / \   ___| |_(_) ___  _ __  ___ 
+    / _ \ / __| __| |/ _ \| '_ \/ __|
+   / ___ \ (__| |_| | (_) | | | \__ \
+  /_/   \_\___|\__|_|\___/|_| |_|___/
+                                     
+ 
+*/
+
+ThunkAction<GiphyState> hydrateAction(){
+  return (Store<GiphyState> store) async {
+    Map<String, double> _list = await GiphyFunctions.loadAssetsFromTrending(0, store);
+    store.dispatch(SetDisplayAssets(_list));
+  };
+}
+
+ThunkAction<GiphyState> selectAsset(String asset){
+  return (Store<GiphyState> store) {
+    if (asset == '' || store.state.selectedAsset == asset) {
+      return;
+    }
+    if(store.state.selectedAsset != ''){
+      store.dispatch(unSelectAsset());
+    }
+    store.dispatch(SetSelectedAsset(asset));
+  };
+}
+
+ThunkAction<GiphyState> unSelectAsset(){
+  return (Store<GiphyState> store) {
+    store.dispatch(SetSelectedAsset(''));
+  };
+}

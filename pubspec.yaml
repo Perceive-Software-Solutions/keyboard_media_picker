@@ -18,6 +18,9 @@ dependencies:
   extended_image: ^4.1.0
   connectivity: ^3.0.6
   tuple: ^2.0.0
+  redux_epics: ^0.15.0
+  rxdart: ^0.26.0
+  fort: ^0.1.2
   flutter:
     sdk: flutter
 

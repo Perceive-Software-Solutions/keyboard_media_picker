@@ -1,3 +1,9 @@
+## [0.3.0]
+
+* Refactored Giphy State into Thunk Middleware
+* Added Search funcitonality through Epic Middleware
+* Optamized asset picker provider
+
 ## [0.2.34]
 
 * Fix on asset picker provider

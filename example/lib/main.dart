@@ -170,7 +170,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey,
-        borderRadius: BorderRadius.circular(12)
       ),
     );
   }

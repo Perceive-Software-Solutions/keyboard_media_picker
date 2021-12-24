@@ -112,7 +112,6 @@ class GiphyPickerPickerBuilderDelegate {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey,
-        borderRadius: BorderRadius.circular(12)
       ),
     );
   }
@@ -133,12 +132,12 @@ class GiphyPickerPickerBuilderDelegate {
       return Stack(
         children: [
           Positioned.fill(
+            child: loadingTileIndicator ?? loadingTileIndicatorExample()
+          ),
+          Positioned.fill(
             child: Image.network(url,
-            fit: BoxFit.cover,
-            loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress){
-              if(loadingProgress == null) return child;
-              return loadingTileIndicator ?? loadingTileIndicatorExample();
-            }),
+              fit: BoxFit.cover,
+            ),
           ),
           if (selectedAsset == currentAssets.keys.elementAt(index)) overlayBuilder != null ? overlayBuilder!(context, 1) : selectedOverlay(context)
         ],
@@ -170,7 +169,6 @@ class GiphyPickerPickerBuilderDelegate {
             if(selectedAsset == currentAssets.keys.elementAt(index))
               provider.dispatch(unSelectAsset());
             else provider.dispatch(selectAsset(currentAssets.keys.elementAt(index)));
-
             giphyPickerController!.update();
           },
         );

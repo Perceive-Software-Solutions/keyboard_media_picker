@@ -209,7 +209,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       imageGridScrollController,
       widget.controller,
       gridCount: 4,
-
+      tileLoadingIndicator: widget.tileLoadingIndicator,
       loadingIndicator: widget.loadingIndicator,
       overlayBuilder: widget.overlayBuilder,
       lockOverlayBuilder: widget.lockOverlayBuilder

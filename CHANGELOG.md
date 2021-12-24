@@ -1,3 +1,7 @@
+## [0.2.34]
+
+* Fix on asset picker provider
+
 ## [0.2.31] v0.2.31
 
 * Optamized album delegate

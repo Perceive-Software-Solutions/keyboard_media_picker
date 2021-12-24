@@ -176,7 +176,7 @@ class ImagePickerBuilderDelegate {
         }
         return Stack(
           children: [
-            Container(
+            tileLoadingIndicator ?? Container(
               decoration: BoxDecoration(
                 color: Colors.grey,
                 border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
@@ -230,7 +230,7 @@ class ImagePickerBuilderDelegate {
         }
         return Stack(
           children: [
-            Container(
+            tileLoadingIndicator ?? Container(
               decoration: BoxDecoration(
                 color: Colors.grey,
                 border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
@@ -295,7 +295,7 @@ class ImagePickerBuilderDelegate {
     // If the asset is a video 
     bool isVideo = currentAssets[index].videoDuration.inMilliseconds > 0;
 
-    
+
     Widget child = isVideo ? 
       videoItemBuilder(context, currentAssets[index]) : 
       imageItemBuilder(context, currentAssets[index]);

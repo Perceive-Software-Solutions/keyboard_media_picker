@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fort/fort.dart';
 import 'package:piky/Pickers/picker.dart';
 import 'package:piky/delegates/giphy_picker_delegate.dart';
-import 'package:piky/provider/giphy_picker_provider.dart';
 import 'package:piky/state/state.dart';
 import 'package:piky/util/functions.dart';
 import 'package:redux_epics/redux_epics.dart';

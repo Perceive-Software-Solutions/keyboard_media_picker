@@ -5,10 +5,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fort/fort.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:piky/Pickers/imager_picker.dart';
-import 'package:piky/provider/giphy_picker_provider.dart';
 import 'package:piky/state/state.dart';
-import 'package:provider/provider.dart';
-
 class GiphyPickerPickerBuilderDelegate {
   GiphyPickerPickerBuilderDelegate(
     this.provider,

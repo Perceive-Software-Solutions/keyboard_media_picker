@@ -362,10 +362,6 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                       },
                     ),
                     headerBuilder: (context, _){
-                      // return Container(
-                      //   color: Colors.blue,
-                      //   height: 60,
-                      // );
                       return Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -449,7 +445,8 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                           ),
                         ),
                         onChanged: (value){
-                          // searchGiphy(value);
+                          store.dispatch(CancelSearchAction());
+                          store.dispatch(LoadAssetsFromSearching(0, value, store));
                         },
                         onTap: (){
                           setState(() {

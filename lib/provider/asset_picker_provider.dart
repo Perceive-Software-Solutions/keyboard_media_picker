@@ -353,8 +353,18 @@ class DefaultAssetPickerProvider
     // Remove recents from the list of albums
     _list.removeWhere((element) => element.name == _other.first.name);
 
+    if(_pathEntityList[_other.first.id] == null){
+      if (requestType != RequestType.audio) {
+          final x = getFirstThumbFromPathEntity(_other.first).then((Uint8List? data) {
+            _pathEntityList[_other.first.id] = Tuple2(_other.first, data);
+          });
+        }
+    }
+
     // Add recents into the first index
     _list.insert(0, _other.first);
+
+
 
     List<Future<void>> otherList = [];
 
@@ -376,7 +386,7 @@ class DefaultAssetPickerProvider
     if (_pathEntityList.isNotEmpty) {
       hasAlbumsToDisplay = true;
       notifyListeners();
-      _currentPathEntity ??= pathEntityList.values.elementAt(0)?.item1;
+      _currentPathEntity ??= pathEntityList[pathEntityList.keys.elementAt(0)]?.item1;
     }
   }
 

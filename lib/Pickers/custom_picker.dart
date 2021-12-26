@@ -31,7 +31,7 @@ class CustomPicker extends StatefulWidget {
   /// Custom picker body builder
   final Widget Function(BuildContext context, double extent, ScrollController scrollController, SheetState state) customBodyBuilder;
 
-  final Widget Function(BuildContext context, SheetState state) headerBuilder;
+  final Widget Function(BuildContext context, SheetController sheetController, FocusNode focusNode, TextEditingController searchFieldController) headerBuilder;
 
   /// Allows the picker to see the sheetstate
   final Function(SheetState state) listener;
@@ -76,6 +76,10 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
   /// If the sheet is currently snapping
   bool snapping = false;
 
+  FocusNode focusNode = FocusNode();
+
+  TextEditingController searchFieldController = TextEditingController();
+
   @override
   void initState(){
     super.initState();
@@ -104,10 +108,11 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
   void initiateListener(ScrollController scrollController){
     scrollController.addListener(() {
       if(scrollController.offset <= -50 && widget.sheetController.state!.extent != widget.minExtent && !snapping){
-        if(widget.sheetController.state!.extent == 1.0){
+        if(widget.sheetController.state!.extent == widget.expandedExtent){
           snapping = true;
           Future.delayed(Duration.zero, () {
             widget.sheetController.snapToExtent(widget.mediumExtent, duration: Duration(milliseconds: 300));
+            focusNode.unfocus();
             Future.delayed(Duration(milliseconds: 300)).then((value) => {
               snapping = false
             });
@@ -117,6 +122,7 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
           snapping = true;
           Future.delayed(Duration.zero, () {
             widget.sheetController.snapToExtent(widget.minExtent, duration: Duration(milliseconds: 300));
+            focusNode.unfocus();
           });
           Future.delayed(Duration(milliseconds: 300)).then((value) => {
             snapping = false
@@ -165,7 +171,7 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(height: lerpDouble(0, statusBarHeight, topExtentValue)!, color: widget.statusBarPaddingColor,),
-                widget.headerBuilder(context, state),
+                widget.headerBuilder(context, widget.sheetController, focusNode, searchFieldController),
               ],
             );
           },

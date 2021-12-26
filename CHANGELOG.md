@@ -3,6 +3,7 @@
 * Refactored Giphy State into Thunk Middleware
 * Added Search funcitonality through Epic Middleware
 * Optamized asset picker provider
+* Optamized gif tile loading state
 
 ## [0.2.34]
 

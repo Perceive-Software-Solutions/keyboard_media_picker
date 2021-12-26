@@ -125,7 +125,7 @@ class Picker extends StatefulWidget {
 
   /// Custom picker
   final Widget Function(BuildContext context, double extent, ScrollController scrollController, SheetState state)? customBodyBuilder;
-  final Widget Function(BuildContext context, SheetState state)? headerBuilder;
+  final Widget Function(BuildContext context, SheetController sheetController, FocusNode focusNode, TextEditingController searchFieldController)? headerBuilder;
   Color customStatusBarColor;
 
   Picker({

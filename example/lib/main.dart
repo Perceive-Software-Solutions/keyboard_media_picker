@@ -553,7 +553,7 @@ class _MyHomePageState extends State<MyHomePage> {
         customBodyBuilder: (context, extent, controller, state){
           return Text("This is Custom");
         },
-        headerBuilder: (context, state){
+        headerBuilder: (context, _, __, state){
           return Text("This is custom header");
         },
         customStatusBarColor: Colors.white,

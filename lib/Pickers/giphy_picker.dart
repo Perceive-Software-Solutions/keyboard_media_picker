@@ -279,7 +279,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   // }
 
   void unSelectAsset(){
-    store.dispatch(unSelectAsset);
+    store.dispatch(unSelectGif());
     widget.controller?.update();
   }
 

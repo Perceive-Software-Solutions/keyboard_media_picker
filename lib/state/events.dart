@@ -71,13 +71,13 @@ ThunkAction<GiphyState> selectAsset(String asset){
       return;
     }
     if(store.state.selectedAsset != ''){
-      store.dispatch(unSelectAsset());
+      store.dispatch(unSelectGif());
     }
     store.dispatch(SetSelectedAsset(asset));
   };
 }
 
-ThunkAction<GiphyState> unSelectAsset(){
+ThunkAction<GiphyState> unSelectGif(){
   return (Store<GiphyState> store) {
     store.dispatch(SetSelectedAsset(''));
   };

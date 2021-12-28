@@ -1,3 +1,7 @@
+## [0.3.1]
+
+* Added searching inputs to custom picker
+
 ## [0.3.0]
 
 * Refactored Giphy State into Thunk Middleware

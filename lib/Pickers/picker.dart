@@ -78,6 +78,7 @@ class Picker extends StatefulWidget {
   ///If not used [CircularProgressIndicator] will be its placeholder
   final Widget? imageLoadingIndicator;
   final Widget? imageTileLoadingIndicator;
+  final Widget Function(String duration)? videoIndicator;
 
   /// Loading Indicator for the albums inside Media Viewer
   /// If not used [CircularProgressIndicator] will be its placeholder

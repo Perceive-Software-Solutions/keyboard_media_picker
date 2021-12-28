@@ -253,7 +253,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   }
 
   Future<void> reload() async {
-    await store.dispatch(hydrateAction);
+    await store.dispatch(hydrateAction());
   }
 
 

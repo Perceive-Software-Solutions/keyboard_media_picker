@@ -19,11 +19,14 @@ class ImagePickerBuilderDelegate {
     this.gridScrollController,
     this.imagePickerController, {
       this.loadingIndicator,
+      this.videoIndicator,
       this.tileLoadingIndicator,
       this.overlayBuilder,
       this.lockOverlayBuilder,
       this.gridCount = 4,
   });
+
+  final Widget Function(String duration)? videoIndicator;
 
   final Widget? tileLoadingIndicator;
 
@@ -242,31 +245,27 @@ class ImagePickerBuilderDelegate {
                 failedItemBuilder: failedItemBuilder,
               ),
             ),
-            Opacity(
-              opacity: 0.4,
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8, right: 8),
-                  child: Container(
-                    height: 16,
-                    width: 32,
-                    decoration:
-                        BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.black,
-                    ),
-                    child: Center(
-                        child: Text(
-                          asset.videoDuration.toString().split('.')[0].substring(3),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 12
-                        ),
-                      )
-                    ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 2, right: 2),
+                child: videoIndicator == null ? Container(
+                  height: 16,
+                  width: 32,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.black.withOpacity(0.5),
                   ),
-                ),
+                  child: Center(
+                      child: Text(
+                        asset.videoDuration.toString().split('.')[0].substring(3),
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 12
+                      ),
+                    )
+                  ),
+                ) : videoIndicator!(asset.videoDuration.toString().split('.')[0].substring(3)),
               ),
             ),
             if (provider.selectedAssets.contains(asset)) 

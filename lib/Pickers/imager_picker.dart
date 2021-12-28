@@ -65,6 +65,9 @@ class ImagePicker extends StatefulWidget {
   /// Allows the picker to see the sheetstate
   final Function(SheetState state) listener;
 
+  /// Overlays a video thumbnail
+  final Widget Function(String duration)? videoIndicator;
+
   const ImagePicker({ 
     required Key key,
     required this.controller,
@@ -75,6 +78,7 @@ class ImagePicker extends StatefulWidget {
     this.pickerController,
     this.loadingIndicator,
     this.tileLoadingIndicator,
+    this.videoIndicator,
     this.overlayBuilder,
     this.minExtent = 0.0,
     this.initialExtent = 0.4,
@@ -212,7 +216,8 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       tileLoadingIndicator: widget.tileLoadingIndicator,
       loadingIndicator: widget.loadingIndicator,
       overlayBuilder: widget.overlayBuilder,
-      lockOverlayBuilder: widget.lockOverlayBuilder
+      lockOverlayBuilder: widget.lockOverlayBuilder,
+      videoIndicator: widget.videoIndicator,
     );
 
     //Initiate animation

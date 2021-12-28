@@ -167,7 +167,7 @@ class GiphyPickerPickerBuilderDelegate {
           ),
           onPressed: (){
             if(selectedAsset == currentAssets.keys.elementAt(index))
-              provider.dispatch(unSelectAsset());
+              provider.dispatch(unSelectGif());
             else provider.dispatch(selectAsset(currentAssets.keys.elementAt(index)));
             giphyPickerController!.update();
           },

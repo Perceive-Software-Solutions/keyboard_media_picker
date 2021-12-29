@@ -117,14 +117,11 @@ class AlbumPickerBuilderDelegate {
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _) {
-        return Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16),
-          child: Selector<DefaultAssetPickerProvider, int>(
-            selector: (_, DefaultAssetPickerProvider provider) => provider.pathEntityList.length,
-            builder: (_, int length, __) {
-              return length != 0 ? assetListBuilder(context, provider) : Container();
-            }
-          ),
+        return Selector<DefaultAssetPickerProvider, int>(
+          selector: (_, DefaultAssetPickerProvider provider) => provider.pathEntityList.length,
+          builder: (_, int length, __) {
+            return length != 0 ? assetListBuilder(context, provider) : Container();
+          }
         );
       }, 
     );

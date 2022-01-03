@@ -354,10 +354,6 @@ class DefaultAssetPickerProvider
     // Remove recents from the list of albums
     _list.removeWhere((element) => element.name == (Platform.isIOS ? "Recents" : "Recent"));
 
-    AssetPathEntity _entity = _other.firstWhere((element) => element.name == (Platform.isIOS ? "Recents" : "Recent"));
-
-    _currentPathEntity = _entity;
-
     // Add recents into the first index
     _list.insert(0, _other.first);
 
@@ -388,7 +384,13 @@ class DefaultAssetPickerProvider
   /// 从当前已选路径获取资源列表
   Future<void> getAssetList() async {
     if (_pathEntityList.isNotEmpty) {
-      _currentPathEntity = _pathEntityList.values.elementAt(0)?.item1;
+      Tuple2<AssetPathEntity, Uint8List?>? _entity = _pathEntityList.values.firstWhere((element) => element?.item1.name == (Platform.isIOS ? "Recents" : "Recent"));
+      if(_entity != null){
+        _currentPathEntity = _entity.item1;
+      }
+      else{
+        _currentPathEntity = _pathEntityList.values.elementAt(0)?.item1;
+      }
       totalAssetsCount = currentPathEntity!.assetCount;
       await getAssetsFromEntity(0, currentPathEntity!);
       // Update total assets count.

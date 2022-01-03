@@ -354,18 +354,12 @@ class DefaultAssetPickerProvider
     // Remove recents from the list of albums
     _list.removeWhere((element) => element.name == (Platform.isIOS ? "Recents" : "Recent"));
 
-    if(_pathEntityList[_other.first.id] == null){
-      if (requestType != RequestType.audio) {
-          getFirstThumbFromPathEntity(_other.first).then((Uint8List? data) {
-            _pathEntityList[_other.first.id] = Tuple2(_other.first, data);
-          });
-        }
-    }
+    AssetPathEntity _entity = _other.firstWhere((element) => element.name == (Platform.isIOS ? "Recents" : "Recent"));
+
+    _currentPathEntity = _entity;
 
     // Add recents into the first index
     _list.insert(0, _other.first);
-
-
 
     List<Future<void>> otherList = [];
 
@@ -387,7 +381,6 @@ class DefaultAssetPickerProvider
     if (_pathEntityList.isNotEmpty) {
       hasAlbumsToDisplay = true;
       notifyListeners();
-      _currentPathEntity ??= pathEntityList[pathEntityList.keys.elementAt(0)]?.item1;
     }
   }
 

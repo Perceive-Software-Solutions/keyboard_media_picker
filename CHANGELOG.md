@@ -1,15 +1,19 @@
-## [0.3.1]
+## [0.3.7] v0.3.7
+
+* Album provider fix
+
+## [0.3.1] v0.3.1
 
 * Added searching inputs to custom picker
 
-## [0.3.0]
+## [0.3.0] v0.3.0
 
 * Refactored Giphy State into Thunk Middleware
 * Added Search funcitonality through Epic Middleware
 * Optamized asset picker provider
 * Optamized gif tile loading state
 
-## [0.2.34]
+## [0.2.34] v0.2.34
 
 * Fix on asset picker provider
 

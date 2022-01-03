@@ -385,7 +385,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                       }
                       return SingleChildScrollView(
                         controller: controller,
-                        physics: AlwaysScrollableScrollPhysics(),
+                        physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                         child: delegate.build(context)
                       );
                     },

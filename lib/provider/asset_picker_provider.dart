@@ -4,6 +4,7 @@
 ///
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -351,11 +352,11 @@ class DefaultAssetPickerProvider
 
 
     // Remove recents from the list of albums
-    _list.removeWhere((element) => element.name == _other.first.name);
+    _list.removeWhere((element) => element.name == (Platform.isIOS ? "Recents" : "Recent"));
 
     if(_pathEntityList[_other.first.id] == null){
       if (requestType != RequestType.audio) {
-          final x = getFirstThumbFromPathEntity(_other.first).then((Uint8List? data) {
+          getFirstThumbFromPathEntity(_other.first).then((Uint8List? data) {
             _pathEntityList[_other.first.id] = Tuple2(_other.first, data);
           });
         }

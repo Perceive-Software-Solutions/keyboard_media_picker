@@ -346,7 +346,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                     isBackdropInteractable: false,
                     duration: Duration(milliseconds: 300),
                     cornerRadius: 32,
-                    cornerRadiusOnFullscreen: 0,
+                    cornerRadiusWhenExpanded: 0,
                     backdropColor: extent > widget.initialExtent ? colorTween.value : null,
                     listener: sheetListener,
                     snapSpec: SnapSpec(

@@ -1,3 +1,7 @@
+## [0.3.10] v0.3.10
+
+* Updated packages with perceive_slidable
+
 ## [0.3.9] v0.3.9
 
 * Album provider fix

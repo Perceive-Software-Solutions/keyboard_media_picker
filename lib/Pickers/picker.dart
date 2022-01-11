@@ -1,14 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/custom_picker.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:piky/piky.dart';
-import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tuple/tuple.dart';
 
 import 'imager_picker.dart';
@@ -125,8 +123,8 @@ class Picker extends StatefulWidget {
   final PickerType initialValue;
 
   /// Custom picker
-  final Widget Function(BuildContext context, double extent, ScrollController scrollController, SheetState state)? customBodyBuilder;
-  final Widget Function(BuildContext context, SheetController sheetController, FocusNode focusNode, TextEditingController searchFieldController)? headerBuilder;
+  final Widget Function(BuildContext context, double extent, ScrollController scrollController, dynamic state)? customBodyBuilder;
+  final Widget Function(BuildContext context, dynamic sheetController, FocusNode focusNode, TextEditingController searchFieldController)? headerBuilder;
   Color customStatusBarColor;
 
   Picker({
@@ -297,7 +295,7 @@ class _PickerState extends State<Picker> {
 
   }
 
-  void multiSheetStateListener(SheetState state){
+  dynamic multiSheetStateListener(dynamic state){
     sheetState.emit(state.extent);
   }
 

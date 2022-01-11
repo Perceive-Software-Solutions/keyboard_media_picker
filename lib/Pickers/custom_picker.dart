@@ -2,10 +2,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/Pickers/picker.dart';
 import 'package:piky/util/functions.dart';
-import 'package:sliding_sheet/sliding_sheet.dart';
 
 class CustomPicker extends StatefulWidget {
 

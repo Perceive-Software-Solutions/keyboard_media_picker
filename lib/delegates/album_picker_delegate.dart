@@ -1,13 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/provider/asset_picker_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/widgets.dart';
-import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tuple/tuple.dart';
 
 

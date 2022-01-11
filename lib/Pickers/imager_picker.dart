@@ -2,8 +2,8 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/picker.dart';
 import 'package:piky/delegates/album_picker_delegate.dart';
 import 'package:piky/delegates/image_picker_delegate.dart';
@@ -11,7 +11,6 @@ import 'package:piky/provider/asset_picker_provider.dart';
 import 'package:piky/util/functions.dart';
 import 'package:piky/util/keep_alive.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 

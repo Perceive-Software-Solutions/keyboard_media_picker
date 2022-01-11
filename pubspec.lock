@@ -345,6 +345,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.11.1"
+  perceive_slidable:
+    dependency: "direct main"
+    description:
+      name: perceive_slidable
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.2"
   photo_manager:
     dependency: "direct main"
     description:
@@ -490,15 +497,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.99"
-  sliding_sheet:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: f5c937155493ee2b914837ca21339639add94a3d
-      resolved-ref: f5c937155493ee2b914837ca21339639add94a3d
-      url: "https://github.com/Perceive-Software-Solutions/sliding_sheet.git"
-    source: git
-    version: "0.5.2"
   source_span:
     dependency: transitive
     description:

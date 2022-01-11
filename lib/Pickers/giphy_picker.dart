@@ -2,15 +2,14 @@ import 'dart:ui';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fort/fort.dart';
+import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/picker.dart';
 import 'package:piky/delegates/giphy_picker_delegate.dart';
 import 'package:piky/state/state.dart';
 import 'package:piky/util/functions.dart';
 import 'package:redux_epics/redux_epics.dart';
-import 'package:sliding_sheet/sliding_sheet.dart';
 
 import 'imager_picker.dart';
 

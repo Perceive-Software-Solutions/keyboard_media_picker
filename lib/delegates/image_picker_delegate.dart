@@ -167,39 +167,44 @@ class ImagePickerBuilderDelegate {
     // ));
 
     return Selector<DefaultAssetPickerProvider, int>(
-      selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
-      builder: (BuildContext context, int selectedCount, Widget? child) {
-        bool lock = false;
-        if(provider.selectedAssets.length >= 4){
-          lock = true;
-        }
-        return Stack(
-          children: [
-            tileLoadingIndicator ?? Container(
-              decoration: BoxDecoration(
-                color: Colors.grey,
-                border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
-              ),
-            ),
-            Positioned.fill(
-              child: AssetEntityGridItemBuilder(
-                image: imageProvider,
-                failedItemBuilder: failedItemBuilder,
-              ),
-            ),
-          if (provider.selectedAssets.contains(asset)) overlayBuilder != null ? 
-          Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : 
-          Positioned.fill(child: selectedOverlay(context, asset)),
+      selector: (_, DefaultAssetPickerProvider p) => p.maxAssets,
+      builder: (BuildContext context, int count, Widget? child) {
+        return Selector<DefaultAssetPickerProvider, int>(
+          selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
+          builder: (BuildContext context, int selectedCount, Widget? child) {
+            bool lock = false;
+            if(provider.selectedAssets.length >= provider.maxAssets){
+              lock = true;
+            }
+            return Stack(
+              children: [
+                tileLoadingIndicator ?? Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+                  ),
+                ),
+                Positioned.fill(
+                  child: AssetEntityGridItemBuilder(
+                    image: imageProvider,
+                    failedItemBuilder: failedItemBuilder,
+                  ),
+                ),
+              if (provider.selectedAssets.contains(asset)) overlayBuilder != null ? 
+              Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : 
+              Positioned.fill(child: selectedOverlay(context, asset)),
 
-          if(!provider.selectedAssets.contains(asset) && lock)
-          lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
-              ),
-            )
-          ],
+              if(!provider.selectedAssets.contains(asset) && lock)
+              lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+                  ),
+                )
+              ],
+            );
+          }
         );
       }
     );
@@ -217,63 +222,68 @@ class ImagePickerBuilderDelegate {
     );
 
     return Selector<DefaultAssetPickerProvider, int>(
-      selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
-      builder: (BuildContext context, int selectedCount, Widget? child) {
-        bool videoLock = false;
-        bool lock = false;
-        if(provider.selectedAssets.length >= 4){
-          lock = true;
-        }
-        else if(provider.selectedAssets.where((element) => element.duration > 0).isNotEmpty){
-          videoLock = true;
-        }
-        return Stack(
-          children: [
-            tileLoadingIndicator ?? Container(
-              decoration: BoxDecoration(
-                color: Colors.grey,
-                border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
-              ),
-            ),
-            Positioned.fill(
-              child: AssetEntityGridItemBuilder(
-                image: imageProvider,
-                failedItemBuilder: failedItemBuilder,
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 2, right: 2),
-                child: videoIndicator == null ? Container(
-                  height: 16,
-                  width: 32,
+      selector: (_, DefaultAssetPickerProvider p) => p.maxAssets,
+      builder: (BuildContext context, int count, Widget? child) {
+        return Selector<DefaultAssetPickerProvider, int>(
+          selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
+          builder: (BuildContext context, int selectedCount, Widget? child) {
+            bool videoLock = false;
+            bool lock = false;
+            if(provider.selectedAssets.length >= provider.maxAssets){
+              lock = true;
+            }
+            else if(provider.selectedAssets.where((element) => element.duration > 0).isNotEmpty){
+              videoLock = true;
+            }
+            return Stack(
+              children: [
+                tileLoadingIndicator ?? Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.grey,
+                    border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
                   ),
-                  child: Center(
-                      child: Text(
-                        asset.videoDuration.toString().split('.')[0].substring(3),
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 12
+                ),
+                Positioned.fill(
+                  child: AssetEntityGridItemBuilder(
+                    image: imageProvider,
+                    failedItemBuilder: failedItemBuilder,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 2, right: 2),
+                    child: videoIndicator == null ? Container(
+                      height: 16,
+                      width: 32,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.black.withOpacity(0.5),
                       ),
-                    )
+                      child: Center(
+                          child: Text(
+                            asset.videoDuration.toString().split('.')[0].substring(3),
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 12
+                          ),
+                        )
+                      ),
+                    ) : videoIndicator!(asset.videoDuration.toString().split('.')[0].substring(3)),
                   ),
-                ) : videoIndicator!(asset.videoDuration.toString().split('.')[0].substring(3)),
-              ),
-            ),
-            if (provider.selectedAssets.contains(asset)) 
-            overlayBuilder != null ? Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : Positioned.fill(child: selectedOverlay(context, asset)),
-            if(!provider.selectedAssets.contains(asset) && (lock || videoLock)) 
-            lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
-              )),
-          ],
+                ),
+                if (provider.selectedAssets.contains(asset)) 
+                overlayBuilder != null ? Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : Positioned.fill(child: selectedOverlay(context, asset)),
+                if(!provider.selectedAssets.contains(asset) && (lock || videoLock)) 
+                lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
+                  )),
+              ],
+            );
+          }
         );
       }
     );
@@ -301,36 +311,41 @@ class ImagePickerBuilderDelegate {
     }
 
     return Selector<DefaultAssetPickerProvider, int>(
-      selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
-      builder: (BuildContext context, int selectedCount, Widget? _) {
-        bool videoLock = false;
-        bool lock = false;
-        if(provider.selectedAssets.length >= 4){
-          lock = true;
-        }
-        else if(provider.selectedAssets.where((element) => element.duration > 0).isNotEmpty){
-          videoLock = true;
-        }
-        return AnimationConfiguration.staggeredGrid(
-          columnCount: (index / gridCount).floor(),
-          position: index,
-          duration: const Duration(milliseconds: 375),
-          child: ScaleAnimation(
-            child: FadeInAnimation(
-              child: GestureDetector(
-                child: child,
-                onTap: !provider.selectedAssets.contains(currentAssets[index]) && (lock || (videoLock && currentAssets[index].duration > 0)) ? null : (){
-                  if(provider.selectedAssets.contains(currentAssets[index])){
-                    provider.unSelectAsset(currentAssets[index]);
-                  }
-                  else{
-                    provider.selectAsset(currentAssets[index]);
-                  }
-                  imagePickerController!.update();
-                }
+      selector: (_, DefaultAssetPickerProvider p) => p.maxAssets,
+      builder: (BuildContext context, int count, Widget? _) {
+        return Selector<DefaultAssetPickerProvider, int>(
+          selector: (_, DefaultAssetPickerProvider p) => p.selectedAssets.length,
+          builder: (BuildContext context, int selectedCount, Widget? _) {
+            bool videoLock = false;
+            bool lock = false;
+            if(provider.selectedAssets.length >= provider.maxAssets){
+              lock = true;
+            }
+            else if(provider.selectedAssets.where((element) => element.duration > 0).isNotEmpty){
+              videoLock = true;
+            }
+            return AnimationConfiguration.staggeredGrid(
+              columnCount: (index / gridCount).floor(),
+              position: index,
+              duration: const Duration(milliseconds: 375),
+              child: ScaleAnimation(
+                child: FadeInAnimation(
+                  child: GestureDetector(
+                    child: child,
+                    onTap: !provider.selectedAssets.contains(currentAssets[index]) && (lock || (videoLock && currentAssets[index].duration > 0)) ? null : (){
+                      if(provider.selectedAssets.contains(currentAssets[index])){
+                        provider.unSelectAsset(currentAssets[index]);
+                      }
+                      else{
+                        provider.selectAsset(currentAssets[index]);
+                      }
+                      imagePickerController!.update();
+                    }
+                  )
+                ),
               )
-            ),
-          )
+            );
+          }
         );
       }
     );

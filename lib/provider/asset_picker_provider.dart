@@ -31,7 +31,7 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
 
   /// Maximum count for asset selection.
   /// 资源选择的最大数量
-  final int maxAssets;
+  int maxAssets;
 
   /// Assets should be loaded per page.
   /// 资源选择的最大数量
@@ -231,6 +231,13 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
 
   /// 是否已经选择了最大数量的资源
   bool get selectedMaximumAssets => selectedAssets.length == maxAssets;
+
+  set maximumAssets(int assetCount){
+    if(assetCount > 0){
+      maxAssets = assetCount;
+      notifyListeners();
+    } 
+  }
 
   /// Get assets path entities.
   /// 获取所有的资源路径

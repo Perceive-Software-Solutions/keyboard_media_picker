@@ -15,7 +15,7 @@ dependencies:
   flutter_staggered_animations: ^1.0.0
   giphy_get: ^2.0.3
   perceive_slidable: ^0.0.2
-  extended_image: ^4.1.0
+  extended_image: ^6.0.1
   connectivity: ^3.0.6
   tuple: ^2.0.0
   redux_thunk: ^0.4.0

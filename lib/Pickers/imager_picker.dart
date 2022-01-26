@@ -46,8 +46,8 @@ class ImagePicker extends StatefulWidget {
   final Widget Function(BuildContext context, int index)? overlayBuilder;
 
   /// Backdrop Colors
-  final Color minBackdropColor;
-  final Color maxBackdropColor;
+  final Color? minBackdropColor;
+  final Color? maxBackdropColor;
 
   /// Color of the growable Header
   final Color statusBarPaddingColor;
@@ -62,7 +62,7 @@ class ImagePicker extends StatefulWidget {
   final Widget Function(BuildContext context, int index)? lockOverlayBuilder;
   
   /// Allows the picker to see the sheetstate
-  final Function(SheetState state) listener;
+  final Function(SheetState state)? listener;
 
   /// Overlays a video thumbnail
   final Widget Function(String duration)? videoIndicator;
@@ -73,7 +73,7 @@ class ImagePicker extends StatefulWidget {
     required this.headerBuilder,
     required this.albumMenuBuilder,
     required this.sheetController,
-    required this.listener,
+    this.listener,
     this.pickerController,
     this.loadingIndicator,
     this.tileLoadingIndicator,
@@ -84,8 +84,8 @@ class ImagePicker extends StatefulWidget {
     this.mediumExtent = 0.4,
     this.expandedExtent = 1.0,
     this.statusBarPaddingColor = Colors.white,
-    this.minBackdropColor = Colors.transparent,
-    this.maxBackdropColor = Colors.black,
+    this.minBackdropColor,
+    this.maxBackdropColor,
     this.backgroundColor = Colors.white,
     this.isLocked = false,
     this.lockOverlayBuilder,
@@ -186,17 +186,6 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       filterOptions: filer
     );
 
-    // provider2 = DefaultAssetPickerProvider(
-    //   maxAssets: widget.controller!.imageCount, 
-    //   pageSize: 120,
-    //   pathThumbSize: 80,
-    //   requestType: 
-    //   widget.controller!.onlyPhotos ? 
-    //   RequestType.image : 
-    //   RequestType.all,
-    //   filterOptions: filer
-    // );
-
     albumDelegate = AlbumPickerBuilderDelegate(
       provider,
       pageCubit,
@@ -253,6 +242,13 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
     super.dispose();
     provider.removeListener(() { });
     provider.dispose();
+  }
+
+  void _updateMaxAssets(int assetCount){
+    if(assetCount > 0){
+      print("Receiveeeeeeeeeeeeeeeed5");
+      provider.maximumAssets = assetCount;
+    }
   }
 
   void unSelectAsset(AssetEntity asset){
@@ -318,7 +314,9 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
     if(state.extent <= widget.initialExtent/3 && widget.isLocked){
       widget.sheetController.snapToExtent(widget.initialExtent);
     }
-    widget.listener(state);
+    if(widget.listener != null){
+      widget.listener!(state);
+    }
   }
 
   Widget _buildHeader(BuildContext context, bool pageCubitState, String path){
@@ -363,7 +361,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                           duration: Duration(milliseconds: 300),
                           cornerRadius: 32,
                           cornerRadiusWhenExpanded: 0,
-                          backdropColor: extent > widget.initialExtent ? colorTween.value : null,
+                          backdropColor: widget.maxBackdropColor == null ? null : extent > widget.initialExtent ? colorTween.value : null,
                           listener: sheetListener,
                           snapSpec: SnapSpec(
                             initialSnap: widget.minExtent,
@@ -521,6 +519,9 @@ class ImagePickerController extends ChangeNotifier {
 
   /// Add assets to the imageProvider
   void addAssets(List<AssetEntity> assets) => _state != null ? _state!.addAssets(assets) : null;
+
+  /// Max Asset Counts
+  void updateAssetCount(int assetCount) => _state != null ? _state!._updateMaxAssets(assetCount) : null;
 
   //Disposes of the controller
   @override

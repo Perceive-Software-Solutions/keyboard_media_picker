@@ -148,7 +148,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   String? selectedAsset;
 
   /// The current state of the [GiphyPicker]
-  Option type = Option.Open;
+  PikyOption type = PikyOption.Open;
 
   /// Primary [FocusNode] for the [TextField] 
   /// Used to see if the [TextField] has focus
@@ -493,7 +493,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     String? get gif => _state != null ? _state!.store.state.selectedAsset : null;
 
     /// Get the current state of the [ImagePicker]
-    Option? get type => _state != null ? type : null;
+    PikyOption? get type => _state != null ? type : null;
 
     /// Clear the selected Gifs
     void clearGif() => _state != null ? _state!.unSelectAsset() : null;

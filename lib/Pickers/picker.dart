@@ -18,7 +18,7 @@ enum PickerType {
   None
 }
 
-enum Option {
+enum PikyOption {
   Open,
   Close,
 }

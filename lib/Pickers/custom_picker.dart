@@ -203,7 +203,7 @@ class CustomPickerController extends ChangeNotifier {
   void update() => _state != null ? notifyListeners() : null;
 
   /// Get the current state of the [ImagePicker]
-  Option? get type => _state != null ? type : null;
+  PikyOption? get type => _state != null ? type : null;
 
   //Disposes of the controller
   @override

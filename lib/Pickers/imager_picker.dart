@@ -130,7 +130,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
   late ConcreteCubit<double> sheetExtent = ConcreteCubit<double>(widget.initialExtent);
 
   /// The state of the [ImagePicker]
-  Option type = Option.Open;
+  PikyOption type = PikyOption.Open;
 
   /// The current selected assets
   List<AssetEntity> selectedAssets = <AssetEntity>[];
@@ -509,7 +509,7 @@ class ImagePickerController extends ChangeNotifier {
   List<AssetEntity>? get list => _state != null ? _state!.provider.selectedAssets : null;
 
   /// Get the current state of the [ImagePicker]
-  Option? get type => _state != null ? type : null;
+  PikyOption? get type => _state != null ? type : null;
 
   /// Clean individual asset entity
   void clearAssetEntity(AssetEntity asset) => _state != null ? _state!.unSelectAsset(asset) : null;

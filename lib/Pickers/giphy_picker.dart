@@ -194,6 +194,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     store = Tower<GiphyState>(
       giphyStateReducer,
       initialState: GiphyState.initial(widget.apiKey),
+      middleware: [thunkMiddleware, ...[EpicMiddleware<GiphyState>(giphySearchEpic)]]
     );
 
     delegate = GiphyPickerPickerBuilderDelegate(

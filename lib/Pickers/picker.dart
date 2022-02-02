@@ -281,7 +281,7 @@ class _PickerState extends State<Picker> {
         currentSheetController.snapToExtent(widget.minExtent, duration: Duration(milliseconds: 300));
         break;
       case PickerExpansion.INITIAL:
-        currentSheetController.snapToExtent(widget.initialExtent - 0.02, duration: Duration(milliseconds: 300));
+        currentSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
         break;
       case PickerExpansion.MIDDLE:
         currentSheetController.snapToExtent(widget.mediumExtent, duration: Duration(milliseconds: 300));

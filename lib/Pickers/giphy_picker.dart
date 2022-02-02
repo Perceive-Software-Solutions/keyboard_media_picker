@@ -191,7 +191,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
   void initState() {
     super.initState();
 
-    store = Store<GiphyState>(
+    store = Tower<GiphyState>(
       giphyStateReducer,
       initialState: GiphyState.initial(widget.apiKey),
     );
@@ -345,7 +345,7 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
                     duration: Duration(milliseconds: 300),
                     cornerRadius: 32,
                     cornerRadiusWhenExpanded: 0,
-                    backdropColor: extent > widget.initialExtent ? colorTween.value : null,
+                    backdropColor: extent > widget.initialExtent + 0.02 ? colorTween.value : null,
                     listener: sheetListener,
                     snapSpec: SnapSpec(
                       initialSnap: widget.minExtent,

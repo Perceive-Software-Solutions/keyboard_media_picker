@@ -1,9 +1,9 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fort/fort.dart';
 import 'package:giphy_get/giphy_get.dart';
 import 'package:piky/state/giphy_functions.dart';
 import 'package:redux_epics/redux_epics.dart';
 import 'package:rxdart/rxdart.dart';
+import 'dart:math';
 
 part 'events.dart';
 part 'reducer.dart';
@@ -49,7 +49,9 @@ class GiphyState extends FortState{
   }
 
   void initializeGiphyClient(String apiKey){
-    giphyClient = GiphyClient(apiKey: apiKey, randomId: '154');
+    Random random = new Random();
+    int randomNumber = random.nextInt(20000);
+    giphyClient = GiphyClient(apiKey: apiKey, randomId: randomNumber.toString());
   }
 
 

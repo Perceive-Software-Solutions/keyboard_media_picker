@@ -361,7 +361,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                           duration: Duration(milliseconds: 300),
                           cornerRadius: 32,
                           cornerRadiusWhenExpanded: 0,
-                          backdropColor: widget.maxBackdropColor == null ? null : extent > widget.initialExtent ? colorTween.value : null,
+                          backdropColor: widget.maxBackdropColor == null ? null : extent > widget.initialExtent + 0.02 ? colorTween.value : null,
                           listener: sheetListener,
                           snapSpec: SnapSpec(
                             initialSnap: widget.minExtent,

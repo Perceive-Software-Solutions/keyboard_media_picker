@@ -130,22 +130,27 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget imageHeaderBuilder(String path, bool state){
-    return Container(
-      key: Key("Picker-Max-View"),
-      height: 59.75,
-      color: Colors.grey,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 2.0),
-            child: Text(path, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+  Widget imageHeaderBuilder(BuildContext context, Widget spacer, String path, bool state){
+    return Column(
+      children: [
+        spacer,
+        Container(
+          key: Key("Picker-Max-View"),
+          height: 59.75,
+          color: Colors.grey,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 2.0),
+                child: Text(path, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              ),
+              Icon(!state ? Icons.arrow_downward : Icons.arrow_upward, size: 16)
+            ],
           ),
-          Icon(!state ? Icons.arrow_downward : Icons.arrow_upward, size: 16)
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -256,7 +261,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget albumMenuBuilder(Map<String, Tuple2<AssetPathEntity, Uint8List?>?> pathEntityList, ScrollController controller, dynamic Function(AssetPathEntity) onTap){
+  Widget albumMenuBuilder(Map<String, Tuple2<AssetPathEntity, Uint8List?>?> pathEntityList, ScrollController controller, bool scrollLock, dynamic Function(AssetPathEntity) onTap){
 
     pathEntityList.removeWhere((key, value) => value == null);
 
@@ -398,7 +403,6 @@ class _MyHomePageState extends State<MyHomePage> {
       minExtent: 0.2,
       mediumExtent: 0.55,
       expandedExtent: 1.0,
-      minBackdropColor: Colors.transparent,
       maxBackdropColor: Colors.black.withOpacity(0.4),
       imageLoadingIndicator: imageLoadingIndicator(),
       gifLoadingTileIndicator: gifTileLoadingIndicator(),

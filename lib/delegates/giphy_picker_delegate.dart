@@ -19,7 +19,7 @@ class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegat
       this.overlayBuilder,
       this.mediumExtent = 0.4,
     }
-  ) : super(pageCount: 1);
+  ) : super(pageCount: 1, staticScrollModifier: 0.01);
 
   /// Builds the header
   final Widget Function(BuildContext context, Widget spacer) header;

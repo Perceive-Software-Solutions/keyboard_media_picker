@@ -1,3 +1,7 @@
+## [0.4.0] v0.4.0
+
+* Updated piky to sliding sheet 2.0
+
 ## [0.3.10] v0.3.10
 
 * Updated packages with perceive_slidable

@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
+import 'package:perceive_slidable/src/sheet.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/provider/asset_picker_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -9,22 +11,18 @@ import 'package:tuple/tuple.dart';
 
 
 
-class AlbumPickerBuilderDelegate {
+class AlbumPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   AlbumPickerBuilderDelegate(
     this.provider,
     this.pageCubit,
-    this.gridScrollController,
     this.albumMenuBuilder,
     this.imagePickerController, {
     this.gridCount = 3,
-  });
+  }) : super(pageCount: 1, staticScrollModifier: 0.01);
 
-  final Widget Function(Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController controller, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+  final Widget Function(Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController controller, bool scrollLock, dynamic Function(AssetPathEntity)) albumMenuBuilder;
 
   final DefaultAssetPickerProvider provider;
-
-  /// The [ScrollController] for the preview grid.
-  final ScrollController gridScrollController;
 
   /// Primary cubit for initiating page transitions
   final ConcreteCubit<bool> pageCubit;
@@ -37,13 +35,6 @@ class AlbumPickerBuilderDelegate {
   /// If the state is changed the imagePicker can change certain
   /// params inside of the [ImagePickerBuilderDelegate] accordingly
   final ImagePickerController? imagePickerController;
-
-  /// Keep a dispose method to sync with [State].
-  ///
-  /// Be aware that the method will do nothing when [keepScrollOffset] is true.
-  void dispose() {
-    gridScrollController.dispose();
-  }
 
   /// Whether the current platform is Apple OS.
   bool get isAppleOS => Platform.isIOS || Platform.isMacOS;
@@ -101,23 +92,31 @@ class AlbumPickerBuilderDelegate {
     
   }
 
-  Widget assetListBuilder(BuildContext context, DefaultAssetPickerProvider provider){
-    return albumMenuBuilder(provider.pathEntityList, gridScrollController, (AssetPathEntity entity){
+  Widget assetListBuilder(BuildContext context, DefaultAssetPickerProvider provider, ScrollController scrollController, bool scrollLock){
+    return albumMenuBuilder(provider.pathEntityList, scrollController, scrollLock, (AssetPathEntity entity){
       provider.currentPathEntity = entity;
-      if(pageCubit.state) pageCubit.emit(false);
+      if(pageCubit.state){
+        pageCubit.emit(false);
+        sheetController.pop();
+      }
       provider.getAssetsFromEntity(0, entity);
     });
   }
-  
-  /// Yes, the build method
-  Widget build(BuildContext context){
+
+  @override
+  Widget headerBuilder(BuildContext context, pageObj, Widget spacer) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Widget scrollingBodyBuilder(BuildContext context, SheetState? state, ScrollController scrollController, int pageIndex, bool scrollLock, double footerHeight) {
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _) {
         return Selector<DefaultAssetPickerProvider, int>(
           selector: (_, DefaultAssetPickerProvider provider) => provider.pathEntityList.length,
           builder: (_, int length, __) {
-            return length != 0 ? assetListBuilder(context, provider) : Container();
+            return length != 0 ? assetListBuilder(context, provider, scrollController, scrollLock) : Container();
           }
         );
       }, 

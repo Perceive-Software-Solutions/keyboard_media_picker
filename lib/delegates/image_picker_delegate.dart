@@ -1,4 +1,6 @@
+import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
+import 'package:perceive_slidable/src/sheet.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/provider/asset_entity_image_provider.dart';
 import 'package:piky/provider/asset_picker_provider.dart';
@@ -9,10 +11,9 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 
 
-class ImagePickerBuilderDelegate {
+class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   ImagePickerBuilderDelegate(
     this.provider,
-    this.gridScrollController,
     this.imagePickerController, {
       this.loadingIndicator,
       this.videoIndicator,
@@ -20,7 +21,7 @@ class ImagePickerBuilderDelegate {
       this.overlayBuilder,
       this.lockOverlayBuilder,
       this.gridCount = 4,
-  });
+  }) : super(pageCount: 1, staticScrollModifier: 0.01);
 
   final Widget Function(String duration)? videoIndicator;
 
@@ -38,9 +39,6 @@ class ImagePickerBuilderDelegate {
   /// [ChangeNotifier] for asset picker
   final DefaultAssetPickerProvider provider;
 
-  /// The [ScrollController] for the preview grid.
-  final ScrollController gridScrollController;
-
   /// The column count inside of the [_sliverGrid]
   final int gridCount;
 
@@ -49,13 +47,6 @@ class ImagePickerBuilderDelegate {
   /// If the state is changed the imagePicker can change certain
   /// params inside of the [ImagePickerBuilderDelegate] accordingly
   final ImagePickerController? imagePickerController;
-
-  /// Keep a dispose method to sync with [State].
-  ///
-  /// Be aware that the method will do nothing when [keepScrollOffset] is true.
-  void dispose() {
-    gridScrollController.dispose();
-  }
 
   //Takes an input [Key], and returns the index of the child element with that associated key, or null if not found.
   int findChildIndexBuilder(String id, List<AssetEntity> assets, {int placeholderCount = 0}) {
@@ -352,7 +343,7 @@ class ImagePickerBuilderDelegate {
   }
 
   /// The main grid view builder for assets
-  Widget assetsGridBuilder(BuildContext context){
+  Widget assetsGridBuilder(BuildContext context, ScrollController scrollController, bool scrollLock){
 
     return Selector<DefaultAssetPickerProvider, AssetPathEntity?>(
       selector: (_, DefaultAssetPickerProvider p) => p.currentPathEntity,
@@ -411,8 +402,8 @@ class ImagePickerBuilderDelegate {
             return AnimationLimiter(
               child: CustomScrollView(
                 scrollDirection: Axis.vertical,
-                physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                controller: gridScrollController,
+                physics: scrollLock ? NeverScrollableScrollPhysics() : BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                controller: scrollController,
                 slivers: [
                   _sliverGrid(_, assets),
                 ],
@@ -423,16 +414,21 @@ class ImagePickerBuilderDelegate {
       }
     );
   } 
-  
-  /// Yes, the build method
-  Widget build(BuildContext context){
+
+  @override
+  Widget headerBuilder(BuildContext context, pageObj, Widget spacer) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Widget scrollingBodyBuilder(BuildContext context, SheetState? state, ScrollController scrollController, int pageIndex, bool scrollLock, double footerHeight) {
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
       builder: (BuildContext context, _){
         return Selector<DefaultAssetPickerProvider, bool>(
         selector: (_, DefaultAssetPickerProvider provider) => provider.hasAssetsToDisplay,
         builder: (_, bool hasAssetsToDisplay, __) {
-          return hasAssetsToDisplay ? assetsGridBuilder(context) : loadingIndicator ?? exampleLoadingIndicator(context);
+          return hasAssetsToDisplay ? assetsGridBuilder(context, scrollController, scrollLock) : loadingIndicator ?? exampleLoadingIndicator(context);
           }
         );
       }, 

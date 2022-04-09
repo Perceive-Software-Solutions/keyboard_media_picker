@@ -62,11 +62,11 @@ class Picker extends StatefulWidget {
 
   ///MaxExtentHeaderBuilder For the ImagePicker
   ///Displayed when the sliding sheet current extent reaches expanded extent
-  final Widget Function(String, bool) imageHeaderBuilder;
+  final Widget Function(BuildContext, Widget spacer, String path, bool albumMode) imageHeaderBuilder;
 
   /// Builds the album menu of the image picker
   /// Contains a list of [AssetEntity] mapped to [Uint8List]'s for thumbnails and information
-  final Widget Function(Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+  final Widget Function(Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController, bool scrollLock, dynamic Function(AssetPathEntity)) albumMenuBuilder;
 
   ///The height of either the minExtentHeaderBuilder or the height of the maxExtentHeaderBuilder
   ///Header height should always be passed in specifying the height of maxExtentImageHeaderBuilder
@@ -92,8 +92,6 @@ class Picker extends StatefulWidget {
   ///Loading Indicator for the Gif viewer when Gifs are currently beiing rendered
   final Widget? gifLoadingTileIndicator;
 
-  ///Initiate Backdrop Colors
-  final Color minBackdropColor;
   final Color maxBackdropColor;
 
   /// Overlay Widget of the selected asset
@@ -147,7 +145,6 @@ class Picker extends StatefulWidget {
     this.mediumExtent = 0.55,
     this.expandedExtent= 1.0,
     this.headerHeight = 50,
-    this.minBackdropColor = Colors.transparent,
     this.maxBackdropColor = Colors.black,
     this.imageStatusBarColor = Colors.white,
     this.imageBackgroundColor = Colors.white,
@@ -187,13 +184,13 @@ class _PickerState extends State<Picker> {
   GiphyPickerController? giphyPickerController;
 
   ///Main Sliding sheet controller for the image picker
-  late SheetController imageSheetController;
+  late final PerceiveSlidableController imageSheetController = PerceiveSlidableController();
 
   ///Main Sliding sheet controller for the giphy picker
-  late PerceiveSlidableController gifSheetController;
+  late final PerceiveSlidableController gifSheetController = PerceiveSlidableController();
 
   ///Main Sliding sheet controller for the custom picker
-  late PerceiveSlidableController customSheetController;
+  late final PerceiveSlidableController customSheetController = PerceiveSlidableController();
 
   Future<void> Function()? currentlyOpen;
 
@@ -228,11 +225,6 @@ class _PickerState extends State<Picker> {
     imagePickerController!.addListener(_imageReceiver);
     giphyPickerController!.addListener(_giphyReceiver);
 
-    //Initiate controllers
-    imageSheetController = SheetController();
-    gifSheetController = PerceiveSlidableController();
-    customSheetController = PerceiveSlidableController();
-
     if(widget.initialValue != PickerType.None){
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) { 
         openPicker(overrideLock: false);
@@ -260,13 +252,13 @@ class _PickerState extends State<Picker> {
   void snapPickerTo(PickerExpansion extent){
     
     //Retreive picker sheet controller
-    late SheetController currentSheetController;
+    late PerceiveSlidableController currentSheetController;
     switch (type.state) {
       case PickerType.Custom:
-        currentSheetController = customSheetController.controller;
+        currentSheetController = customSheetController;
         break;
       case PickerType.GiphyPickerView:
-        currentSheetController = gifSheetController.controller;
+        currentSheetController = gifSheetController;
         break;
       case PickerType.ImagePicker:
         currentSheetController = imageSheetController;
@@ -277,16 +269,16 @@ class _PickerState extends State<Picker> {
 
     switch (extent) {
       case PickerExpansion.MINIMUM:
-        currentSheetController.snapToExtent(widget.minExtent, duration: Duration(milliseconds: 300));
+        currentSheetController.snapTo(widget.minExtent, duration: Duration(milliseconds: 300));
         break;
       case PickerExpansion.INITIAL:
-        currentSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300));
+        currentSheetController.snapTo(widget.initialExtent, duration: Duration(milliseconds: 300));
         break;
       case PickerExpansion.MIDDLE:
-        currentSheetController.snapToExtent(widget.mediumExtent, duration: Duration(milliseconds: 300));
+        currentSheetController.snapTo(widget.mediumExtent, duration: Duration(milliseconds: 300));
         break;
       case PickerExpansion.EXPANDED:
-        currentSheetController.snapToExtent(widget.expandedExtent, duration: Duration(milliseconds: 300));
+        currentSheetController.snapTo(widget.expandedExtent, duration: Duration(milliseconds: 300));
         break;
       default:
         throw 'Invalid Extent';
@@ -369,13 +361,19 @@ class _PickerState extends State<Picker> {
     
     currentlyOpen = closeImagePicker;
 
-    imageSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300))?.then((value) {
-      paddingLock = false;
-      type.emit(PickerType.ImagePicker);
-    }) ?? Future.delayed(Duration(milliseconds: 300)).then((value) {
-      paddingLock = false;
-      type.emit(PickerType.ImagePicker);
-    });
+    try{
+      await imageSheetController.snapTo(widget.initialExtent, duration: Duration(milliseconds: 300)).then((value) {
+        paddingLock = false;
+        type.emit(PickerType.ImagePicker);
+      });
+    }catch(e){
+      await Future.delayed(Duration(milliseconds: 300)).then((value) {
+        paddingLock = false;
+        type.emit(PickerType.ImagePicker);
+      });
+    }
+
+    setState(() {});
   }
 
   ///Close the image picker: Called from image controller
@@ -385,7 +383,7 @@ class _PickerState extends State<Picker> {
 
     widget.controller._update();
 
-    await imageSheetController.collapse();
+    await imageSheetController.snapTo(0);
 
   }
 
@@ -506,30 +504,50 @@ class _PickerState extends State<Picker> {
   @override
   Widget build(BuildContext context) {
 
-    print('build');
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: widget.backgroundColor,
       body: Stack(
         children: [
-          BlocBuilder<ConcreteCubit<double>, double>(
-            bloc: sheetState,
-            builder: (context, extent) {
-              return AnimatedPadding(
-                duration: Duration(milliseconds: 0),
-                curve: Curves.linear,
-                padding: EdgeInsets.only(bottom: extent > widget.initialExtent || paddingLock ? bottomPadding : (bottomPadding/widget.minExtent)*extent),
-                child: widget.child,
-              );
-            }
+
+          Positioned.fill(
+            child: BlocBuilder<ConcreteCubit<double>, double>(
+              bloc: sheetState,
+              builder: (context, extent) {
+
+                double animationOffset = (extent - widget.initialExtent).clamp(0, 1.0) / (widget.expandedExtent - widget.initialExtent); 
+
+                return Stack(
+                  children: [
+                    AnimatedPadding(
+                      duration: Duration(milliseconds: 0),
+                      curve: Curves.linear,
+                      padding: EdgeInsets.only(bottom: extent > widget.initialExtent || paddingLock ? bottomPadding : (bottomPadding/widget.minExtent)*extent),
+                      child: widget.child,
+                    ),
+
+                    IgnorePointer(
+                      ignoring: animationOffset < 0.1,
+                        child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: (){
+                          snapPickerTo(PickerExpansion.INITIAL);
+                        },
+                        child: Container(
+                          color: Color.lerp(Colors.transparent, widget.maxBackdropColor, animationOffset),
+                        ),
+                      )
+                    )
+                  ],
+                );
+              }
+            ),
           ),
           ImagePicker(
             key: Key('ImagePicker'), 
-            isLocked: false,//pickerType == PickerType.ImagePicker,
+            openType: type,
             sheetController: imageSheetController,
             controller: imagePickerController, 
-            pickerController: widget.controller, 
             initialExtent: widget.initialExtent, 
             minExtent: 0,
             videoIndicator: widget.videoIndicator,
@@ -539,10 +557,7 @@ class _PickerState extends State<Picker> {
             albumMenuBuilder: widget.albumMenuBuilder,
             loadingIndicator: widget.imageLoadingIndicator,
             tileLoadingIndicator: widget.imageTileLoadingIndicator,
-            minBackdropColor: widget.minBackdropColor,
-            maxBackdropColor: widget.maxBackdropColor,
             overlayBuilder: widget.overlayBuilder,
-            statusBarPaddingColor: widget.imageStatusBarColor,
             backgroundColor: widget.imageBackgroundColor,
             lockOverlayBuilder: widget.lockOverlayBuilder,
             listener: multiSheetStateListener,

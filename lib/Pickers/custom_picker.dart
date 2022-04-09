@@ -27,7 +27,7 @@ class CustomPicker extends StatefulWidget {
   /// Allows the picker to see the sheetstate
   final Function(double extent) listener;
 
-  /// If the giphy picker is in a locked state
+  /// If the custom picker is in a locked state
   final ConcreteCubit<PickerType?> openType;
   
   const CustomPicker({ 
@@ -49,7 +49,12 @@ class CustomPicker extends StatefulWidget {
 
 class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderStateMixin {
 
-  FocusNode focusNode = FocusNode();
+  late final FocusNode focusNode = FocusNode()..addListener(() {
+    //Expands the sheet if the focus node has focus
+    if(focusNode.hasFocus && widget.sheetController.extent != widget.expandedExtent){
+      widget.sheetController.snapTo(widget.expandedExtent, duration: Duration(milliseconds: 300));
+    }
+  });
 
   TextEditingController searchFieldController = TextEditingController();
 
@@ -111,7 +116,7 @@ class _CustomPickerSheetController extends ScrollablePerceiveSlidableDelegate {
 
   final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLock) body;
 
-  _CustomPickerSheetController(this.header, this.body) : super(pageCount: 1);
+  _CustomPickerSheetController(this.header, this.body) : super(pageCount: 1, staticScrollModifier: 0.01);
 
   @override
   Widget headerBuilder(BuildContext context, pageObj, Widget spacer) {

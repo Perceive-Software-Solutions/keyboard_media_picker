@@ -57,20 +57,20 @@ class GiphyPicker extends StatefulWidget {
   final Widget? notch;
 
   /// Loading Indicators
-  Widget? loadingIndicator;
-  Widget? Function(BuildContext, double)? connectivityIndicator;
-  Widget? loadingTileIndicator;
+  final Widget? loadingIndicator;
+  final Widget? Function(BuildContext, double)? connectivityIndicator;
+  final Widget? loadingTileIndicator;
 
   /// Overlay Widget of the selected asset
   final Widget Function(BuildContext context, int index)? overlayBuilder;
 
   /// If the giphy picker is in a locked state
-  ConcreteCubit<PickerType?> openType;
+  final ConcreteCubit<PickerType?> openType;
 
   /// Allows the picker to see the sheetstate
   final Function(double extent) listener;
 
-  GiphyPicker({
+  const GiphyPicker({
     required Key key,
     required this.apiKey, 
     required this.controller,

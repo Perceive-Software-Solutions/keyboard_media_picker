@@ -124,8 +124,8 @@ class Picker extends StatefulWidget {
   final PickerType initialValue;
 
   /// Custom picker
-  final Widget Function(BuildContext context, double extent, ScrollController scrollController, dynamic state)? customBodyBuilder;
-  final Widget Function(BuildContext context, dynamic sheetController, FocusNode focusNode, TextEditingController searchFieldController)? headerBuilder;
+  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLocked)? customBodyBuilder;
+  final Widget Function(BuildContext context, Widget spacer, FocusNode focusNode, TextEditingController searchFieldController)? headerBuilder;
   Color customStatusBarColor;
 
   Picker({
@@ -193,7 +193,7 @@ class _PickerState extends State<Picker> {
   late PerceiveSlidableController gifSheetController;
 
   ///Main Sliding sheet controller for the custom picker
-  late SheetController customSheetController;
+  late PerceiveSlidableController customSheetController;
 
   Future<void> Function()? currentlyOpen;
 
@@ -231,7 +231,7 @@ class _PickerState extends State<Picker> {
     //Initiate controllers
     imageSheetController = SheetController();
     gifSheetController = PerceiveSlidableController();
-    customSheetController = SheetController();
+    customSheetController = PerceiveSlidableController();
 
     if(widget.initialValue != PickerType.None){
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) { 
@@ -263,7 +263,7 @@ class _PickerState extends State<Picker> {
     late SheetController currentSheetController;
     switch (type.state) {
       case PickerType.Custom:
-        currentSheetController = customSheetController;
+        currentSheetController = customSheetController.controller;
         break;
       case PickerType.GiphyPickerView:
         currentSheetController = gifSheetController.controller;
@@ -399,7 +399,7 @@ class _PickerState extends State<Picker> {
   Future<void> closeCustomPicker() async {
     type.emit(null);
     widget.controller._update();
-    await customSheetController.collapse();
+    await customSheetController.snapTo(0);
   }
 
   ///Opens the giphy picker: Called from picker controller
@@ -453,14 +453,19 @@ class _PickerState extends State<Picker> {
     }
 
     currentlyOpen = closeCustomPicker;
+    try{
+      await customSheetController.snapTo(widget.initialExtent, duration: Duration(milliseconds: 300)).then((value) {
+        paddingLock = false;
+        type.emit(PickerType.Custom);
+      });
+    }catch(e){
+      await Future.delayed(Duration(milliseconds: 300)).then((value) {
+        paddingLock = false;
+        type.emit(PickerType.Custom);
+      });
+    }
 
-    await customSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300))?.then((value) {
-      paddingLock = false;
-      type.emit(PickerType.Custom);
-    }) ?? Future.delayed(Duration(milliseconds: 300)).then((value) {
-      paddingLock = false;
-      type.emit(PickerType.Custom);
-    });
+    setState(() {});
   }
 
   ///Handles the giphy receiving
@@ -567,18 +572,14 @@ class _PickerState extends State<Picker> {
             listener: multiSheetStateListener,
           ),
           CustomPicker(
-            isLocked: false,//pickerType == PickerType.Custom,
+            openType: type,
             sheetController: customSheetController, 
-            pickerController: widget.controller, 
             customBodyBuilder: widget.customBodyBuilder!, 
-            headerBuilder: widget.headerBuilder!,
+            headerBuilder: widget.headerBuilder,
             initialExtent: widget.initialExtent, 
             minExtent: 0,
             mediumExtent: widget.mediumExtent,
             expandedExtent: widget.expandedExtent,
-            statusBarPaddingColor: widget.customStatusBarColor,
-            minBackdropColor: widget.minBackdropColor,
-            maxBackdropColor: widget.maxBackdropColor,
             listener: multiSheetStateListener,
           ) 
         ],

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:perceive_slidable/sliding_sheet.dart';
@@ -10,10 +11,7 @@ import 'package:piky/util/functions.dart';
 class CustomPicker extends StatefulWidget {
 
   /// Sliding sheet controller
-  final SheetController sheetController;
-
-  /// Picker controller
-  final PickerController? pickerController;
+  final PerceiveSlidableController sheetController;
 
   /// Sheet sizing extents
   final double initialExtent;
@@ -21,38 +19,28 @@ class CustomPicker extends StatefulWidget {
   final double mediumExtent;
   final double minExtent;
 
-  /// Color of the growable Header
-  final Color statusBarPaddingColor;
-
-  /// Backdrop Colors
-  final Color minBackdropColor;
-  final Color maxBackdropColor;
-
   /// Custom picker body builder
-  final Widget Function(BuildContext context, double extent, ScrollController scrollController, SheetState state) customBodyBuilder;
-
-  final Widget Function(BuildContext context, SheetController sheetController, FocusNode focusNode, TextEditingController searchFieldController) headerBuilder;
+  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLock) customBodyBuilder;
+  /// Custom picker header builder
+  final Widget Function(BuildContext context, Widget spacer, FocusNode focusNode, TextEditingController searchFieldController)? headerBuilder;
 
   /// Allows the picker to see the sheetstate
   final Function(double extent) listener;
 
-  final bool isLocked;
+  /// If the giphy picker is in a locked state
+  final ConcreteCubit<PickerType?> openType;
   
   const CustomPicker({ 
     Key? key, 
     required this.sheetController,
-    required this.pickerController,
     required this.customBodyBuilder,
     required this.headerBuilder,
     required this.listener,
+    required this.openType,
     this.initialExtent = 0.55,
     this.minExtent = 0.2,
     this.mediumExtent = 0.55,
     this.expandedExtent = 1.0,
-    this.statusBarPaddingColor = Colors.white,
-    this.minBackdropColor = Colors.transparent,
-    this.maxBackdropColor = Colors.black, 
-    this.isLocked = false
   }) : super(key: key);
 
   @override
@@ -61,133 +49,38 @@ class CustomPicker extends StatefulWidget {
 
 class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderStateMixin {
 
-  /// Controls the animation of the backdrop color reletive the the [SlidingSheet]
-  late AnimationController animationController;
-
-  /// Animates the color from min extent to medium extent
-  late Animation<Color?> colorTween;
-
-  /// Sheet cubit state
-  late ConcreteCubit<double> sheetExtent = ConcreteCubit<double>(widget.initialExtent);
-
-  /// Scroll offset of the custom sheet
-  ScrollController scrollController = ScrollController();
-
-  /// If the sheet is currently snapping
-  bool snapping = false;
-
   FocusNode focusNode = FocusNode();
 
   TextEditingController searchFieldController = TextEditingController();
 
-  @override
-  void initState(){
-    super.initState();
-    //Initiate animation
-    animationController = AnimationController(
-      vsync: this,
-      value: widget.initialExtent/widget.mediumExtent,
-      duration: Duration(milliseconds: 0)
-    );
-    colorTween = ColorTween(begin: widget.minBackdropColor, end: widget.maxBackdropColor).animate(animationController);
-
-    initiateListener(scrollController);
-  }
-
-  void sheetListener(SheetState state){
-    if(state.extent<= widget.mediumExtent && (state.extent - widget.minExtent) >= 0){
-      animationController.animateTo((state.extent - widget.minExtent) / widget.mediumExtent);
+  void sheetListener(double extent){
+    if(extent <= widget.initialExtent/3 && widget.openType.state == PickerType.Custom){
+      widget.sheetController.snapTo(widget.initialExtent);
     }
-    sheetExtent.emit(state.extent);
-    if(state.extent <= widget.initialExtent/3 && widget.isLocked){
-      widget.sheetController.snapToExtent(widget.initialExtent);
-    }
-    widget.listener(state.extent);
-  }
-
-  void initiateListener(ScrollController scrollController){
-    scrollController.addListener(() {
-      if(scrollController.offset <= -50 && widget.sheetController.state!.extent != widget.minExtent && !snapping){
-        if(widget.sheetController.state!.extent == widget.expandedExtent){
-          snapping = true;
-          Future.delayed(Duration.zero, () {
-            widget.sheetController.snapToExtent(widget.mediumExtent, duration: Duration(milliseconds: 300));
-            focusNode.unfocus();
-            Future.delayed(Duration(milliseconds: 300)).then((value) => {
-              snapping = false
-            });
-          });
-        }
-        else if(widget.sheetController.state!.extent == widget.mediumExtent){
-          snapping = true;
-          Future.delayed(Duration.zero, () {
-            widget.sheetController.snapToExtent(widget.minExtent, duration: Duration(milliseconds: 300));
-            focusNode.unfocus();
-          });
-          Future.delayed(Duration(milliseconds: 300)).then((value) => {
-            snapping = false
-          });
-        }
-      }
-    });
+    widget.listener(extent);
   }
 
   @override
   Widget build(BuildContext context) {
 
-    var statusBarHeight = MediaQueryData.fromWindow(window).padding.top;
-
-    return BlocBuilder<ConcreteCubit<double>, double>(
-      bloc: sheetExtent,
-      builder: (context, extent) {
-        double topExtentValue = Functions.animateOver(extent, percent: 0.9);
-        return SlidingSheet(
-          controller: widget.sheetController,
-          isBackdropInteractable: false,
-          duration: Duration(milliseconds: 300),
-          cornerRadius: 32,
-          cornerRadiusWhenExpanded: 0,
-          backdropColor: extent > widget.initialExtent + 0.02 ? colorTween.value : null,
-          listener: sheetListener,
-          snapSpec: SnapSpec(
-            initialSnap: widget.minExtent,
-            snappings: [widget.minExtent, widget.initialExtent, widget.mediumExtent, widget.expandedExtent],
-            onSnap: (state, _){
-              // if(state.isCollapsed && widget.minExtent == 0){
-              //   // ~~~~~ Change ~~~~~
-              //   widget.pickerController!.closeImagePicker();
-              // }
-              if(state.extent == widget.mediumExtent){
-                // if(sheetCubit.state) sheetCubit.emit(false);
-                // if(pageCubit.state) pageCubit.emit(false);
-              }
-              else if(state.isExpanded){
-                // if(!sheetCubit.state) sheetCubit.emit(true);
-              }
-            },
-          ),
-          headerBuilder: (context, state){
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(height: lerpDouble(0, statusBarHeight, topExtentValue)!, color: widget.statusBarPaddingColor,),
-                widget.headerBuilder(context, widget.sheetController, focusNode, searchFieldController),
-              ],
-            );
-          },
-          customBuilder: (context, controller, sheetState){
-            return Container(
-
-              child: SingleChildScrollView(
-                controller: controller,
-                physics: AlwaysScrollableScrollPhysics(),
-                child: widget.customBodyBuilder(context, extent, scrollController, sheetState),
-              ),
-            );
-          },
-        );
-      }
+    return PerceiveSlidable(
+      controller: widget.sheetController,
+      staticSheet: true,
+      closeOnBackdropTap: false,
+      isBackgroundIntractable: true,
+      doesPop: false,
+      additionalSnappings: [widget.initialExtent],
+      initialExtent: 0,
+      minExtent: widget.minExtent,
+      mediumExtent: widget.mediumExtent,
+      expandedExtent: widget.expandedExtent,
+      extentListener: sheetListener,
+      delegate: _CustomPickerSheetController(
+        (context, spacer) => widget.headerBuilder?.call(context, spacer, focusNode, searchFieldController) ?? Container(),
+        (context, extent, scrollController, scrollLock) => widget.customBodyBuilder(context, extent, scrollController, scrollLock),
+      )
     );
+
   }
 }
 
@@ -210,4 +103,27 @@ class CustomPickerController extends ChangeNotifier {
   void dispose() {
     _state = null;
   }
+}
+
+class _CustomPickerSheetController extends ScrollablePerceiveSlidableDelegate {
+
+  final Widget Function(BuildContext context, Widget spacer) header;
+
+  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLock) body;
+
+  _CustomPickerSheetController(this.header, this.body) : super(pageCount: 1);
+
+  @override
+  Widget headerBuilder(BuildContext context, pageObj, Widget spacer) {
+    return header.call(context, spacer);
+  }
+
+  @override
+  Widget scrollingBodyBuilder(BuildContext context, SheetState? state, ScrollController scrollController, int pageIndex, bool scrollLock, double footerHeight) {
+    if(state == null){
+      return Container();
+    }
+    return body.call(context, state.extent, scrollController, scrollLock);
+  }
+
 }

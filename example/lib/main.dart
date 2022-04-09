@@ -343,11 +343,11 @@ class _MyHomePageState extends State<MyHomePage> {
     return _cupertinoList();
   }
 
-  Widget gifLoadingIndicator(BuildContext context, ScrollController controller, double extent){
+  Widget gifLoadingIndicator(BuildContext context){
     return SizedBox(
       height: 1000,
       child: ListView(
-        controller: controller,
+        physics: NeverScrollableScrollPhysics(),
         children: [
           SizedBox(
             height: 200,
@@ -391,7 +391,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Picker(
       apiKey: 'Example',
-      initialValue: PickerType.ImagePicker,
+      initialValue: PickerType.Custom,
       controller: pickerController,
       backgroundColor: Colors.white,
       initialExtent: 0.2,
@@ -404,7 +404,7 @@ class _MyHomePageState extends State<MyHomePage> {
       gifLoadingTileIndicator: gifTileLoadingIndicator(),
       imageHeaderBuilder: imageHeaderBuilder,
       albumMenuBuilder: albumMenuBuilder,
-      gifLoadingIndicator: gifLoadingIndicator,
+      gifLoadingIndicator: gifLoadingIndicator(context),
 
       child: Scaffold(
           resizeToAvoidBottomInset: false,

@@ -62,7 +62,7 @@ class ImagePicker extends StatefulWidget {
   final Widget Function(BuildContext context, int index)? lockOverlayBuilder;
   
   /// Allows the picker to see the sheetstate
-  final Function(SheetState state)? listener;
+  final Function(double extent)? listener;
 
   /// Overlays a video thumbnail
   final Widget Function(String duration)? videoIndicator;
@@ -182,7 +182,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       requestType: 
       widget.controller!.onlyPhotos ? 
       RequestType.image : 
-      RequestType.all,
+      RequestType.common,
       filterOptions: filer
     );
 
@@ -315,7 +315,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       widget.sheetController.snapToExtent(widget.initialExtent);
     }
     if(widget.listener != null){
-      widget.listener!(state);
+      widget.listener!(state.extent);
     }
   }
 

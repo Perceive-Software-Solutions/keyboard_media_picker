@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:perceive_slidable/sliding_sheet.dart';
@@ -83,7 +84,7 @@ class Picker extends StatefulWidget {
   final Widget? albumLoadingIndicator;
 
   ///Loading Indicator for the Gif viewer when no Gifs are loaded
-  final Widget? Function(BuildContext, ScrollController, double)? gifLoadingIndicator;
+  final Widget? gifLoadingIndicator;
 
   ///Connectivity Indiciator when there are no gifs and not connected to the internet
   final Widget? Function(BuildContext, double)? gifconnectivityIndicator;
@@ -189,7 +190,7 @@ class _PickerState extends State<Picker> {
   late SheetController imageSheetController;
 
   ///Main Sliding sheet controller for the giphy picker
-  late SheetController gifSheetController;
+  late PerceiveSlidableController gifSheetController;
 
   ///Main Sliding sheet controller for the custom picker
   late SheetController customSheetController;
@@ -211,8 +212,6 @@ class _PickerState extends State<Picker> {
   void initState(){
     super.initState();
 
-
-
     /// Extent of all 3 sliding sheets
     sheetState = ConcreteCubit<double>(widget.initialExtent);
 
@@ -231,7 +230,7 @@ class _PickerState extends State<Picker> {
 
     //Initiate controllers
     imageSheetController = SheetController();
-    gifSheetController = SheetController();
+    gifSheetController = PerceiveSlidableController();
     customSheetController = SheetController();
 
     if(widget.initialValue != PickerType.None){
@@ -267,7 +266,7 @@ class _PickerState extends State<Picker> {
         currentSheetController = customSheetController;
         break;
       case PickerType.GiphyPickerView:
-        currentSheetController = gifSheetController;
+        currentSheetController = gifSheetController.controller;
         break;
       case PickerType.ImagePicker:
         currentSheetController = imageSheetController;
@@ -295,8 +294,8 @@ class _PickerState extends State<Picker> {
 
   }
 
-  dynamic multiSheetStateListener(dynamic state){
-    sheetState.emit(state.extent);
+  dynamic multiSheetStateListener(double extent){
+    sheetState.emit(extent);
   }
 
   void openPicker({
@@ -394,7 +393,7 @@ class _PickerState extends State<Picker> {
   Future<void> closeGiphyPicker() async {
     type.emit(null);
     widget.controller._update();
-    await gifSheetController.collapse();
+    await gifSheetController.snapTo(0);
   }
 
   Future<void> closeCustomPicker() async {
@@ -425,13 +424,17 @@ class _PickerState extends State<Picker> {
 
     currentlyOpen = closeGiphyPicker;
 
-    gifSheetController.snapToExtent(widget.initialExtent, duration: Duration(milliseconds: 300))?.then((value) {
-      paddingLock = false;
-      type.emit(PickerType.GiphyPickerView);
-    }) ?? Future.delayed(Duration(milliseconds: 300)).then((value) {
-      paddingLock = false;
-      type.emit(PickerType.GiphyPickerView);
-    });
+    try{
+      await gifSheetController.snapTo(widget.initialExtent, duration: Duration(milliseconds: 300)).then((value) {
+        type.emit(PickerType.GiphyPickerView);
+        paddingLock = false;
+      });
+    }catch(e){
+      await Future.delayed(Duration(milliseconds: 300)).then((value) {
+        paddingLock = false;
+      });
+    }
+    setState((){});
   }
 
   Future<void> openCustomPicker([bool? overrideLock]) async {
@@ -498,96 +501,87 @@ class _PickerState extends State<Picker> {
   @override
   Widget build(BuildContext context) {
 
+    print('build');
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: widget.backgroundColor,
-      body: BlocBuilder<ConcreteCubit<PickerType?>, PickerType?>(
-        bloc: type,
-        buildWhen: (o, n) => o!=n,
-        builder: (context, pickerType) {
-          return Stack(
-            children: [
-              BlocBuilder<ConcreteCubit<double>, double>(
-                bloc: sheetState,
-                builder: (context, extent) {
-                  return AnimatedPadding(
-                    duration: Duration(milliseconds: 0),
-                    curve: Curves.linear,
-                    padding: EdgeInsets.only(bottom: extent > widget.initialExtent || paddingLock ? bottomPadding : (bottomPadding/widget.minExtent)*extent),
-                    child: widget.child,
-                  );
-                }
-              ),
-              ImagePicker(
-                key: Key('ImagePicker'), 
-                isLocked: pickerType == PickerType.ImagePicker,
-                sheetController: imageSheetController,
-                controller: imagePickerController, 
-                pickerController: widget.controller, 
-                initialExtent: widget.initialExtent, 
-                minExtent: 0,
-                videoIndicator: widget.videoIndicator,
-                mediumExtent: widget.mediumExtent,
-                expandedExtent: widget.expandedExtent,
-                headerBuilder: widget.imageHeaderBuilder,
-                albumMenuBuilder: widget.albumMenuBuilder,
-                loadingIndicator: widget.imageLoadingIndicator,
-                tileLoadingIndicator: widget.imageTileLoadingIndicator,
-                minBackdropColor: widget.minBackdropColor,
-                maxBackdropColor: widget.maxBackdropColor,
-                overlayBuilder: widget.overlayBuilder,
-                statusBarPaddingColor: widget.imageStatusBarColor,
-                backgroundColor: widget.imageBackgroundColor,
-                lockOverlayBuilder: widget.lockOverlayBuilder,
-                listener: multiSheetStateListener,
-              ),
-              GiphyPicker(
-                key: Key('GiphyPicker'), 
-                isLocked: pickerType == PickerType.GiphyPickerView,
-                apiKey: widget.apiKey, 
-                sheetController: gifSheetController,
-                controller: giphyPickerController, 
-                pickerController: widget.controller,
-                initialExtent: widget.initialExtent, 
-                minExtent: 0,
-                mediumExtent: widget.mediumExtent,
-                expandedExtent: widget.expandedExtent,
-                notch: widget.notch,
-                cancelButtonStyle: widget.cancelButtonStyle,
-                hiddentTextStyle: widget.hiddenTextStyle,
-                style: widget.style,
-                icon: widget.icon,
-                iconStyle: widget.iconStyle,
-                backgroundColor: widget.gifBackgroundColor,
-                searchColor: widget.searchColor,
-                minBackdropColor: widget.minBackdropColor,
-                maxBackdropColor: widget.maxBackdropColor,
-                loadingIndicator: widget.gifLoadingIndicator,
-                connectivityIndicator: widget.gifconnectivityIndicator,
-                loadingTileIndicator: widget.gifLoadingTileIndicator,
-                statusBarPaddingColor: widget.gifStatusBarColor,
-                overlayBuilder: widget.overlayBuilder,
-                headerColor: widget.gifStatusBarColor,
-                listener: multiSheetStateListener,
-              ),
-              CustomPicker(
-                isLocked: pickerType == PickerType.Custom,
-                sheetController: customSheetController, 
-                pickerController: widget.controller, 
-                customBodyBuilder: widget.customBodyBuilder!, 
-                headerBuilder: widget.headerBuilder!,
-                initialExtent: widget.initialExtent, 
-                minExtent: 0,
-                mediumExtent: widget.mediumExtent,
-                expandedExtent: widget.expandedExtent,
-                statusBarPaddingColor: widget.customStatusBarColor,
-                minBackdropColor: widget.minBackdropColor,
-                maxBackdropColor: widget.maxBackdropColor,
-                listener: multiSheetStateListener,
-              ) 
-            ],
-          );
-        }
+      body: Stack(
+        children: [
+          BlocBuilder<ConcreteCubit<double>, double>(
+            bloc: sheetState,
+            builder: (context, extent) {
+              return AnimatedPadding(
+                duration: Duration(milliseconds: 0),
+                curve: Curves.linear,
+                padding: EdgeInsets.only(bottom: extent > widget.initialExtent || paddingLock ? bottomPadding : (bottomPadding/widget.minExtent)*extent),
+                child: widget.child,
+              );
+            }
+          ),
+          ImagePicker(
+            key: Key('ImagePicker'), 
+            isLocked: false,//pickerType == PickerType.ImagePicker,
+            sheetController: imageSheetController,
+            controller: imagePickerController, 
+            pickerController: widget.controller, 
+            initialExtent: widget.initialExtent, 
+            minExtent: 0,
+            videoIndicator: widget.videoIndicator,
+            mediumExtent: widget.mediumExtent,
+            expandedExtent: widget.expandedExtent,
+            headerBuilder: widget.imageHeaderBuilder,
+            albumMenuBuilder: widget.albumMenuBuilder,
+            loadingIndicator: widget.imageLoadingIndicator,
+            tileLoadingIndicator: widget.imageTileLoadingIndicator,
+            minBackdropColor: widget.minBackdropColor,
+            maxBackdropColor: widget.maxBackdropColor,
+            overlayBuilder: widget.overlayBuilder,
+            statusBarPaddingColor: widget.imageStatusBarColor,
+            backgroundColor: widget.imageBackgroundColor,
+            lockOverlayBuilder: widget.lockOverlayBuilder,
+            listener: multiSheetStateListener,
+          ),
+          GiphyPicker(
+            key: Key('GiphyPicker'), 
+            openType: type,
+            apiKey: widget.apiKey, 
+            sheetController: gifSheetController,
+            controller: giphyPickerController, 
+            initialExtent: widget.initialExtent, 
+            minExtent: 0,
+            mediumExtent: widget.mediumExtent,
+            expandedExtent: widget.expandedExtent,
+            notch: widget.notch,
+            cancelButtonStyle: widget.cancelButtonStyle,
+            hiddenTextStyle: widget.hiddenTextStyle,
+            style: widget.style,
+            icon: widget.icon,
+            iconStyle: widget.iconStyle,
+            backgroundColor: widget.gifBackgroundColor,
+            searchColor: widget.searchColor,
+            loadingIndicator: widget.gifLoadingIndicator,
+            connectivityIndicator: widget.gifconnectivityIndicator,
+            loadingTileIndicator: widget.gifLoadingTileIndicator,
+            overlayBuilder: widget.overlayBuilder,
+            listener: multiSheetStateListener,
+          ),
+          CustomPicker(
+            isLocked: false,//pickerType == PickerType.Custom,
+            sheetController: customSheetController, 
+            pickerController: widget.controller, 
+            customBodyBuilder: widget.customBodyBuilder!, 
+            headerBuilder: widget.headerBuilder!,
+            initialExtent: widget.initialExtent, 
+            minExtent: 0,
+            mediumExtent: widget.mediumExtent,
+            expandedExtent: widget.expandedExtent,
+            statusBarPaddingColor: widget.customStatusBarColor,
+            minBackdropColor: widget.minBackdropColor,
+            maxBackdropColor: widget.maxBackdropColor,
+            listener: multiSheetStateListener,
+          ) 
+        ],
       ),
     );
   }

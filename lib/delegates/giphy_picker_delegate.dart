@@ -1,31 +1,34 @@
+import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fort/fort.dart';
+import 'package:perceive_slidable/src/sheet.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/state/state.dart';
-class GiphyPickerPickerBuilderDelegate {
+class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   GiphyPickerPickerBuilderDelegate(
     this.provider,
-    this.gridScrollController,
     this.giphyPickerController,
-    this.sheetExtent,
-    this.sheetState,
+    this.header,
     this.loadingIndicator,
     this.connectivityIndicator,
     this.loadingTileIndicator, {
       this.overlayBuilder,
       this.mediumExtent = 0.4,
     }
-  );
+  ) : super(pageCount: 1);
+
+  /// Builds the header
+  final Widget Function(BuildContext context, Widget spacer) header;
 
   /// Overlay Widget of the selected asset
   final Widget Function(BuildContext context, int index)? overlayBuilder;
 
   /// Loading Indicator before any Gifs are loaded
-  final Widget? Function(BuildContext, ScrollController, double)? loadingIndicator;
+  final Widget? loadingIndicator;
 
   /// When the giphy picker is not connected to the internet
   final Widget? Function(BuildContext, double)? connectivityIndicator;
@@ -34,22 +37,13 @@ class GiphyPickerPickerBuilderDelegate {
   final Widget? loadingTileIndicator;
 
   /// [ChangeNotifier] for giphy picker
-  final Store<GiphyState> provider;
-
-  /// The [ScrollController] for the preview grid.
-  final ScrollController gridScrollController;
+  final Tower<GiphyState> provider;
 
   /// Controls the changes in state relative to the [SlidingSheet]
   /// 
   /// If the state is changed the imagePicker can change certain
   /// params inside of the [GiphyPickerPickerBuilderDelegate] accordingly
   final GiphyPickerController? giphyPickerController;
-
-  /// The primary [Cubit] for the headerBuilder inside [SlidingSheet]
-  final ConcreteCubit<double> sheetExtent;
-
-  /// The primary [Cubit] for the headerBuilder inside [SlidingSheet]
-  final ConcreteCubit<bool> sheetState;
 
   /// Intial Extent
   final double mediumExtent;
@@ -177,7 +171,7 @@ class GiphyPickerPickerBuilderDelegate {
   }
 
   /// The primary grid view builder for assets
-  Widget assetsGridBuilder(BuildContext context, double extent){
+  Widget assetsGridBuilder(BuildContext context, double extent, ScrollController scrollController, bool scrollLock, Map<String, double> displayAssets){
 
     //Height of the screen
     var height = MediaQuery.of(context).size.height;
@@ -185,55 +179,46 @@ class GiphyPickerPickerBuilderDelegate {
     //Width of the screen
     var width = MediaQuery.of(context).size.width;
 
+    List<double> urlRatio = displayAssets.values.toList();
 
-    return StoreConnector<GiphyState, Map<String, double>>(
-      converter: (store) => store.state.displayAssets,
-      builder: (context, displayAssets) {
-        List<double> urlRatio = displayAssets.values.toList();
-        return Container(
-          height: extent > 0.55 ? (extent == 1.0 ? 
-          extent*height - MediaQuery.of(context).padding.top - 60 : extent > 0.8 ? 
-          extent*height - MediaQuery.of(context).padding.top : extent*height - 60) : 
-          height*0.55 - 60,
-          alignment: Alignment.topCenter,
-          child: StaggeredGridView.countBuilder(
-            controller: gridScrollController,
-            shrinkWrap: false,
-            mainAxisSpacing: 1,
-            crossAxisSpacing: 1,
-            padding: EdgeInsets.zero,
-            itemCount: displayAssets.length,
-            scrollDirection: Axis.vertical,
-            crossAxisCount: 2,
-            itemBuilder: (context, i){
-              return assetItemBuilder(displayAssets.keys.elementAt(i), displayAssets, i);
-            },
-            staggeredTileBuilder: (int index) => StaggeredTile.extent(1, (width*0.5)/urlRatio[index] - 15),
-          ),
-        );
-      }
+    return StaggeredGridView.countBuilder(
+      controller: scrollController,
+      physics: scrollLock ? NeverScrollableScrollPhysics() : BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      mainAxisSpacing: 1,
+      crossAxisSpacing: 1,
+      padding: EdgeInsets.zero,
+      itemCount: displayAssets.length,
+      scrollDirection: Axis.vertical,
+      crossAxisCount: 2,
+      itemBuilder: (context, i){
+        return assetItemBuilder(displayAssets.keys.elementAt(i), displayAssets, i);
+      },
+      staggeredTileBuilder: (int index) => StaggeredTile.extent(1, (width*0.5)/urlRatio[index] - 15),
     );
   }
 
-  /// Yes, the build method
-  Widget build(BuildContext context) {
+  @override
+  Widget headerBuilder(BuildContext context, pageObj, Widget spacer) {
+    return header(context, spacer);
+  }
+
+  @override
+  Widget scrollingBodyBuilder(BuildContext context, SheetState? sheetState, ScrollController scrollController, int pageIndex, bool scrollLock, double footerHeight) {
     return StoreConnector<GiphyState, GiphyState>(
       converter: (store) => store.state,
       builder: (context, state){
-        return BlocBuilder(
-          bloc: sheetExtent,
-          builder: (BuildContext context, double extent){
-            if(state.displayAssets.length == 0 && !state.connectivity){
-              return connectivityIndicator == null ? connectivityIndicatorExample() : connectivityIndicator!(context, extent)!;
-            }
-            else if(state.displayAssets.length > 0){
-              return assetsGridBuilder(context, extent);
-            }
-            else{
-              return loadingIndicator == null ? loadingIndicatorExample(context) : loadingIndicator!(context, gridScrollController, extent)!;
-            }
-          }
-        );
+
+        final extent = sheetState?.extent ?? 0;
+
+        if(state.displayAssets.length == 0 && !state.connectivity){
+          return connectivityIndicator == null ? connectivityIndicatorExample() : connectivityIndicator!(context, extent)!;
+        }
+        else if(state.displayAssets.length > 0){
+          return assetsGridBuilder(context, extent, scrollController, scrollLock, state.displayAssets);
+        }
+        else{
+          return loadingIndicator ?? loadingIndicatorExample(context);
+        }
       }
     );
   }

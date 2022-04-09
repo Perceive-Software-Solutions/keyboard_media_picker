@@ -34,7 +34,7 @@ class CustomPicker extends StatefulWidget {
   final Widget Function(BuildContext context, SheetController sheetController, FocusNode focusNode, TextEditingController searchFieldController) headerBuilder;
 
   /// Allows the picker to see the sheetstate
-  final Function(SheetState state) listener;
+  final Function(double extent) listener;
 
   final bool isLocked;
   
@@ -102,7 +102,7 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
     if(state.extent <= widget.initialExtent/3 && widget.isLocked){
       widget.sheetController.snapToExtent(widget.initialExtent);
     }
-    widget.listener(state);
+    widget.listener(state.extent);
   }
 
   void initiateListener(ScrollController scrollController){

@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:connectivity/connectivity.dart';
+import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fort/fort.dart';
@@ -20,13 +21,10 @@ class GiphyPicker extends StatefulWidget {
   final String apiKey;
 
   /// Sliding sheet controller
-  final SheetController sheetController;
+  final PerceiveSlidableController sheetController;
 
   /// GiphyPicker State
   final GiphyPickerController? controller;
-
-  /// Picker State
-  final PickerController? pickerController;
 
   /// [SlidingSheet] extents
   final double initialExtent;
@@ -37,20 +35,14 @@ class GiphyPicker extends StatefulWidget {
   /// Background color when images are not loaded in
   final Color backgroundColor;
 
-  /// Header color displayed behind the search bar 
-  final Color headerColor;
-
   /// Search bar color
   final Color searchColor;
-
-  /// Color of the growable Header
-  final Color statusBarPaddingColor;
 
   /// Cancel button
   final TextStyle cancelButtonStyle;
 
   /// Search field hint text style
-  final TextStyle hiddentTextStyle;
+  final TextStyle hiddenTextStyle;
 
   /// Sty;e for the text
   final TextStyle style;
@@ -64,12 +56,8 @@ class GiphyPicker extends StatefulWidget {
   /// Notch for the search bar
   final Widget? notch;
 
-  /// Backdrop Colors
-  final Color minBackdropColor;
-  final Color maxBackdropColor;
-
   /// Loading Indicators
-  Widget? Function(BuildContext, ScrollController,  double)? loadingIndicator;
+  Widget? loadingIndicator;
   Widget? Function(BuildContext, double)? connectivityIndicator;
   Widget? loadingTileIndicator;
 
@@ -77,10 +65,10 @@ class GiphyPicker extends StatefulWidget {
   final Widget Function(BuildContext context, int index)? overlayBuilder;
 
   /// If the giphy picker is in a locked state
-  bool isLocked;
+  ConcreteCubit<PickerType?> openType;
 
   /// Allows the picker to see the sheetstate
-  final Function(SheetState state) listener;
+  final Function(double extent) listener;
 
   GiphyPicker({
     required Key key,
@@ -88,25 +76,20 @@ class GiphyPicker extends StatefulWidget {
     required this.controller,
     required this.sheetController, 
     required this.listener,
-    required this.isLocked,
-    this.statusBarPaddingColor = Colors.white,
-    this.headerColor = Colors.white,
+    required this.openType,
     this.overlayBuilder,
     this.minExtent = 0.0,
     this.initialExtent = 0.4,
     this.mediumExtent = 0.4,
     this.expandedExtent = 1.0,
-    this.pickerController,
     this.notch,
     this.cancelButtonStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
-    this.hiddentTextStyle = const TextStyle(fontSize: 14, color: Colors.black),
+    this.hiddenTextStyle = const TextStyle(fontSize: 14, color: Colors.black),
     this.style = const TextStyle(fontSize: 14),
     this.icon = const Icon(Icons.search, size: 24, color: Colors.black),
     this.iconStyle = const TextStyle(color: Colors.grey),
     this.backgroundColor = Colors.white,
     this.searchColor = Colors.grey,
-    this.minBackdropColor = Colors.transparent,
-    this.maxBackdropColor = Colors.black,
     this.loadingIndicator,
     this.loadingTileIndicator,
     this.connectivityIndicator
@@ -115,20 +98,7 @@ class GiphyPicker extends StatefulWidget {
   _GiphyPickerState createState() => _GiphyPickerState();
 }
 
-class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStateMixin {
-
-/*
- 
-      ____                _   
-     / ___|___  _ __  ___| |_ 
-    | |   / _ \| '_ \/ __| __|
-    | |__| (_) | | | \__ \ |_ 
-     \____\___/|_| |_|___/\__|
-                              
- 
-*/
-
-  double HEADER_HEIGHT = 60;
+class _GiphyPickerState extends State<GiphyPicker> {
 
 /*
  
@@ -141,85 +111,36 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
  
 */
 
-  /// Primary delegate for displaying assets
-  late GiphyPickerPickerBuilderDelegate delegate;
-
-  /// The currently slected Gif
-  String? selectedAsset;
-
-  /// The current state of the [GiphyPicker]
-  PikyOption type = PikyOption.Open;
-
   /// Primary [FocusNode] for the [TextField] 
   /// Used to see if the [TextField] has focus
-  FocusNode focusNode = FocusNode();
+  late final FocusNode focusNode = FocusNode()..addListener(() {
+    //Expands the sheet if the focus node has focus
+    if(focusNode.hasFocus && widget.sheetController.extent != widget.expandedExtent){
+      widget.sheetController.snapTo(widget.expandedExtent, duration: Duration(milliseconds: 300));
+    }
+  });
 
   /// Primary [TextEditingController] to get the current value of the [TextField]
-  TextEditingController searchFieldController = TextEditingController();
-
-  /// The primary [Cubit] for the headerBuilder inside [SlidingSheet]
-  ConcreteCubit<bool> sheetCubit = ConcreteCubit<bool>(false);
-
-  /// Primary [Cubit] to track the textfields current value
-  String searchValue = '';
+  late final TextEditingController searchFieldController = TextEditingController()..addListener(() {
+    //When the text is edited, a search is run
+    store.dispatch(CancelSearchAction());
+    store.dispatch(LoadAssetsFromSearching(0, searchFieldController.text, store));
+  });
 
   /// The [ScrollController] for the giphy preview grid
   ScrollController giphyScrollController = ScrollController();
 
-  /// Controls the animation of the backdrop color reletive the the [SlidingSheet]
-  late AnimationController animationController;
-
-  /// Animates the color from min extent to medium extent
-  late Animation<Color?> colorTween;
-
-  /// If the sliding sheet is currently snapping
-  bool snapping = false;
-
-  /// If assets are finished loading
-  bool assetsLoadingComplete = false;
-
-  /// If the search is currently queued up
-  bool queued = true;
-
-  /// Tracks the sheet extent
-  late ConcreteCubit<double> sheetExtent = ConcreteCubit<double>(widget.initialExtent);
-
-  late Store<GiphyState> store;
+  /// The store for the giphy state
+  late final Tower<GiphyState> store = Tower<GiphyState>(
+    giphyStateReducer,
+    initialState: GiphyState.initial(widget.apiKey),
+    middleware: [EpicMiddleware<GiphyState>(giphySearchEpic)],
+  );
 
   //Adds a listener to the scroll position of the staggered grid view
   @override
   void initState() {
     super.initState();
-
-    store = Tower<GiphyState>(
-      giphyStateReducer,
-      initialState: GiphyState.initial(widget.apiKey),
-      middleware: [thunkMiddleware, ...[EpicMiddleware<GiphyState>(giphySearchEpic)]]
-    );
-
-    delegate = GiphyPickerPickerBuilderDelegate(
-      store,
-      giphyScrollController, 
-      widget.controller,
-      sheetExtent,
-      sheetCubit,
-      widget.loadingIndicator,
-      widget.connectivityIndicator,
-      widget.loadingTileIndicator,
-      mediumExtent: widget.mediumExtent,
-      overlayBuilder: widget.overlayBuilder
-    );
-
-    //Initiate animation
-    animationController = AnimationController(
-      vsync: this,
-      value: widget.initialExtent/widget.mediumExtent,
-      duration: Duration(milliseconds: 0)
-    );
-    colorTween = ColorTween(begin: widget.minBackdropColor, end: widget.maxBackdropColor).animate(animationController);
-
-    // Initiate Listeners
-    initiateScrollListener(giphyScrollController);
 
     checkConnectivity();
 
@@ -255,229 +176,121 @@ class _GiphyPickerState extends State<GiphyPicker> with SingleTickerProviderStat
     await store.dispatch(hydrateAction());
   }
 
-
-
-  // void searchGiphy(String value){
-  //   searchValue = value;
-  //   if(assetsLoadingComplete == false){
-  //     queued = true;
-  //   }
-  //   else if(assetsLoadingComplete){
-  //     provider.loadMoreAssetsFromSearching(0, searchValue);
-  //     queued = false;
-  //   }
-  // }
-
-  // void initiateSearchListener(){
-  //   provider.addListener(() { 
-  //     assetsLoadingComplete = provider.assetsLoadingComplete;
-  //   });
-  //   if(queued){
-  //     searchGiphy(searchValue);
-  //   }
-  // }
-
   void unSelectAsset(){
     store.dispatch(unSelectGif());
     widget.controller?.update();
   }
 
-  /// Matches the widget.sheetController state to the scroll offset of the feed
-  void initiateScrollListener(ScrollController scrollController){
-    scrollController.addListener(() {
-      if(scrollController.offset <= -50 && widget.sheetController.state!.extent != widget.minExtent && !snapping){
-        if(widget.sheetController.state!.extent == widget.expandedExtent){
-          snapping = true;
-          Future.delayed(Duration(milliseconds: 0), () {
-            widget.sheetController.snapToExtent(widget.mediumExtent, duration: Duration(milliseconds: 300));
-            focusNode.unfocus();
-            sheetCubit.emit(false);
-            scrollController.jumpTo(0.0);
-            Future.delayed(Duration(milliseconds: 300)).then((value) => {
-              snapping = false
-            });
-          });
-        }
-        else if(widget.sheetController.state!.extent == widget.mediumExtent){
-          snapping = true;
-          Future.delayed(Duration.zero, () {
-            widget.sheetController.snapToExtent(widget.minExtent, duration: Duration(milliseconds: 300));
-            focusNode.unfocus();
-            sheetCubit.emit(false);
-            scrollController.jumpTo(0.0);
-          });
-          Future.delayed(Duration(milliseconds: 300)).then((value) => {
-            snapping = false
-          });
-        }
-      }
-    });
+  void sheetListener(double extent){
+    if(extent <= widget.initialExtent/3 && widget.openType.state == PickerType.GiphyPickerView){
+      widget.sheetController.snapTo(widget.initialExtent);
+    }
+    widget.listener(extent);
   }
 
-  void sheetListener(SheetState state){
-    if(state.extent<= widget.mediumExtent && (state.extent - widget.minExtent) >= 0){
-      animationController.animateTo((state.extent - widget.minExtent) / widget.mediumExtent);
-    }
-    sheetExtent.emit(state.extent);
-    if(state.extent <= widget.initialExtent/3 && widget.isLocked){
-      widget.sheetController.snapToExtent(widget.initialExtent);
-    }
-    widget.listener(state);
+  
+  Widget _buildHeader(BuildContext context, Widget spacer){
+
+    //Width of the screen
+    var width = MediaQuery.of(context).size.width;
+
+    return Column(
+      children: [
+        spacer,
+        Padding(
+          padding: const EdgeInsets.only(top: 6, bottom: 6),
+          child: widget.notch ?? Container(
+            width: 20,
+            height: 4,
+            color: Colors.grey,
+          ),
+        ),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(left: 16, right: !focusNode.hasFocus ? 16 : 0),
+                  child: Container(
+                    width: focusNode.hasFocus ? width - 91 : width - 32,
+                    height: 36,
+                    child: TextFormField(
+                      controller: searchFieldController,
+                      focusNode: focusNode,
+                      style: widget.style,
+                      decoration: InputDecoration(
+                        prefixStyle: widget.iconStyle,
+                        prefixIcon: widget.icon,
+                        contentPadding: EdgeInsets.zero,
+                        filled: true,
+                        fillColor: widget.searchColor,
+                        hintText: 'Search GIPHY',
+                        hintStyle: widget.hiddenTextStyle,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none
+                        ),
+                      ),
+                      onEditingComplete: (){
+                        setState(() {
+                          focusNode.unfocus();
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                focusNode.hasFocus ? GestureDetector(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 10, right: 16, top: 1),
+                    child: Text('Cancel', style: widget.cancelButtonStyle),
+                  ),
+                  onTap: (){
+                    focusNode.unfocus();
+                    searchFieldController.clear();
+                  },
+                ) : Container()
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    var statusBarHeight = MediaQueryData.fromWindow(window).padding.top;
     return StoreProvider(
       store: store,
-      child: BlocProvider(
-        create: (context) => sheetCubit,
-        child: BlocBuilder<ConcreteCubit<bool>, bool>(
-          bloc: sheetCubit,
-          buildWhen: (o, n) => o != n,
-          builder: (context, sheetCubitState) {
-            return BlocBuilder<ConcreteCubit<double>, double>(
-              bloc: sheetExtent,
-              builder: (context, extent) {
-                double topExtentValue = Functions.animateOver(extent, percent: 0.9);
-                return SlidingSheet(
-                    controller: widget.sheetController,
-                    isBackdropInteractable: false,
-                    duration: Duration(milliseconds: 300),
-                    cornerRadius: 32,
-                    cornerRadiusWhenExpanded: 0,
-                    backdropColor: extent > widget.initialExtent + 0.02 ? colorTween.value : null,
-                    listener: sheetListener,
-                    snapSpec: SnapSpec(
-                      initialSnap: widget.minExtent,
-                      snappings: [widget.minExtent, widget.initialExtent, widget.mediumExtent, widget.expandedExtent],
-                      onSnap: (state, _){
-                        if(state.extent == widget.mediumExtent){
-                          if(sheetCubitState) sheetCubit.emit(false);
-                        }
-                        else if(state.isExpanded){
-                          sheetCubit.emit(true);
-                        }
-                      },
-                    ),
-                    headerBuilder: (context, _){
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(height: lerpDouble(0, statusBarHeight, topExtentValue)!, color: widget.statusBarPaddingColor,),
-                          Container(
-                            color: widget.headerColor,
-                            child: _buildHeader(context),
-                          ),
-                        ],
-                      );
-                    },
-                    customBuilder: (context, controller, sheetState){
-                      controller.addListener(() {
-                        if(controller.offset > 0 && !sheetCubitState){
-                          sheetCubit.emit(true);
-                          widget.sheetController.snapToExtent(widget.expandedExtent);
-                        }
-                      });
-                      if(delegate == null){
-                        return Container();
-                      }
-                      return SingleChildScrollView(
-                        controller: controller,
-                        physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                        child: delegate.build(context)
-                      );
-                    },
-                  );
-              }
-            );
-          }
+      child: PerceiveSlidable(
+        controller: widget.sheetController,
+        backgroundColor: widget.backgroundColor,
+        staticSheet: true,
+        closeOnBackdropTap: false,
+        isBackgroundIntractable: true,
+        doesPop: false,
+        additionalSnappings: [widget.initialExtent],
+        initialExtent: 0,
+        minExtent: widget.minExtent,
+        mediumExtent: widget.mediumExtent,
+        expandedExtent: widget.expandedExtent,
+        extentListener: sheetListener,
+        delegate: GiphyPickerPickerBuilderDelegate(
+          store,
+          widget.controller,
+          _buildHeader,
+          widget.loadingIndicator,
+          widget.connectivityIndicator,
+          widget.loadingTileIndicator,
+          mediumExtent: widget.mediumExtent,
+          overlayBuilder: widget.overlayBuilder
         )
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context){
-
-    //Width of the screen
-    var width = MediaQuery.of(context).size.width;
-
-    return Container(
-      height: HEADER_HEIGHT,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 6, bottom: 6),
-            child: widget.notch ?? Container(
-              width: 20,
-              height: 4,
-              color: Colors.grey,
-            ),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.only(left: 16, right: !focusNode.hasFocus ? 16 : 0),
-                    child: Container(
-                      width: focusNode.hasFocus ? width - 91 : width - 32,
-                      height: 36,
-                      child: TextFormField(
-                        controller: searchFieldController,
-                        focusNode: focusNode,
-                        style: widget.style,
-                        decoration: InputDecoration(
-                          prefixStyle: widget.iconStyle,
-                          prefixIcon: widget.icon,
-                          contentPadding: EdgeInsets.zero,
-                          filled: true,
-                          fillColor: widget.searchColor,
-                          hintText: 'Search GIPHY',
-                          hintStyle: widget.hiddentTextStyle,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: BorderSide.none
-                          ),
-                        ),
-                        onChanged: (value){
-                          store.dispatch(CancelSearchAction());
-                          store.dispatch(LoadAssetsFromSearching(0, value, store));
-                        },
-                        onTap: (){
-                          setState(() {
-                            widget.sheetController.snapToExtent(widget.expandedExtent, duration: Duration(milliseconds: 300));
-                          });
-                        },
-                        onEditingComplete: (){
-                          setState(() {
-                            focusNode.unfocus();
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  focusNode.hasFocus ? GestureDetector(
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 10, right: 16, top: 1),
-                      child: Text('Cancel', style: widget.cancelButtonStyle),
-                    ),
-                    onTap: (){
-                      focusNode.unfocus();
-                      searchValue = '';
-                    },
-                  ) : Container()
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
   class GiphyPickerController extends ChangeNotifier{

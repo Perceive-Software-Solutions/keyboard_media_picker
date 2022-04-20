@@ -1,3 +1,7 @@
+## [0.4.1] v0.4.1
+
+* Updated Feed version
+
 ## [0.4.0] v0.4.0
 
 * Updated piky to sliding sheet 2.0

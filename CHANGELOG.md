@@ -1,3 +1,5 @@
+
+## [0.4.4] v0.4.4
 ## [0.4.1] v0.4.1
 
 * Updated Feed version

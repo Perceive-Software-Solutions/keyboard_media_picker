@@ -130,7 +130,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget imageHeaderBuilder(BuildContext context, Widget spacer, String path, bool state){
+  Widget imageHeaderBuilder(BuildContext context, Widget spacer, String path, bool state, double borderRadius){
     return Column(
       children: [
         spacer,
@@ -261,7 +261,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget albumMenuBuilder(Map<String, Tuple2<AssetPathEntity, Uint8List?>?> pathEntityList, ScrollController controller, bool scrollLock, dynamic Function(AssetPathEntity) onTap){
+  Widget albumMenuBuilder(__, Map<String, Tuple2<AssetPathEntity, Uint8List?>?> pathEntityList, ScrollController controller, bool scrollLock, _, dynamic Function(AssetPathEntity) onTap){
 
     pathEntityList.removeWhere((key, value) => value == null);
 
@@ -554,10 +554,10 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           )
         ),
-        customBodyBuilder: (context, extent, controller, state){
+        customBodyBuilder: (context, extent, controller, state, _){
           return Text("This is Custom");
         },
-        headerBuilder: (context, _, __, state){
+        headerBuilder: (context, _, __, state, double borderRadius){
           return Text("This is custom header");
         },
         customStatusBarColor: Colors.white,

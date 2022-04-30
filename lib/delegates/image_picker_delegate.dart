@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
 import 'package:perceive_slidable/src/sheet.dart';
@@ -343,7 +345,7 @@ class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   }
 
   /// The main grid view builder for assets
-  Widget assetsGridBuilder(BuildContext context, ScrollController scrollController, bool scrollLock){
+  Widget assetsGridBuilder(BuildContext context, ScrollController scrollController, bool scrollLock, double footerHeight){
 
     return Selector<DefaultAssetPickerProvider, AssetPathEntity?>(
       selector: (_, DefaultAssetPickerProvider p) => p.currentPathEntity,
@@ -406,6 +408,9 @@ class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
                 controller: scrollController,
                 slivers: [
                   _sliverGrid(_, assets),
+                  SliverToBoxAdapter(
+                    child: Container(height: footerHeight + MediaQueryData.fromWindow(window).viewPadding.bottom),
+                  )
                 ],
               ),
             );
@@ -416,7 +421,7 @@ class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   } 
 
   @override
-  Widget headerBuilder(BuildContext context, pageObj, Widget spacer) {
+  Widget headerBuilder(BuildContext context, pageObj, Widget spacer, double borderRadius) {
     throw UnimplementedError();
   }
 
@@ -428,7 +433,7 @@ class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
         return Selector<DefaultAssetPickerProvider, bool>(
         selector: (_, DefaultAssetPickerProvider provider) => provider.hasAssetsToDisplay,
         builder: (_, bool hasAssetsToDisplay, __) {
-          return hasAssetsToDisplay ? assetsGridBuilder(context, scrollController, scrollLock) : loadingIndicator ?? exampleLoadingIndicator(context);
+          return hasAssetsToDisplay ? assetsGridBuilder(context, scrollController, scrollLock, footerHeight) : loadingIndicator ?? exampleLoadingIndicator(context);
           }
         );
       }, 

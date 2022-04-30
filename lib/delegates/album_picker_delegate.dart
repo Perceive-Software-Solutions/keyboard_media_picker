@@ -20,7 +20,7 @@ class AlbumPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
     this.gridCount = 3,
   }) : super(pageCount: 1, staticScrollModifier: 0.01);
 
-  final Widget Function(Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController controller, bool scrollLock, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+  final Widget Function(String selectedAlbum, Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController controller, bool scrollLock, double footerHeight, dynamic Function(AssetPathEntity)) albumMenuBuilder;
 
   final DefaultAssetPickerProvider provider;
 
@@ -92,8 +92,8 @@ class AlbumPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
     
   }
 
-  Widget assetListBuilder(BuildContext context, DefaultAssetPickerProvider provider, ScrollController scrollController, bool scrollLock){
-    return albumMenuBuilder(provider.pathEntityList, scrollController, scrollLock, (AssetPathEntity entity){
+  Widget assetListBuilder(BuildContext context, DefaultAssetPickerProvider provider, ScrollController scrollController, bool scrollLock, double footerHeight){
+    return albumMenuBuilder(provider.currentPathEntity?.name ?? '', provider.pathEntityList, scrollController, scrollLock, footerHeight, (AssetPathEntity entity){
       provider.currentPathEntity = entity;
       if(pageCubit.state){
         pageCubit.emit(false);
@@ -104,7 +104,7 @@ class AlbumPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   }
 
   @override
-  Widget headerBuilder(BuildContext context, pageObj, Widget spacer) {
+  Widget headerBuilder(BuildContext context, pageObj, Widget spacer, double borderRadius) {
     throw UnimplementedError();
   }
 
@@ -116,7 +116,7 @@ class AlbumPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
         return Selector<DefaultAssetPickerProvider, int>(
           selector: (_, DefaultAssetPickerProvider provider) => provider.pathEntityList.length,
           builder: (_, int length, __) {
-            return length != 0 ? assetListBuilder(context, provider, scrollController, scrollLock) : Container();
+            return length != 0 ? assetListBuilder(context, provider, scrollController, scrollLock, footerHeight) : Container();
           }
         );
       }, 

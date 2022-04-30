@@ -64,6 +64,9 @@ class GiphyPicker extends StatefulWidget {
   /// Overlay Widget of the selected asset
   final Widget Function(BuildContext context, int index)? overlayBuilder;
 
+  /// Builds a wrapper around the header and provides the border radius
+  final Widget Function(BuildContext context, double borderRadius, Widget child)? headerWrapper;
+
   /// If the giphy picker is in a locked state
   final ConcreteCubit<PickerType?> openType;
 
@@ -77,6 +80,7 @@ class GiphyPicker extends StatefulWidget {
     required this.sheetController, 
     required this.listener,
     required this.openType,
+    this.headerWrapper,
     this.overlayBuilder,
     this.minExtent = 0.0,
     this.initialExtent = 0.4,
@@ -183,18 +187,25 @@ class _GiphyPickerState extends State<GiphyPicker> {
 
   void sheetListener(double extent){
     if(extent <= widget.initialExtent/3 && widget.openType.state == PickerType.GiphyPickerView){
-      widget.sheetController.snapTo(widget.initialExtent);
+      if(extent == 0){
+        Future.delayed(Duration(milliseconds: 100)).then((value){
+          widget.sheetController.snapTo(widget.initialExtent);
+        });
+      }
+      else{
+        widget.sheetController.snapTo(widget.initialExtent);
+      }
     }
     widget.listener(extent);
   }
 
   
-  Widget _buildHeader(BuildContext context, Widget spacer){
+  Widget _buildHeader(BuildContext context, Widget spacer, double borderRadius){
 
     //Width of the screen
     var width = MediaQuery.of(context).size.width;
 
-    return Column(
+    Widget header = Column(
       children: [
         spacer,
         Padding(
@@ -258,6 +269,12 @@ class _GiphyPickerState extends State<GiphyPicker> {
         ),
       ],
     );
+
+    if(widget.headerWrapper != null){
+      header = widget.headerWrapper!.call(context, borderRadius, header);
+    }
+
+    return header;
   }
 
   @override
@@ -269,7 +286,7 @@ class _GiphyPickerState extends State<GiphyPicker> {
         backgroundColor: widget.backgroundColor,
         staticSheet: true,
         closeOnBackdropTap: false,
-        isBackgroundIntractable: true,
+        isBackgroundIntractable: false,
         doesPop: false,
         additionalSnappings: [widget.initialExtent],
         initialExtent: 0,

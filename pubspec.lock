@@ -130,9 +130,9 @@ packages:
   feed:
     dependency: "direct main"
     description:
-      name: feed
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "../feed"
+      relative: true
+    source: path
     version: "0.5.5"
   ffi:
     dependency: transitive

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,7 +24,7 @@ class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegat
   ) : super(pageCount: 1, staticScrollModifier: 0.01);
 
   /// Builds the header
-  final Widget Function(BuildContext context, Widget spacer) header;
+  final Widget Function(BuildContext context, Widget spacer, double borderRadius) header;
 
   /// Overlay Widget of the selected asset
   final Widget Function(BuildContext context, int index)? overlayBuilder;
@@ -171,7 +173,7 @@ class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegat
   }
 
   /// The primary grid view builder for assets
-  Widget assetsGridBuilder(BuildContext context, double extent, ScrollController scrollController, bool scrollLock, Map<String, double> displayAssets){
+  Widget assetsGridBuilder(BuildContext context, double extent, ScrollController scrollController, bool scrollLock, double footerHeight, Map<String, double> displayAssets){
 
     //Height of the screen
     var height = MediaQuery.of(context).size.height;
@@ -186,7 +188,7 @@ class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegat
       physics: scrollLock ? NeverScrollableScrollPhysics() : BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       mainAxisSpacing: 1,
       crossAxisSpacing: 1,
-      padding: EdgeInsets.zero,
+      padding: EdgeInsets.only(bottom: footerHeight + MediaQueryData.fromWindow(window).viewInsets.bottom),
       itemCount: displayAssets.length,
       scrollDirection: Axis.vertical,
       crossAxisCount: 2,
@@ -198,8 +200,8 @@ class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegat
   }
 
   @override
-  Widget headerBuilder(BuildContext context, pageObj, Widget spacer) {
-    return header(context, spacer);
+  Widget headerBuilder(BuildContext context, pageObj, Widget spacer, double borderRadius) {
+    return header(context, spacer, borderRadius);
   }
 
   @override
@@ -214,7 +216,7 @@ class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegat
           return connectivityIndicator == null ? connectivityIndicatorExample() : connectivityIndicator!(context, extent)!;
         }
         else if(state.displayAssets.length > 0){
-          return assetsGridBuilder(context, extent, scrollController, scrollLock, state.displayAssets);
+          return assetsGridBuilder(context, extent, scrollController, scrollLock, footerHeight, state.displayAssets);
         }
         else{
           return loadingIndicator ?? loadingIndicatorExample(context);

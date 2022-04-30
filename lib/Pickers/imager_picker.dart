@@ -31,11 +31,11 @@ class ImagePicker extends StatefulWidget {
 
   /// Header of the Media Picker at min Extent
   /// Contains a String defining the most recent or current album name
-  final Widget Function(BuildContext, Widget spacer, String path, bool albumMode) headerBuilder;
+  final Widget Function(BuildContext, Widget spacer, String path, bool albumMode, double borderRadius) headerBuilder;
 
   /// Builds the album menu of the image picker
   /// Contains a list of [AssetEntity] mapped to [Uint8List]'s for thumbnails and information
-  final Widget Function(Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController, bool scrollLock, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+  final Widget Function(String selectedAlbum, Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController, bool scrollLock, double footerHeight, dynamic Function(AssetPathEntity)) albumMenuBuilder;
 
   /// Loading indicator when ImagePickerProvidor is still fetching the images
   /// If not used will have the base [CircularProgressIndicator] as placeholder
@@ -192,12 +192,19 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
 
   void sheetListener(double extent){
     if(extent <= widget.initialExtent/3 && widget.openType?.state == PickerType.ImagePicker){
-      widget.sheetController.snapTo(widget.initialExtent);
+      if(extent == 0){
+        Future.delayed(Duration(milliseconds: 100)).then((value){
+          widget.sheetController.snapTo(widget.initialExtent);
+        });
+      }
+      else{
+        widget.sheetController.snapTo(widget.initialExtent);
+      }
     }
     widget.listener(extent);
   }
 
-  Widget _buildHeader(BuildContext context, Widget spacer){
+  Widget _buildHeader(BuildContext context, Widget spacer, double borderRadius){
 
     return BlocBuilder<ConcreteCubit<bool>, bool>(
       bloc: pageCubit,
@@ -230,7 +237,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                       widget.sheetController.snapTo(widget.mediumExtent);
                     }
                   },
-                  child: widget.headerBuilder(context, spacer, _path?.name ?? "Recents", pageCubitState) 
+                  child: widget.headerBuilder(context, spacer, _path?.name ?? "Recents", pageCubitState, borderRadius) 
                 );
               }
             );
@@ -248,7 +255,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       controller: widget.sheetController,
       staticSheet: true,
       closeOnBackdropTap: false,
-      isBackgroundIntractable: true,
+      isBackgroundIntractable: false,
       doesPop: false,
       additionalSnappings: [widget.initialExtent],
       initialExtent: 0,

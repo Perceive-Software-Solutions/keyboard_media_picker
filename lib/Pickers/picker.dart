@@ -60,13 +60,17 @@ class Picker extends StatefulWidget {
   final double mediumExtent;
   final double expandedExtent;
 
+  
+  /// Builds a wrapper around the gif header and provides the border radius
+  final Widget Function(BuildContext context, double borderRadius, Widget child)? gifHeaderWrapper;
+
   ///MaxExtentHeaderBuilder For the ImagePicker
   ///Displayed when the sliding sheet current extent reaches expanded extent
-  final Widget Function(BuildContext, Widget spacer, String path, bool albumMode) imageHeaderBuilder;
+  final Widget Function(BuildContext, Widget spacer, String path, bool albumMode, double borderRadius) imageHeaderBuilder;
 
   /// Builds the album menu of the image picker
   /// Contains a list of [AssetEntity] mapped to [Uint8List]'s for thumbnails and information
-  final Widget Function(Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController, bool scrollLock, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+  final Widget Function(String selectedAlbum, Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController, bool scrollLock, double footerHeight, dynamic Function(AssetPathEntity)) albumMenuBuilder;
 
   ///The height of either the minExtentHeaderBuilder or the height of the maxExtentHeaderBuilder
   ///Header height should always be passed in specifying the height of maxExtentImageHeaderBuilder
@@ -122,8 +126,8 @@ class Picker extends StatefulWidget {
   final PickerType initialValue;
 
   /// Custom picker
-  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLocked)? customBodyBuilder;
-  final Widget Function(BuildContext context, Widget spacer, FocusNode focusNode, TextEditingController searchFieldController)? headerBuilder;
+  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLocked, double footerHeight)? customBodyBuilder;
+  final Widget Function(BuildContext context, Widget spacer, FocusNode focusNode, TextEditingController searchFieldController, double borderRadius)? headerBuilder;
   Color customStatusBarColor;
 
   Picker({
@@ -135,6 +139,7 @@ class Picker extends StatefulWidget {
     required this.imageHeaderBuilder,
     required this.albumMenuBuilder,
     this.lockOverlayBuilder,
+    this.gifHeaderWrapper,
     this.overlayBuilder,
     this.videoIndicator,
     this.imageTileLoadingIndicator,
@@ -584,6 +589,7 @@ class _PickerState extends State<Picker> {
             connectivityIndicator: widget.gifconnectivityIndicator,
             loadingTileIndicator: widget.gifLoadingTileIndicator,
             overlayBuilder: widget.overlayBuilder,
+            headerWrapper: widget.gifHeaderWrapper,
             listener: multiSheetStateListener,
           ),
           CustomPicker(

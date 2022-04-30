@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:ui';
 
 import 'package:feed/feed.dart';
@@ -20,9 +21,9 @@ class CustomPicker extends StatefulWidget {
   final double minExtent;
 
   /// Custom picker body builder
-  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLock) customBodyBuilder;
+  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLock, double footerHeight) customBodyBuilder;
   /// Custom picker header builder
-  final Widget Function(BuildContext context, Widget spacer, FocusNode focusNode, TextEditingController searchFieldController)? headerBuilder;
+  final Widget Function(BuildContext context, Widget spacer, FocusNode focusNode, TextEditingController searchFieldController, double borderRadius)? headerBuilder;
 
   /// Allows the picker to see the sheetstate
   final Function(double extent) listener;
@@ -60,7 +61,14 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
 
   void sheetListener(double extent){
     if(extent <= widget.initialExtent/3 && widget.openType.state == PickerType.Custom){
-      widget.sheetController.snapTo(widget.initialExtent);
+      if(extent == 0){
+        Future.delayed(Duration(milliseconds: 100)).then((value){
+          widget.sheetController.snapTo(widget.initialExtent);
+        });
+      }
+      else{
+        widget.sheetController.snapTo(widget.initialExtent);
+      }
     }
     widget.listener(extent);
   }
@@ -72,7 +80,7 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
       controller: widget.sheetController,
       staticSheet: true,
       closeOnBackdropTap: false,
-      isBackgroundIntractable: true,
+      isBackgroundIntractable: false,
       doesPop: false,
       additionalSnappings: [widget.initialExtent],
       initialExtent: 0,
@@ -81,8 +89,8 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
       expandedExtent: widget.expandedExtent,
       extentListener: sheetListener,
       delegate: _CustomPickerSheetController(
-        (context, spacer) => widget.headerBuilder?.call(context, spacer, focusNode, searchFieldController) ?? Container(),
-        (context, extent, scrollController, scrollLock) => widget.customBodyBuilder(context, extent, scrollController, scrollLock),
+        (context, spacer, borderRadius) => widget.headerBuilder?.call(context, spacer, focusNode, searchFieldController, borderRadius) ?? Container(),
+        (context, extent, scrollController, scrollLock, footerHeight) => widget.customBodyBuilder(context, extent, scrollController, scrollLock, footerHeight),
       )
     );
 
@@ -112,15 +120,15 @@ class CustomPickerController extends ChangeNotifier {
 
 class _CustomPickerSheetController extends ScrollablePerceiveSlidableDelegate {
 
-  final Widget Function(BuildContext context, Widget spacer) header;
+  final Widget Function(BuildContext context, Widget spacer, double borderRadius) header;
 
-  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLock) body;
+  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLock, double footerHeight) body;
 
   _CustomPickerSheetController(this.header, this.body) : super(pageCount: 1, staticScrollModifier: 0.01);
 
   @override
-  Widget headerBuilder(BuildContext context, pageObj, Widget spacer) {
-    return header.call(context, spacer);
+  Widget headerBuilder(BuildContext context, pageObj, Widget spacer, double borderRadius) {
+    return header.call(context, spacer, borderRadius);
   }
 
   @override
@@ -128,7 +136,7 @@ class _CustomPickerSheetController extends ScrollablePerceiveSlidableDelegate {
     if(state == null){
       return Container();
     }
-    return body.call(context, state.extent, scrollController, scrollLock);
+    return body.call(context, state.extent, scrollController, scrollLock, footerHeight);
   }
 
 }

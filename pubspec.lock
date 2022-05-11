@@ -133,7 +133,7 @@ packages:
       name: feed
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.5.13"
+    version: "0.5.14"
   ffi:
     dependency: transitive
     description:

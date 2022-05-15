@@ -1,4 +1,8 @@
 
+## [0.4.16] v0.4.16
+
+* Supports Flutter 3
+
 ## [0.4.8] v0.4.8
 
 * various bug fixes

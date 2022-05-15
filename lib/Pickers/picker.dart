@@ -231,7 +231,7 @@ class _PickerState extends State<Picker> {
     giphyPickerController!.addListener(_giphyReceiver);
 
     if(widget.initialValue != PickerType.None){
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) { 
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) { 
         openPicker(overrideLock: false);
       });
     }

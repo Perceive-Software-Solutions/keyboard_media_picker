@@ -410,8 +410,8 @@ class DefaultAssetPickerProvider
   Future<void> getAssetsFromEntity(int page, AssetPathEntity pathEntity) async {
     _currentAssets.clear();
     _currentAssets = (await pathEntity.getAssetListPaged(
-      page,
-      pageSize,
+      page: page,
+      size: pageSize,
     )).toList();
 
     // _currentAssets = _currentAssets.toSet().toList();
@@ -425,8 +425,8 @@ class DefaultAssetPickerProvider
   Future<void> loadMoreAssets() async {
     final List<AssetEntity> assets =
         (await currentPathEntity!.getAssetListPaged(
-      currentAssetsListPage,
-      pageSize,
+      page: currentAssetsListPage,
+      size: pageSize,
     ))
             .toList();
     if (assets.isNotEmpty && currentAssets.contains(assets[0])) {
@@ -479,7 +479,7 @@ class DefaultAssetPickerProvider
     ))
         .elementAt(0);
     final Uint8List? assetData =
-        await asset.thumbDataWithSize(pathThumbSize, pathThumbSize);
+        await asset.thumbnailDataWithSize(ThumbnailSize(pathThumbSize, pathThumbSize));
     return assetData;
   }
 }

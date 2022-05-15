@@ -79,7 +79,7 @@ class AssetEntityImageProvider extends ImageProvider<AssetEntityImageProvider> {
         );
       }
       if (key.entity.type == AssetType.video) {
-        data = await key.entity.thumbDataWithOption(
+        data = await key.entity.thumbnailDataWithOption(
           _thumbOption(
             200,
             200,
@@ -92,7 +92,7 @@ class AssetEntityImageProvider extends ImageProvider<AssetEntityImageProvider> {
       }
     } else {
       final List<int> _thumbSize = thumbSize!;
-      data = await key.entity.thumbDataWithOption(
+      data = await key.entity.thumbnailDataWithOption(
         _thumbOption(_thumbSize[0], _thumbSize[1]),
       );
     }
@@ -102,15 +102,14 @@ class AssetEntityImageProvider extends ImageProvider<AssetEntityImageProvider> {
     return decode(data);
   }
 
-  ThumbOption _thumbOption(int width, int height) {
+  ThumbnailOption _thumbOption(int width, int height) {
     if (Platform.isIOS || Platform.isMacOS) {
-      return ThumbOption.ios(
-        width: width,
-        height: height,
+      return ThumbnailOption.ios(
+        size: ThumbnailSize(width, height),
         deliveryMode: DeliveryMode.opportunistic,
       );
     }
-    return ThumbOption(width: width, height: height);
+    return ThumbnailOption(size: ThumbnailSize(width, height),);
   }
 
   /// Get image type by reading the file extension.

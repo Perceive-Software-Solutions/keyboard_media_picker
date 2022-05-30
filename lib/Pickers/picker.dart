@@ -221,7 +221,7 @@ class _PickerState extends State<Picker> {
     imagePickerController = ImagePickerController(
       selectedAssets: [], 
       duration: DurationConstraint(max: Duration(minutes: 1)), 
-      imageCount: 5, 
+      imageCount: 4, 
       onlyPhotos: false
     );
     giphyPickerController = GiphyPickerController();

@@ -157,7 +157,9 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
   }
 
   void _updateMaxAssets(int assetCount){
-    if(assetCount > 0){
+    print("ASSET COUNT UPDATING");
+    print(assetCount);
+    if(assetCount >= 0){
       provider.maximumAssets = assetCount;
     }
   }

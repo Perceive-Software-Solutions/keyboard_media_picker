@@ -233,10 +233,8 @@ abstract class AssetPickerProvider<Asset, Path> extends ChangeNotifier {
   bool get selectedMaximumAssets => selectedAssets.length == maxAssets;
 
   set maximumAssets(int assetCount){
-    if(assetCount > 0){
-      maxAssets = assetCount;
-      notifyListeners();
-    } 
+    maxAssets = assetCount;
+    notifyListeners();
   }
 
   /// Get assets path entities.

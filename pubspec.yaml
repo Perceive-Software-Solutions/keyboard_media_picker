@@ -21,8 +21,7 @@ dependencies:
   redux_epics: ^0.15.0
   rxdart: ^0.26.0
   fort: ^0.1.2
-  feed: ^0.5.17
-    # path: ../feed 
+  feed: ^0.5.18
   flutter:
     sdk: flutter
 

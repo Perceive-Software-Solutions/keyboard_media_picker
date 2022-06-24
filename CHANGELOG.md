@@ -1,5 +1,5 @@
 
-## [0.4.21] v0.4.21
+## [0.4.22] v0.4.22
 
 * Removed perceive slidable dependency through feed
 

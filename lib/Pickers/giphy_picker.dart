@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:connectivity/connectivity.dart';
-import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fort/fort.dart';

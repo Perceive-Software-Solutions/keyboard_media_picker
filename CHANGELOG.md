@@ -1,4 +1,12 @@
 
+## [0.4.21] v0.4.21
+
+* Removed perceive slidable dependency through feed
+
+## [0.4.18] v0.4.18
+
+* Supports `feed: ^0.5.17`
+
 ## [0.4.17] v0.4.17
 
 * Feed update

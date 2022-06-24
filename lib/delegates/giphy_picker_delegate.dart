@@ -1,14 +1,11 @@
 import 'dart:ui';
 
-import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fort/fort.dart';
-import 'package:perceive_slidable/src/sheet.dart';
+import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
-import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/state/state.dart';
 class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   GiphyPickerPickerBuilderDelegate(

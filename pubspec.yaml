@@ -1,6 +1,6 @@
 name: piky
 description: Multi Media Picker
-version: 0.4.20
+version: 0.4.21
 homepage: "https://perceivedev.com/#/"
 
 environment:
@@ -14,14 +14,14 @@ dependencies:
   flutter_bloc: ^7.2.0
   flutter_staggered_animations: ^1.0.0
   giphy_get: ^2.0.3
-  perceive_slidable: ^0.0.2
+  perceive_slidable: ^0.1.0
   extended_image: ^6.0.1
   connectivity: ^3.0.6
   tuple: ^2.0.0
   redux_epics: ^0.15.0
   rxdart: ^0.26.0
   fort: ^0.1.2
-  feed: ^0.5.18
+  feed: ^0.5.19
   flutter:
     sdk: flutter
 

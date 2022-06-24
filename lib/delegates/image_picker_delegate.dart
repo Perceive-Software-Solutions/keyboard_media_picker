@@ -1,8 +1,7 @@
 import 'dart:ui';
 
-import 'package:feed/feed.dart';
 import 'package:flutter/material.dart';
-import 'package:perceive_slidable/src/sheet.dart';
+import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/provider/asset_entity_image_provider.dart';
 import 'package:piky/provider/asset_picker_provider.dart';

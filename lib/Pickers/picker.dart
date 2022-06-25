@@ -1,13 +1,9 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/custom_picker.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:piky/piky.dart';
-import 'package:tuple/tuple.dart';
 
 import 'imager_picker.dart';
 
@@ -40,9 +36,6 @@ enum PickerExpansion {
 
 class Picker extends StatefulWidget {
 
-  ///Giphy API Key
-  final String apiKey;
-
   ///Child be padded when image or giphy picker is shown
   final Widget child;
 
@@ -59,118 +52,38 @@ class Picker extends StatefulWidget {
   final double mediumExtent;
   final double expandedExtent;
 
-  
-  /// Builds a wrapper around the gif header and provides the border radius
-  final Widget Function(BuildContext context, double borderRadius, Widget child)? gifHeaderWrapper;
-
-  ///MaxExtentHeaderBuilder For the ImagePicker
-  ///Displayed when the sliding sheet current extent reaches expanded extent
-  final Widget Function(BuildContext, Widget spacer, String path, bool albumMode, double borderRadius) imageHeaderBuilder;
-
-  /// Builds the album menu of the image picker
-  /// Contains a list of [AssetEntity] mapped to [Uint8List]'s for thumbnails and information
-  final Widget Function(String selectedAlbum, Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController, bool scrollLock, double footerHeight, dynamic Function(AssetPathEntity)) albumMenuBuilder;
-
-  ///The height of either the minExtentHeaderBuilder or the height of the maxExtentHeaderBuilder
-  ///Header height should always be passed in specifying the height of maxExtentImageHeaderBuilder
-  ///or minExtentImageHeaderBuilder so the offset of the sliding sheet can be set accordingly
-  final double headerHeight;
-
-  ///Loading Indicator for the Media Viewer
-  ///If not used [CircularProgressIndicator] will be its placeholder
-  final Widget? imageLoadingIndicator;
-  final Widget? imageTileLoadingIndicator;
-  final Widget Function(String duration)? videoIndicator;
-
-  /// Loading Indicator for the albums inside Media Viewer
-  /// If not used [CircularProgressIndicator] will be its placeholder
-  final Widget? albumLoadingIndicator;
-
-  ///Loading Indicator for the Gif viewer when no Gifs are loaded
-  final Widget? gifLoadingIndicator;
-
-  ///Connectivity Indiciator when there are no gifs and not connected to the internet
-  final Widget? Function(BuildContext, double)? gifconnectivityIndicator;
-
-  ///Loading Indicator for the Gif viewer when Gifs are currently beiing rendered
-  final Widget? gifLoadingTileIndicator;
-
+  /// Color of the background overlay when the piky is expanded
   final Color maxBackdropColor;
-
-  /// Overlay Widget of the selected asset
-  final Widget Function(BuildContext context, int index)? overlayBuilder;
-
-  /// Overlay displayed when images or videos are locked
-  final Widget Function(BuildContext context, int index)? lockOverlayBuilder;
-
-  /// Background color for the image selector
-  /// Status color used for the animated status bar color
-  /// Background color used behind the image and album delegate
-  final Color imageBackgroundColor;
-  final Color imageStatusBarColor;
-
-  /// GiphyPicker
-  final TextStyle cancelButtonStyle;
-  final Widget? notch;
-  final TextStyle hiddenTextStyle;
-  final TextStyle style;
-  final Icon icon;
-  final TextStyle iconStyle;
-  final Color searchColor;
-  final Color gifStatusBarColor;
-  final Color gifBackgroundColor;
-
 
   /// Initial Picker Value
   final PickerType initialValue;
 
-  /// Custom picker
-  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLocked, double footerHeight)? customBodyBuilder;
-  final Widget Function(BuildContext context, Widget spacer, FocusNode focusNode, TextEditingController searchFieldController, double borderRadius)? headerBuilder;
-  Color customStatusBarColor;
+  /// Delegates to build each piky
+  final ImagePickerConfigDelegate? imagePickerDelegate;
+  final GiphyPickerConfigDelegate? giphyPickerDelegate;
+  final CustomPickerConfigDelegate? customPickerDelegate;
 
   Picker({
-    required this.apiKey,
     required this.child, 
     required this.initialValue,
     required this.backgroundColor, 
     required this.controller,  
-    required this.imageHeaderBuilder,
-    required this.albumMenuBuilder,
-    this.lockOverlayBuilder,
-    this.gifHeaderWrapper,
-    this.overlayBuilder,
-    this.videoIndicator,
-    this.imageTileLoadingIndicator,
-    this.imageLoadingIndicator,
-    this.albumLoadingIndicator,
     this.initialExtent = 0.55, 
     this.minExtent = 0.0,
     this.mediumExtent = 0.55,
     this.expandedExtent= 1.0,
-    this.headerHeight = 50,
     this.maxBackdropColor = Colors.black,
-    this.imageStatusBarColor = Colors.white,
-    this.imageBackgroundColor = Colors.white,
-    // Giphy Picker
-    this.notch,
-    this.cancelButtonStyle = const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black),
-    this.hiddenTextStyle = const TextStyle(fontSize: 14, color: Colors.black),
-    this.style = const TextStyle(fontSize: 14),
-    this.icon = const Icon(Icons.search, size: 24, color: Colors.black),
-    this.iconStyle = const TextStyle(color: Colors.grey),
-    this.searchColor = Colors.grey,
-    this.gifLoadingIndicator,
-    this.gifconnectivityIndicator,
-    this.gifLoadingTileIndicator,
-    this.gifStatusBarColor = Colors.white,
-    this.gifBackgroundColor = Colors.white,
-    // Custom Picker
-    this.customBodyBuilder,
-    this.headerBuilder,
-    this.customStatusBarColor = Colors.white,
-
-  });
+    this.imagePickerDelegate,
+    this.giphyPickerDelegate,
+    this.customPickerDelegate,
+  }) : assert(
+    imagePickerDelegate != null ||
+    giphyPickerDelegate != null ||
+    customPickerDelegate != null
+  ),
+  assert(initialValue != PickerType.ImagePicker || imagePickerDelegate != null),
+  assert(initialValue != PickerType.GiphyPickerView || giphyPickerDelegate != null),
+  assert(initialValue != PickerType.Custom || customPickerDelegate != null);
 
   @override
   _PickerState createState() => _PickerState();
@@ -313,15 +226,33 @@ class _PickerState extends State<Picker> {
     }
     await Future.delayed(Duration(milliseconds: 50));
     if(type.state == PickerType.ImagePicker){
-      openImagePicker(selectedAssets ?? const [], const DurationConstraint(max: Duration(minutes: 1)), imageCount ?? 5, onlyPhotos ?? false, overrideLock).then((value) {
-        paddingLock = false;
-      });
+      if(widget.imagePickerDelegate != null){
+        openImagePicker(selectedAssets ?? const [], const DurationConstraint(max: Duration(minutes: 1)), imageCount ?? 5, onlyPhotos ?? false, overrideLock).then((value) {
+          paddingLock = false;
+        });
+      }
+      else{
+        //Close piky
+        closePicker();
+      }
     }
     else if(type.state == PickerType.GiphyPickerView){
-      openGiphyPicker(gif ?? '', overrideLock);
+      if(widget.giphyPickerDelegate != null){
+        openGiphyPicker(gif ?? '', overrideLock);
+      }
+      else{
+        //Close piky
+        closePicker();
+      }
     }
     else if(type.state == PickerType.Custom){
-      openCustomPicker(overrideLock);
+      if(widget.customPickerDelegate != null){
+        openCustomPicker(overrideLock);
+      }
+      else{
+        //Close piky
+        closePicker();
+      }
     }
   }
 
@@ -362,6 +293,13 @@ class _PickerState extends State<Picker> {
     if(currentlyOpen != null && type.state != PickerType.ImagePicker){
       await currentlyOpen!();
     }
+
+    if(widget.imagePickerDelegate == null){
+      // No image picker
+      paddingLock = false;
+      setState(() {});
+      return;
+    }
     
     currentlyOpen = closeImagePicker;
 
@@ -387,6 +325,11 @@ class _PickerState extends State<Picker> {
 
     widget.controller._update();
 
+    if(widget.imagePickerDelegate == null){
+      // No image picker
+      return;
+    }
+
     await imageSheetController.snapTo(0);
 
   }
@@ -395,12 +338,24 @@ class _PickerState extends State<Picker> {
   Future<void> closeGiphyPicker() async {
     type.emit(null);
     widget.controller._update();
+
+    if(widget.giphyPickerDelegate == null){
+      // No gif picker
+      return;
+    }
+
     await gifSheetController.snapTo(0);
   }
 
   Future<void> closeCustomPicker() async {
     type.emit(null);
     widget.controller._update();
+
+    if(widget.customPickerDelegate == null){
+      // No custom picker
+      return;
+    }
+
     await customSheetController.snapTo(0);
   }
 
@@ -422,6 +377,13 @@ class _PickerState extends State<Picker> {
 
     if(currentlyOpen != null && type.state != PickerType.GiphyPickerView){
       await currentlyOpen!();
+    }
+
+    if(widget.giphyPickerDelegate == null){
+      // No gif picker
+      paddingLock = false;
+      setState((){});
+      return;
     }
 
     currentlyOpen = closeGiphyPicker;
@@ -452,6 +414,13 @@ class _PickerState extends State<Picker> {
 
     if(currentlyOpen != null && type.state != PickerType.Custom){
       await currentlyOpen!();
+    }
+
+    if(widget.customPickerDelegate == null){
+      // No custom picker
+      paddingLock = false;
+      setState((){});
+      return;
     }
 
     currentlyOpen = closeCustomPicker;
@@ -547,61 +516,43 @@ class _PickerState extends State<Picker> {
               }
             ),
           ),
-          ImagePicker(
-            key: Key('ImagePicker'), 
-            openType: type,
-            sheetController: imageSheetController,
-            controller: imagePickerController, 
-            initialExtent: widget.initialExtent, 
-            minExtent: 0,
-            videoIndicator: widget.videoIndicator,
-            mediumExtent: widget.mediumExtent,
-            expandedExtent: widget.expandedExtent,
-            headerBuilder: widget.imageHeaderBuilder,
-            albumMenuBuilder: widget.albumMenuBuilder,
-            loadingIndicator: widget.imageLoadingIndicator,
-            tileLoadingIndicator: widget.imageTileLoadingIndicator,
-            overlayBuilder: widget.overlayBuilder,
-            backgroundColor: widget.imageBackgroundColor,
-            lockOverlayBuilder: widget.lockOverlayBuilder,
-            listener: multiSheetStateListener,
-          ),
-          GiphyPicker(
-            key: Key('GiphyPicker'), 
-            openType: type,
-            apiKey: widget.apiKey, 
-            sheetController: gifSheetController,
-            controller: giphyPickerController, 
-            initialExtent: widget.initialExtent, 
-            minExtent: 0,
-            mediumExtent: widget.mediumExtent,
-            expandedExtent: widget.expandedExtent,
-            notch: widget.notch,
-            cancelButtonStyle: widget.cancelButtonStyle,
-            hiddenTextStyle: widget.hiddenTextStyle,
-            style: widget.style,
-            icon: widget.icon,
-            iconStyle: widget.iconStyle,
-            backgroundColor: widget.gifBackgroundColor,
-            searchColor: widget.searchColor,
-            loadingIndicator: widget.gifLoadingIndicator,
-            connectivityIndicator: widget.gifconnectivityIndicator,
-            loadingTileIndicator: widget.gifLoadingTileIndicator,
-            overlayBuilder: widget.overlayBuilder,
-            headerWrapper: widget.gifHeaderWrapper,
-            listener: multiSheetStateListener,
-          ),
-          CustomPicker(
-            openType: type,
-            sheetController: customSheetController, 
-            customBodyBuilder: widget.customBodyBuilder!, 
-            headerBuilder: widget.headerBuilder,
-            initialExtent: widget.initialExtent, 
-            minExtent: 0,
-            mediumExtent: widget.mediumExtent,
-            expandedExtent: widget.expandedExtent,
-            listener: multiSheetStateListener,
-          ) 
+          if(widget.imagePickerDelegate != null)
+            ImagePicker(
+              key: Key('ImagePicker'), 
+              openType: type,
+              sheetController: imageSheetController,
+              controller: imagePickerController, 
+              initialExtent: widget.initialExtent, 
+              minExtent: 0,
+              mediumExtent: widget.mediumExtent,
+              expandedExtent: widget.expandedExtent,
+              delegate: widget.imagePickerDelegate!,
+              listener: multiSheetStateListener,
+            ),
+          if(widget.giphyPickerDelegate != null)
+            GiphyPicker(
+              key: Key('GiphyPicker'), 
+              openType: type,
+              sheetController: gifSheetController,
+              controller: giphyPickerController, 
+              initialExtent: widget.initialExtent, 
+              minExtent: 0,
+              mediumExtent: widget.mediumExtent,
+              expandedExtent: widget.expandedExtent,
+              delegate: widget.giphyPickerDelegate!,
+              listener: multiSheetStateListener,
+            ),
+          if(widget.customPickerDelegate != null)
+            CustomPicker(
+              openType: type,
+              sheetController: customSheetController, 
+              initialExtent: widget.initialExtent, 
+              minExtent: 0,
+              mediumExtent: widget.mediumExtent,
+              expandedExtent: widget.expandedExtent,
+              delegate: widget.customPickerDelegate!,
+              listener: multiSheetStateListener,
+            ) 
         ],
       ),
     );

@@ -1,13 +1,11 @@
-import 'dart:io';
-import 'dart:math';
-import 'dart:typed_data';
 
+import 'package:example/delegates/custom_delegate.dart';
+import 'package:example/delegates/giphy_delegate.dart';
+import 'package:example/delegates/image_delegate.dart';
 import 'package:flutter/material.dart';
 import 'package:piky/piky.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tuple/tuple.dart';
 
 
 void main() {
@@ -130,262 +128,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget imageHeaderBuilder(BuildContext context, Widget spacer, String path, bool state, double borderRadius){
-    return Column(
-      children: [
-        spacer,
-        Container(
-          key: Key("Picker-Max-View"),
-          height: 59.75,
-          color: Colors.grey,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 2.0),
-                child: Text(path, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-              ),
-              Icon(!state ? Icons.arrow_downward : Icons.arrow_upward, size: 16)
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget itemBuilder(int index){
-    return AnimationConfiguration.staggeredGrid(
-      columnCount: 4,
-      position: index,
-      duration: const Duration(milliseconds: 375),
-      child: ScaleAnimation(
-        child: FadeInAnimation(
-          child: Container(
-            height: 200,
-            width: 200,
-            color: Colors.grey.withOpacity(0.4),
-          ),
-        )
-      )
-    );
-  }
-
-  Widget? gifTileLoadingIndicator(){
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey,
-      ),
-    );
-  }
-
-  Widget imageLoadingIndicator(){
-    return CustomScrollView(
-      scrollDirection: Axis.vertical,
-      physics: NeverScrollableScrollPhysics(),
-      controller: scrollController,
-      slivers: [
-        SliverGrid(
-          delegate: SliverChildBuilderDelegate((_, int index) => Builder(
-            builder: (BuildContext c){
-              return itemBuilder(index);
-              },
-            ),
-            childCount: 100,
-          ), 
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            mainAxisSpacing: 1,
-            crossAxisSpacing: 1
-          )
-        ),
-      ],
-    );
-  }
-
-  /// Builds the apping thumbnail
-  Widget thumbnailItemBuilder(
-    BuildContext context, Uint8List? thumbNail){
-      Widget assetItemBuilder(){
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            height: 36,
-            width: 36,
-            child: thumbNail != null ? Image.memory(
-              thumbNail,
-              filterQuality: FilterQuality.high,
-              fit: BoxFit.fitWidth,
-            ) : Container()
-          ),
-        );
-      }
-
-    if(thumbNail != null)
-      return assetItemBuilder();
-    else
-      return SizedBox.shrink();
-    
-  }
-
-  Widget tileItemBuilder(BuildContext context, AssetPathEntity? assetPathEntity, Uint8List? thumbNail, dynamic Function(AssetPathEntity) onTap){
-    return GestureDetector(
-      child: Container(
-        color: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: thumbnailItemBuilder(context, thumbNail),
-              ),
-              Container(
-                height: 36,
-                child: assetPathEntity != null ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(assetPathEntity.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                    Text(assetPathEntity.assetCount.toString(), style: TextStyle(fontSize: 12, color: Colors.grey.withOpacity(0.4)))
-                  ],
-                ) : SizedBox.shrink(),
-              ),
-            ],
-          ),
-        ),
-      ),
-      onTap: assetPathEntity != null ? (){
-        onTap(assetPathEntity);
-      } : (){},
-    );
-  }
-
-  Widget albumMenuBuilder(__, Map<String, Tuple2<AssetPathEntity, Uint8List?>?> pathEntityList, ScrollController controller, bool scrollLock, _, dynamic Function(AssetPathEntity) onTap){
-
-    pathEntityList.removeWhere((key, value) => value == null);
-
-    AssetPathEntity? recents; 
-    AssetPathEntity? favorites;
-    if(pathEntityList.isNotEmpty){
-      try{
-        recents = pathEntityList.values.firstWhere((element) => element?.item1.name == (Platform.isIOS ? "Recents" : "Recent"))?.item1;
-        favorites = pathEntityList.values.firstWhere((element) => element?.item1.name == (Platform.isIOS ? "Favorites" : "Camera"))?.item1;
-      }catch(e){}
-    }
-    List<Widget> children = [];
-    pathEntityList.forEach((key, value) { 
-      if(value?.item1.name != (Platform.isIOS ? "Recents" : "Recent") && value?.item1.name != (Platform.isIOS ? "Favorites" : "Camera"))
-        children.add(tileItemBuilder(context, value?.item1, value?.item2, onTap));
-    });
-    Widget _cupertinoList(){
-      return ListView(
-        shrinkWrap: true,
-        padding: const EdgeInsets.only(top: 16, bottom: 16, left: 8, right: 8),
-        physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-        controller: controller,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Text('Pick an album', style: TextStyle(fontSize: 12, color: Colors.grey.withOpacity(0.4))),
-          ),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: Container(
-              color: Colors.white,
-              height: 124,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  tileItemBuilder(context, recents, pathEntityList.values.firstWhere((element) => element?.item1 == recents)?.item2, onTap),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 62, top: 10, bottom: 10),
-                    child: Container(
-                      height: 1,
-                      color: Colors.grey.withOpacity(0.4),
-                    ),
-                  ),
-                  tileItemBuilder(context, favorites, pathEntityList.values.firstWhere((element) => element?.item1 == favorites)?.item2, onTap),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 20, bottom: 10, left: 8),
-            child: Text('My Albums', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),),
-          ),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: Container(
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 16, bottom: 16),
-                child: Column(
-                  children: [
-                    for(int i = 0; i < children.length; i++)
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          children[i],
-                          i != children.length - 1 ? Padding(
-                            padding: const EdgeInsets.only(left: 62, top: 10, bottom: 10),
-                            child: Container(
-                              height: 1,
-                              color: Colors.grey.withOpacity(0.4),
-                            ),
-                          ) : SizedBox.shrink()
-                        ],
-                      ),
-                  ]
-                ),
-              ),
-            ),
-          )
-        ],
-      );
-    }
-
-    return _cupertinoList();
-  }
-
-  Widget gifLoadingIndicator(BuildContext context){
-    return SizedBox(
-      height: 1000,
-      child: ListView(
-        physics: NeverScrollableScrollPhysics(),
-        children: [
-          SizedBox(
-            height: 200,
-          ),
-          Text("This is the loading state"),
-          SizedBox(
-            height: 200,
-          ),
-          Text("This is the loading state"),
-          SizedBox(
-            height: 200,
-          ),
-          Text("This is the loading state"),
-          SizedBox(
-            height: 200,
-          ),
-          Text("This is the loading state"),
-          SizedBox(
-            height: 200,
-          ),
-          Text("This is the loading state"),
-          SizedBox(
-            height: 200,
-          ),
-          Text("This is the loading state"),
-          SizedBox(
-            height: 200,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget gifConnectivityIndicator(BuildContext context, double extent){
     return Container(
       child: Text("This is the connectivity loading state"),
@@ -395,7 +137,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Picker(
-      apiKey: 'Example',
       initialValue: PickerType.Custom,
       controller: pickerController,
       backgroundColor: Colors.white,
@@ -404,12 +145,9 @@ class _MyHomePageState extends State<MyHomePage> {
       mediumExtent: 0.55,
       expandedExtent: 1.0,
       maxBackdropColor: Colors.black.withOpacity(0.4),
-      imageLoadingIndicator: imageLoadingIndicator(),
-      gifLoadingTileIndicator: gifTileLoadingIndicator(),
-      imageHeaderBuilder: imageHeaderBuilder,
-      albumMenuBuilder: albumMenuBuilder,
-      gifLoadingIndicator: gifLoadingIndicator(context),
-
+      imagePickerDelegate: ExampleImagePickerConfigDelegate(scrollController: scrollController),
+      giphyPickerDelegate: ExampleGiphyPickerConfigDelegate(apiKey: 'Example'),
+      customPickerDelegate: ExampleCustomPickerConfigDelegate(),
       child: Scaffold(
           resizeToAvoidBottomInset: false,
           backgroundColor: Colors.white,
@@ -554,13 +292,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           )
         ),
-        customBodyBuilder: (context, extent, controller, state, _){
-          return Text("This is Custom");
-        },
-        headerBuilder: (context, _, __, state, double borderRadius){
-          return Text("This is custom header");
-        },
-        customStatusBarColor: Colors.white,
     );
 
   }

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/imager_picker.dart';
+import 'package:piky/configuration_delegates/image_picker_config_delegate.dart';
 import 'package:piky/provider/asset_entity_image_provider.dart';
 import 'package:piky/provider/asset_picker_provider.dart';
 import 'package:piky/widget/builder/asset_entity_grid_item_builder.dart';
@@ -15,27 +16,12 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   ImagePickerBuilderDelegate(
     this.provider,
+    this.delegate,
     this.imagePickerController, {
-      this.loadingIndicator,
-      this.videoIndicator,
-      this.tileLoadingIndicator,
-      this.overlayBuilder,
-      this.lockOverlayBuilder,
       this.gridCount = 4,
   }) : super(pageCount: 1, staticScrollModifier: 0.01);
 
-  final Widget Function(String duration)? videoIndicator;
-
-  final Widget? tileLoadingIndicator;
-
-  /// Overlay that displays if the image is selected
-  final Widget Function(BuildContext context, int index)? overlayBuilder;
-
-  /// Overlay displayed when images or videos are locked
-  final Widget Function(BuildContext context, int index)? lockOverlayBuilder;
-
-  /// When fetching the images this loading indicator will be used
-  final Widget? loadingIndicator;
+  final ImagePickerConfigDelegate delegate;
 
   /// [ChangeNotifier] for asset picker
   final DefaultAssetPickerProvider provider;
@@ -168,9 +154,13 @@ class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
             if(provider.selectedAssets.length >= provider.maxAssets){
               lock = true;
             }
+
+            final Widget? overlay = delegate.overlayBuilder(context, provider.selectedAssets.indexOf(asset) + 1);
+            final Widget? lockOverlay = delegate.lockOverlayBuilder(context, provider.selectedAssets.indexOf(asset) + 1);
+
             return Stack(
               children: [
-                tileLoadingIndicator ?? Container(
+                delegate.tileLoadingIndicator(context) ?? Container(
                   decoration: BoxDecoration(
                     color: Colors.grey,
                     border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
@@ -182,12 +172,13 @@ class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
                     failedItemBuilder: failedItemBuilder,
                   ),
                 ),
-              if (provider.selectedAssets.contains(asset)) overlayBuilder != null ? 
-              Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : 
-              Positioned.fill(child: selectedOverlay(context, asset)),
+              if (provider.selectedAssets.contains(asset)) 
+                overlay != null ? 
+                  Positioned.fill(child: overlay) : 
+                  Positioned.fill(child: selectedOverlay(context, asset)),
 
               if(!provider.selectedAssets.contains(asset) && lock)
-              lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
+              lockOverlay != null ? Positioned.fill(child: lockOverlay) : greyOverlay(context, asset),
               Container(
                 decoration: BoxDecoration(
                   color: Colors.transparent,
@@ -227,9 +218,15 @@ class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
             else if(provider.selectedAssets.where((element) => element.duration > 0).isNotEmpty){
               videoLock = true;
             }
+
+            final String duration = asset.videoDuration.toString().split('.')[0].substring(3);
+            final Widget? videoIndicator = delegate.videoIndicator(context, duration);
+            final Widget? overlay = delegate.overlayBuilder(context, provider.selectedAssets.indexOf(asset) + 1);
+            final Widget? lockOverlay = delegate.lockOverlayBuilder(context, provider.selectedAssets.indexOf(asset) + 1);
+
             return Stack(
               children: [
-                tileLoadingIndicator ?? Container(
+                delegate.tileLoadingIndicator(context) ?? Container(
                   decoration: BoxDecoration(
                     color: Colors.grey,
                     border: provider.selectedAssets.contains(asset) ? Border.all(width: 2, color: Colors.white.withOpacity(0.5)) : null
@@ -254,20 +251,20 @@ class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
                       ),
                       child: Center(
                           child: Text(
-                            asset.videoDuration.toString().split('.')[0].substring(3),
+                            duration,
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.8),
                               fontSize: 12
                           ),
                         )
                       ),
-                    ) : videoIndicator!(asset.videoDuration.toString().split('.')[0].substring(3)),
+                    ) : videoIndicator,
                   ),
                 ),
                 if (provider.selectedAssets.contains(asset)) 
-                overlayBuilder != null ? Positioned.fill(child: overlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : Positioned.fill(child: selectedOverlay(context, asset)),
+                overlay != null ? Positioned.fill(child: overlay) : Positioned.fill(child: selectedOverlay(context, asset)),
                 if(!provider.selectedAssets.contains(asset) && (lock || videoLock)) 
-                lockOverlayBuilder != null ? Positioned.fill(child: lockOverlayBuilder!(context, provider.selectedAssets.indexOf(asset) + 1)) : greyOverlay(context, asset),
+                lockOverlay != null ? Positioned.fill(child: lockOverlay) : greyOverlay(context, asset),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.transparent,
@@ -432,7 +429,7 @@ class ImagePickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
         return Selector<DefaultAssetPickerProvider, bool>(
         selector: (_, DefaultAssetPickerProvider provider) => provider.hasAssetsToDisplay,
         builder: (_, bool hasAssetsToDisplay, __) {
-          return hasAssetsToDisplay ? assetsGridBuilder(context, scrollController, scrollLock, footerHeight) : loadingIndicator ?? exampleLoadingIndicator(context);
+          return hasAssetsToDisplay ? assetsGridBuilder(context, scrollController, scrollLock, footerHeight) : delegate.imageLoadingIndicator(context) ?? exampleLoadingIndicator(context);
           }
         );
       }, 

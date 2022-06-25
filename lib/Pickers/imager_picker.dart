@@ -1,18 +1,13 @@
-import 'dart:typed_data';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/picker.dart';
+import 'package:piky/configuration_delegates/image_picker_config_delegate.dart';
 import 'package:piky/delegates/album_picker_delegate.dart';
 import 'package:piky/delegates/image_picker_delegate.dart';
 import 'package:piky/provider/asset_picker_provider.dart';
-import 'package:piky/util/functions.dart';
-import 'package:piky/util/keep_alive.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:tuple/tuple.dart';
 
 class ImagePicker extends StatefulWidget {
 
@@ -28,55 +23,26 @@ class ImagePicker extends StatefulWidget {
   final double mediumExtent;
   final double minExtent;
 
-  /// Header of the Media Picker at min Extent
-  /// Contains a String defining the most recent or current album name
-  final Widget Function(BuildContext, Widget spacer, String path, bool albumMode, double borderRadius) headerBuilder;
-
-  /// Builds the album menu of the image picker
-  /// Contains a list of [AssetEntity] mapped to [Uint8List]'s for thumbnails and information
-  final Widget Function(String selectedAlbum, Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController, bool scrollLock, double footerHeight, dynamic Function(AssetPathEntity)) albumMenuBuilder;
-
-  /// Loading indicator when ImagePickerProvidor is still fetching the images
-  /// If not used will have the base [CircularProgressIndicator] as placeholder
-  final Widget? loadingIndicator;
-  final Widget? tileLoadingIndicator;
-
-  /// Overlay of the selected Asset
-  final Widget Function(BuildContext context, int index)? overlayBuilder;
-
-  /// Background color displayed behind the images and albums
-  final Color backgroundColor;
-
-  /// Overlay displayed when images or videos are locked
-  final Widget Function(BuildContext context, int index)? lockOverlayBuilder;
+  /// Delegate
+  final ImagePickerConfigDelegate delegate;
   
   /// Allows the picker to see the sheetstate
   final Function(double extent) listener;
-
-  /// Overlays a video thumbnail
-  final Widget Function(String duration)? videoIndicator;
 
   /// If the image picker is in a locked state
   final ConcreteCubit<PickerType?>? openType;
 
   const ImagePicker({ 
     required Key key,
+    required this.delegate,
     required this.controller,
-    required this.headerBuilder,
-    required this.albumMenuBuilder,
     required this.sheetController,
     required this.listener,
     this.openType,
-    this.loadingIndicator,
-    this.tileLoadingIndicator,
-    this.videoIndicator,
-    this.overlayBuilder,
     this.minExtent = 0.0,
     this.initialExtent = 0.4,
     this.mediumExtent = 0.4,
-    this.expandedExtent = 1.0,
-    this.backgroundColor = Colors.white,
-    this.lockOverlayBuilder,
+    this.expandedExtent = 1.0, 
   }) : super(key: key);
 
   @override
@@ -223,10 +189,10 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                       widget.sheetController.push(AlbumPickerBuilderDelegate(
                         provider,
                         pageCubit,
-                        widget.albumMenuBuilder,
+                        widget.delegate,
                         widget.controller,
                         gridCount: 2
-                      ), _buildRoute(widget.backgroundColor));
+                      ), _buildRoute(widget.delegate.backgroundColor));
                     }
                     else{
                       widget.sheetController.pop();
@@ -238,7 +204,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
                       widget.sheetController.snapTo(widget.mediumExtent);
                     }
                   },
-                  child: widget.headerBuilder(context, spacer, _path?.name ?? "Recents", pageCubitState, borderRadius) 
+                  child: widget.delegate.headerBuilder(context, spacer, _path?.name ?? "Recents", pageCubitState, borderRadius) 
                 );
               }
             );
@@ -260,7 +226,7 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       doesPop: false,
       additionalSnappings: [widget.initialExtent],
       initialExtent: 0,
-      backgroundColor: widget.backgroundColor,
+      backgroundColor: widget.delegate.backgroundColor,
       minExtent: widget.minExtent,
       mediumExtent: widget.mediumExtent,
       expandedExtent: widget.expandedExtent,
@@ -268,13 +234,9 @@ class _ImagePickerState extends State<ImagePicker> with SingleTickerProviderStat
       persistentHeader: _buildHeader,
       delegate: ImagePickerBuilderDelegate(
         provider,
+        widget.delegate,
         widget.controller,
         gridCount: 4,
-        tileLoadingIndicator: widget.tileLoadingIndicator,
-        loadingIndicator: widget.loadingIndicator,
-        overlayBuilder: widget.overlayBuilder,
-        lockOverlayBuilder: widget.lockOverlayBuilder,
-        videoIndicator: widget.videoIndicator,
       ),
     );
 

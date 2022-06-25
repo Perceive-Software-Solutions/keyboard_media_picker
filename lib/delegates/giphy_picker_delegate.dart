@@ -6,16 +6,14 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fort/fort.dart';
 import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/giphy_picker.dart';
+import 'package:piky/configuration_delegates/giphy_picker_config_delegate.dart';
 import 'package:piky/state/state.dart';
 class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   GiphyPickerPickerBuilderDelegate(
     this.provider,
+    this.delegate,
     this.giphyPickerController,
-    this.header,
-    this.loadingIndicator,
-    this.connectivityIndicator,
-    this.loadingTileIndicator, {
-      this.overlayBuilder,
+    this.header, {
       this.mediumExtent = 0.4,
     }
   ) : super(pageCount: 1, staticScrollModifier: 0.01);
@@ -23,17 +21,8 @@ class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegat
   /// Builds the header
   final Widget Function(BuildContext context, Widget spacer, double borderRadius) header;
 
-  /// Overlay Widget of the selected asset
-  final Widget Function(BuildContext context, int index)? overlayBuilder;
-
-  /// Loading Indicator before any Gifs are loaded
-  final Widget? loadingIndicator;
-
-  /// When the giphy picker is not connected to the internet
-  final Widget? Function(BuildContext, double)? connectivityIndicator;
-
-  /// Individual Gif loading indicator
-  final Widget? loadingTileIndicator;
+  /// The delegate for this
+  final GiphyPickerConfigDelegate delegate;
 
   /// [ChangeNotifier] for giphy picker
   final Tower<GiphyState> provider;
@@ -122,17 +111,20 @@ class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegat
 
     // Render individual asset
     Widget _displayImage(BuildContext context, String? selectedAsset){
+
+      final overlay = delegate.overlayBuilder(context, 1);
+
       return Stack(
         children: [
           Positioned.fill(
-            child: loadingTileIndicator ?? loadingTileIndicatorExample()
+            child: delegate.loadingTileIndicator(context) ?? loadingTileIndicatorExample()
           ),
           Positioned.fill(
             child: Image.network(url,
               fit: BoxFit.cover,
             ),
           ),
-          if (selectedAsset == currentAssets.keys.elementAt(index)) overlayBuilder != null ? overlayBuilder!(context, 1) : selectedOverlay(context)
+          if (selectedAsset == currentAssets.keys.elementAt(index)) overlay != null ? overlay : selectedOverlay(context)
         ],
       );
     }
@@ -210,13 +202,16 @@ class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegat
         final extent = sheetState?.extent ?? 0;
 
         if(state.displayAssets.length == 0 && !state.connectivity){
-          return connectivityIndicator == null ? connectivityIndicatorExample() : connectivityIndicator!(context, extent)!;
+
+          final connectivityIndicator =  delegate.connectivityIndicator(context, extent);
+
+          return connectivityIndicator == null ? connectivityIndicatorExample() : connectivityIndicator;
         }
         else if(state.displayAssets.length > 0){
           return assetsGridBuilder(context, extent, scrollController, scrollLock, footerHeight, state.displayAssets);
         }
         else{
-          return loadingIndicator ?? loadingIndicatorExample(context);
+          return delegate.loadingIndicator(context) ?? loadingIndicatorExample(context);
         }
       }
     );

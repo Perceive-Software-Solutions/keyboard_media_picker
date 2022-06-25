@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fort/fort.dart';
 import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/picker.dart';
+import 'package:piky/configuration_delegates/giphy_picker_config_delegate.dart';
 import 'package:piky/delegates/giphy_picker_delegate.dart';
 import 'package:piky/state/state.dart';
 import 'package:piky/util/functions.dart';
@@ -15,9 +16,6 @@ import 'imager_picker.dart';
 
 
 class GiphyPicker extends StatefulWidget {
-
-  /// Giphy Client API Key
-  final String apiKey;
 
   /// Sliding sheet controller
   final PerceiveSlidableController sheetController;
@@ -31,40 +29,8 @@ class GiphyPicker extends StatefulWidget {
   final double mediumExtent;
   final double expandedExtent;
 
-  /// Background color when images are not loaded in
-  final Color backgroundColor;
-
-  /// Search bar color
-  final Color searchColor;
-
-  /// Cancel button
-  final TextStyle cancelButtonStyle;
-
-  /// Search field hint text style
-  final TextStyle hiddenTextStyle;
-
-  /// Sty;e for the text
-  final TextStyle style;
-
-  /// Search field hint icon style
-  final TextStyle iconStyle;
-
-  /// Search field hint icon
-  final Icon icon;
-
-  /// Notch for the search bar
-  final Widget? notch;
-
-  /// Loading Indicators
-  final Widget? loadingIndicator;
-  final Widget? Function(BuildContext, double)? connectivityIndicator;
-  final Widget? loadingTileIndicator;
-
-  /// Overlay Widget of the selected asset
-  final Widget Function(BuildContext context, int index)? overlayBuilder;
-
-  /// Builds a wrapper around the header and provides the border radius
-  final Widget Function(BuildContext context, double borderRadius, Widget child)? headerWrapper;
+  /// The delegate for this
+  final GiphyPickerConfigDelegate delegate;
 
   /// If the giphy picker is in a locked state
   final ConcreteCubit<PickerType?> openType;
@@ -74,28 +40,15 @@ class GiphyPicker extends StatefulWidget {
 
   const GiphyPicker({
     required Key key,
-    required this.apiKey, 
+    required this.delegate, 
     required this.controller,
     required this.sheetController, 
     required this.listener,
     required this.openType,
-    this.headerWrapper,
-    this.overlayBuilder,
     this.minExtent = 0.0,
     this.initialExtent = 0.4,
     this.mediumExtent = 0.4,
     this.expandedExtent = 1.0,
-    this.notch,
-    this.cancelButtonStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
-    this.hiddenTextStyle = const TextStyle(fontSize: 14, color: Colors.black),
-    this.style = const TextStyle(fontSize: 14),
-    this.icon = const Icon(Icons.search, size: 24, color: Colors.black),
-    this.iconStyle = const TextStyle(color: Colors.grey),
-    this.backgroundColor = Colors.white,
-    this.searchColor = Colors.grey,
-    this.loadingIndicator,
-    this.loadingTileIndicator,
-    this.connectivityIndicator
   }) : super(key: key);
   @override
   _GiphyPickerState createState() => _GiphyPickerState();
@@ -136,7 +89,7 @@ class _GiphyPickerState extends State<GiphyPicker> {
   /// The store for the giphy state
   late final Tower<GiphyState> store = Tower<GiphyState>(
     giphyStateReducer,
-    initialState: GiphyState.initial(widget.apiKey),
+    initialState: GiphyState.initial(widget.delegate.apiKey),
     middleware: [EpicMiddleware<GiphyState>(giphySearchEpic)],
   );
 
@@ -209,7 +162,7 @@ class _GiphyPickerState extends State<GiphyPicker> {
         spacer,
         Padding(
           padding: const EdgeInsets.only(top: 6, bottom: 6),
-          child: widget.notch ?? Container(
+          child: widget.delegate.notchBuilder(context) ?? Container(
             width: 20,
             height: 4,
             color: Colors.grey,
@@ -230,15 +183,15 @@ class _GiphyPickerState extends State<GiphyPicker> {
                     child: TextFormField(
                       controller: searchFieldController,
                       focusNode: focusNode,
-                      style: widget.style,
+                      style: widget.delegate.style,
                       decoration: InputDecoration(
-                        prefixStyle: widget.iconStyle,
-                        prefixIcon: widget.icon,
+                        prefixStyle: widget.delegate.iconStyle,
+                        prefixIcon: widget.delegate.icon,
                         contentPadding: EdgeInsets.zero,
                         filled: true,
-                        fillColor: widget.searchColor,
+                        fillColor: widget.delegate.searchColor,
                         hintText: 'Search GIPHY',
-                        hintStyle: widget.hiddenTextStyle,
+                        hintStyle: widget.delegate.hiddenTextStyle,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide.none
@@ -255,7 +208,7 @@ class _GiphyPickerState extends State<GiphyPicker> {
                 focusNode.hasFocus ? GestureDetector(
                   child: Padding(
                     padding: EdgeInsets.only(left: 10, right: 16, top: 1),
-                    child: Text('Cancel', style: widget.cancelButtonStyle),
+                    child: Text('Cancel', style: widget.delegate.cancelButtonStyle),
                   ),
                   onTap: (){
                     focusNode.unfocus();
@@ -269,8 +222,9 @@ class _GiphyPickerState extends State<GiphyPicker> {
       ],
     );
 
-    if(widget.headerWrapper != null){
-      header = widget.headerWrapper!.call(context, borderRadius, header);
+    final Widget? delegateHeader = widget.delegate.headerWrapper(context, borderRadius, header);
+    if(delegateHeader != null){
+      header = delegateHeader;
     }
 
     return header;
@@ -282,7 +236,7 @@ class _GiphyPickerState extends State<GiphyPicker> {
       store: store,
       child: PerceiveSlidable(
         controller: widget.sheetController,
-        backgroundColor: widget.backgroundColor,
+        backgroundColor: widget.delegate.backgroundColor,
         staticSheet: true,
         closeOnBackdropTap: false,
         isBackgroundIntractable: false,
@@ -295,13 +249,10 @@ class _GiphyPickerState extends State<GiphyPicker> {
         extentListener: sheetListener,
         delegate: GiphyPickerPickerBuilderDelegate(
           store,
+          widget.delegate,
           widget.controller,
           _buildHeader,
-          widget.loadingIndicator,
-          widget.connectivityIndicator,
-          widget.loadingTileIndicator,
           mediumExtent: widget.mediumExtent,
-          overlayBuilder: widget.overlayBuilder
         )
       ),
     );

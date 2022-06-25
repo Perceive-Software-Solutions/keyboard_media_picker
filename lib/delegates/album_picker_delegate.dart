@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/imager_picker.dart';
+import 'package:piky/configuration_delegates/image_picker_config_delegate.dart';
 import 'package:piky/provider/asset_picker_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
@@ -14,12 +15,13 @@ class AlbumPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   AlbumPickerBuilderDelegate(
     this.provider,
     this.pageCubit,
-    this.albumMenuBuilder,
+    this.delegate,
     this.imagePickerController, {
     this.gridCount = 3,
   }) : super(pageCount: 1, staticScrollModifier: 0.01);
 
-  final Widget Function(String selectedAlbum, Map<String, Tuple2<AssetPathEntity, Uint8List?>?>, ScrollController controller, bool scrollLock, double footerHeight, dynamic Function(AssetPathEntity)) albumMenuBuilder;
+
+  final ImagePickerConfigDelegate delegate;
 
   final DefaultAssetPickerProvider provider;
 
@@ -92,7 +94,7 @@ class AlbumPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegate {
   }
 
   Widget assetListBuilder(BuildContext context, DefaultAssetPickerProvider provider, ScrollController scrollController, bool scrollLock, double footerHeight){
-    return albumMenuBuilder(provider.currentPathEntity?.name ?? '', provider.pathEntityList, scrollController, scrollLock, footerHeight, (AssetPathEntity entity){
+    return delegate.albumMenuBuilder(context, provider.currentPathEntity?.name ?? '', provider.pathEntityList, scrollController, scrollLock, footerHeight, (AssetPathEntity entity){
       provider.currentPathEntity = entity;
       if(pageCubit.state){
         pageCubit.emit(false);

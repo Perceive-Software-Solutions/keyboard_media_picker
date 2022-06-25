@@ -1,4 +1,9 @@
 
+## [0.5.0] v0.5.0
+
+* Migrated input format to delegate classes
+  * Allows for conditionally building pickers
+
 ## [0.4.22] v0.4.22
 
 * Removed perceive slidable dependency through feed

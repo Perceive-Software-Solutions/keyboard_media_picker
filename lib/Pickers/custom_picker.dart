@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:perceive_slidable/sliding_sheet.dart';
 import 'package:piky/Pickers/imager_picker.dart';
 import 'package:piky/Pickers/picker.dart';
+import 'package:piky/configuration_delegates/custom_picker_config_delegate.dart';
 import 'package:piky/util/functions.dart';
 
 class CustomPicker extends StatefulWidget {
@@ -19,10 +20,8 @@ class CustomPicker extends StatefulWidget {
   final double mediumExtent;
   final double minExtent;
 
-  /// Custom picker body builder
-  final Widget Function(BuildContext context, double extent, ScrollController scrollController, bool scrollLock, double footerHeight) customBodyBuilder;
-  /// Custom picker header builder
-  final Widget Function(BuildContext context, Widget spacer, FocusNode focusNode, TextEditingController searchFieldController, double borderRadius)? headerBuilder;
+  /// Delegate for this widget
+  final CustomPickerConfigDelegate delegate;
 
   /// Allows the picker to see the sheetstate
   final Function(double extent) listener;
@@ -33,8 +32,7 @@ class CustomPicker extends StatefulWidget {
   const CustomPicker({ 
     Key? key, 
     required this.sheetController,
-    required this.customBodyBuilder,
-    required this.headerBuilder,
+    required this.delegate,
     required this.listener,
     required this.openType,
     this.initialExtent = 0.55,
@@ -88,8 +86,8 @@ class _CustomPickerState extends State<CustomPicker> with SingleTickerProviderSt
       expandedExtent: widget.expandedExtent,
       extentListener: sheetListener,
       delegate: _CustomPickerSheetController(
-        (context, spacer, borderRadius) => widget.headerBuilder?.call(context, spacer, focusNode, searchFieldController, borderRadius) ?? Container(),
-        (context, extent, scrollController, scrollLock, footerHeight) => widget.customBodyBuilder(context, extent, scrollController, scrollLock, footerHeight),
+        (context, spacer, borderRadius) => widget.delegate.headerBuilder(context, spacer, focusNode, searchFieldController, borderRadius) ?? Container(),
+        (context, extent, scrollController, scrollLock, footerHeight) => widget.delegate.bodyBuilder(context, extent, scrollController, scrollLock, footerHeight) ?? Container(),
       )
     );
 

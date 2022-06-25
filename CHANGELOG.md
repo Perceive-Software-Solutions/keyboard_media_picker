@@ -1,4 +1,8 @@
 
+## [0.5.2] v0.5.2
+
+* Changed `isOpen` calculation
+
 ## [0.5.1] v0.5.1
 
 * Made receivers options for `PickerController`

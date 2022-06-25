@@ -1,4 +1,8 @@
 
+## [0.5.1] v0.5.1
+
+* Made receivers options for `PickerController`
+
 ## [0.5.0] v0.5.0
 
 * Migrated input format to delegate classes

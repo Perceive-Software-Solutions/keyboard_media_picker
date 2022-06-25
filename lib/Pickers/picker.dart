@@ -443,18 +443,18 @@ class _PickerState extends State<Picker> {
   void _giphyReceiver() {
     if(imagePickerController != null && giphyPickerController?.gif?.isNotEmpty == true){
       imagePickerController!.clearAll();
-      widget.controller.onImageReceived([]);
+      widget.controller.onImageReceived?.call([]);
     }
-    widget.controller.onGiphyReceived(giphyPickerController!.gif);
+    widget.controller.onGiphyReceived?.call(giphyPickerController!.gif);
   }
 
   ///Handles the image receiving
   void _imageReceiver() { 
     if(giphyPickerController != null){
       giphyPickerController!.clearGif();
-      widget.controller.onGiphyReceived('');
+      widget.controller.onGiphyReceived?.call('');
     }
-    widget.controller.onImageReceived(imagePickerController!.list);
+    widget.controller.onImageReceived?.call(imagePickerController!.list);
   }
 
   /// Clear Asset Entity
@@ -469,8 +469,8 @@ class _PickerState extends State<Picker> {
     if(imagePickerController != null && giphyPickerController != null){
       giphyPickerController?.clearGif();
       imagePickerController?.clearAll();
-      widget.controller.onImageReceived([]);
-      widget.controller.onGiphyReceived('');
+      widget.controller.onImageReceived?.call([]);
+      widget.controller.onGiphyReceived?.call('');
     }
   }
 
@@ -564,11 +564,11 @@ class PickerController extends ChangeNotifier{
   _PickerState? _state;
 
   ///If a image is selected inside of the ImagePicker
-  Function(List<AssetEntity>? images) onImageReceived;
+  Function(List<AssetEntity>? images)? onImageReceived;
   ///If a Giphy is selected inside of the GiphyPicker
-  Function(String? gif) onGiphyReceived;
+  Function(String? gif)? onGiphyReceived;
 
-  PickerController({required this.onGiphyReceived, required this.onImageReceived});
+  PickerController({this.onGiphyReceived, this.onImageReceived});
 
   void _bind(_PickerState bind) => _state = bind;
 

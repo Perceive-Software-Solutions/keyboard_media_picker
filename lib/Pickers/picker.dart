@@ -503,7 +503,7 @@ class _PickerState extends State<Picker> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: widget.backgroundColor,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
 
@@ -531,7 +531,7 @@ class _PickerState extends State<Picker> {
                           snapPickerTo(PickerExpansion.INITIAL);
                         },
                         child: Container(
-                          color: Color.lerp(Colors.transparent, widget.maxBackdropColor, animationOffset),
+                          color: Color.lerp(widget.backgroundColor, widget.maxBackdropColor, animationOffset),
                         ),
                       )
                     )

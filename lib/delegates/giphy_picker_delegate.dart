@@ -132,8 +132,10 @@ class GiphyPickerPickerBuilderDelegate extends ScrollablePerceiveSlidableDelegat
     return StoreConnector<GiphyState, String?>(
       converter: (store) => store.state.selectedAsset,
       builder: (context, selectedAsset) {
-        return FlatButton(
-          padding: EdgeInsets.zero,
+        return TextButton(
+          style: ButtonStyle(
+            padding: MaterialStatePropertyAll(EdgeInsets.zero),
+          ),
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: 300,

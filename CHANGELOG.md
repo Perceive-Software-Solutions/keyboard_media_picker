@@ -1,3 +1,7 @@
+## [0.5.4] v0.5.4
+
+* Support for Flutter `3.3.2`
+* Support for Piky `0.5.21`
 
 ## [0.5.2] v0.5.2
 
